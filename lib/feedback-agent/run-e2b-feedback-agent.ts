@@ -67,6 +67,18 @@ function lf(s: string) {
   return s.replace(/\r\n/g, "\n");
 }
 
+/** Last line may be PR URL if git or other tools polluted stdout before create-pr. */
+function extractGithubPullRequestUrl(text: string): string | null {
+  const matches = text.matchAll(
+    /https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/pull\/\d+/g,
+  );
+  let last: string | null = null;
+  for (const m of matches) {
+    last = m[0];
+  }
+  return last;
+}
+
 function githubPushDeniedHint(detail: string): string {
   const d = detail.toLowerCase();
   if (
@@ -298,6 +310,12 @@ export async function runE2bFeedbackAgent(input: {
     });
 
     const out = (finalize.stdout ?? "").trim();
+    const combined = [finalize.stdout, finalize.stderr]
+      .filter((s): s is string => !!s?.trim())
+      .join("\n");
+    const prUrl =
+      extractGithubPullRequestUrl(out) ?? extractGithubPullRequestUrl(combined);
+
     if (finalize.exitCode === 2 || out === "NO_COMMITS") {
       await markFailed(
         input.feedbackId,
@@ -306,22 +324,27 @@ export async function runE2bFeedbackAgent(input: {
       );
       return;
     }
-    if (finalize.exitCode !== 0 || !out.startsWith("http")) {
-      const parts = [finalize.stderr, finalize.stdout].filter(
-        (s): s is string => !!s?.trim(),
-      );
-      const detail =
-        (parts.length ? parts.join("\n---\n") : out).slice(0, 4000) ||
-        "unknown";
+
+    if (prUrl) {
+      await markSuccess(input.feedbackId, prUrl, dash);
+      return;
+    }
+
+    if (finalize.exitCode === 0 && !prUrl) {
       await markFailed(
         input.feedbackId,
-        `Finalize/push/PR failed: ${detail}${githubPushDeniedHint(detail)}`,
+        `Finalize finished but no PR URL was found in output: ${combined.slice(0, 2000)}`,
         dash,
       );
       return;
     }
 
-    await markSuccess(input.feedbackId, out, dash);
+    const detail = combined.slice(0, 4000) || "unknown";
+    await markFailed(
+      input.feedbackId,
+      `Finalize/push/PR failed: ${detail}${githubPushDeniedHint(detail)}`,
+      dash,
+    );
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await markFailed(input.feedbackId, msg, dash);

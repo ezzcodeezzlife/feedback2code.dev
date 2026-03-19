@@ -32,9 +32,9 @@ fi
 TOKEN="$(node "$GHJS" token)"
 PUSH_URL="https://x-access-token:${TOKEN}@github.com/${F2C_OWNER}/${F2C_REPO}.git"
 git -C "$REPO_PATH" remote set-url origin "$PUSH_URL"
-# GitHub prints "Create a pull request by visiting…" on stderr even on success; keep stderr clean for real errors.
-if ! git -C "$REPO_PATH" push -u origin "$BRANCH" 2>/tmp/f2c_git_push.log; then
-  cat /tmp/f2c_git_push.log >&2
+# Absorb all push output: "set up to track" and GitHub hints go to stdout/stderr and must not mix with PR URL below.
+if ! git -C "$REPO_PATH" push -q -u origin "$BRANCH" >/tmp/f2c_git_push.out 2>/tmp/f2c_git_push.err; then
+  cat /tmp/f2c_git_push.err /tmp/f2c_git_push.out >&2
   exit 1
 fi
 git -C "$REPO_PATH" remote set-url origin "$CLEAN_URL"
@@ -44,4 +44,12 @@ export F2C_PR_HEAD="$BRANCH"
 export F2C_PR_BASE="$BASE"
 # REST API can 422 briefly right after push until the new ref is visible.
 sleep 2
-node "$GHJS" create-pr /home/user/f2c-pr-title.txt /home/user/f2c-pr-body.txt
+# Only this line may write to script stdout (single PR URL) so the host can detect success reliably.
+node "$GHJS" create-pr /home/user/f2c-pr-title.txt /home/user/f2c-pr-body.txt > /tmp/f2c_pr_url.txt
+PR_URL="$(tr -d '\r\n' </tmp/f2c_pr_url.txt)"
+if ! [[ "$PR_URL" =~ ^https://github\.com/[^/]+/[^/]+/pull/[0-9]+$ ]]; then
+  echo "create-pr did not return a PR URL (got: ${PR_URL:0:200})" >&2
+  cat /tmp/f2c_pr_url.txt >&2
+  exit 1
+fi
+printf '%s' "$PR_URL"
