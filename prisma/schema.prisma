@@ -60,6 +60,7 @@ enum WidgetFeedbackStatus {
   CODING
   WAITING_FOR_REVIEW
   MERGED
+  FAILED
 }
 
 model RepositoryConfig {
@@ -86,6 +87,10 @@ model WidgetFeedback {
   pageUrl            String?
   status             WidgetFeedbackStatus @default(CODING)
   createdAt          DateTime             @default(now())
+  e2bSandboxId       String?
+  prUrl              String?
+  agentError         String?              @db.Text
+  agentFinishedAt    DateTime?
 
   repositoryConfig RepositoryConfig @relation(fields: [repositoryConfigId], references: [id], onDelete: Cascade)
 

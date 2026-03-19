@@ -33,8 +33,23 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Widget feedback automation (E2B + OpenCode)
+
+When someone submits feedback through the embed, the app schedules an [E2B](https://e2b.dev) sandbox that clones the GitHub repo, runs [OpenCode](https://opencode.ai) with **MiniMax**, pushes a branch, and opens a PR.
+
+GitHub auth stays **inside the sandbox**: the same **GitHub App** credentials (`GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`) are written into the VM only long enough to mint **installation tokens** (see `lib/feedback-agent/e2b/e2b-github.mjs`). The repo remote is scrubbed before OpenCode runs so the agent does not see tokens. PRs are created as your **GitHub App** bot.
+
+Set these **server-only** variables (see `.env.example`):
+
+- `E2B_API_KEY`
+- `MINIMAX_API_KEY`
+- GitHub App credentials (`GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, and the rest you already use for the dashboard install flow)
+- Users must complete the **GitHub App install** so `githubInstallationId` is stored (used to pick the installation when minting tokens in the sandbox).
+
+**If push/PR fails with `403` / `Permission … denied to …[bot]`:** the app is recognized but cannot write to that repo. In [GitHub App settings](https://github.com/settings/apps) → your app → **Permissions**: set **Repository permissions → Contents** and **Pull requests** to **Read and write**, save, then reinstall the app (GitHub will prompt to accept the new permissions). On the install screen, choose **All repositories** or ensure **every repo you add in the dashboard** is checked. For organization repos, an org admin may need to approve the app under **Organization settings → Third-party access**.
+
+**Vercel / serverless:** `next/server` `after()` still runs under your function **max duration** (often 10–60s on hobby/pro). A full agent run can take many minutes. For production, run the app on a host with a long timeout, or move `runE2bFeedbackAgent` behind a queue/worker (e.g. Inngest, Trigger.dev, a small Railway service).
+
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying). Configure env vars and database migrations (`prisma migrate deploy` runs in `npm run build`).
