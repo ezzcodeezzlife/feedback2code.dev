@@ -2,13 +2,19 @@ import { authOptions } from "@/auth";
 import { PagePanel, PageShell } from "@/components/layout/page-shell";
 import AuthorizedDomainsFields from "@/components/repo/authorized-domains-fields";
 import EmbedSnippetCopy from "@/components/repo/embed-snippet-copy";
+import FeedbackStatusSelect from "@/components/repo/feedback-status-select";
 import { createWidgetId } from "@/lib/widget-embed";
+import {
+  type WidgetFeedbackStatus,
+  isWidgetFeedbackStatus,
+} from "@/lib/widget-feedback-status";
 import { isLocalDevPageUrl } from "@/lib/widget-origin";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 type PageProps = {
   params: Promise<{
@@ -52,9 +58,55 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
           where: { repositoryConfigId: existing.id },
           orderBy: { createdAt: "desc" },
           take: 100,
-          select: { id: true, body: true, pageUrl: true, createdAt: true },
+          select: {
+            id: true,
+            body: true,
+            pageUrl: true,
+            createdAt: true,
+            status: true,
+          },
         })
       : [];
+
+  async function updateFeedbackStatus(
+    feedbackId: string,
+    status: WidgetFeedbackStatus,
+  ) {
+    "use server";
+
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) return;
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+    if (!user) return;
+
+    if (!isWidgetFeedbackStatus(status)) return;
+
+    const config = await prisma.repositoryConfig.findUnique({
+      where: {
+        userId_fullName: {
+          userId: user.id,
+          fullName,
+        },
+      },
+      select: { id: true },
+    });
+    if (!config) return;
+
+    const updated = await prisma.widgetFeedback.updateMany({
+      where: {
+        id: feedbackId,
+        repositoryConfigId: config.id,
+      },
+      data: { status },
+    });
+    if (updated.count === 0) return;
+
+    revalidatePath(`/${owner}/${repo}`);
+  }
 
   const domains =
     Array.isArray(existing?.authorizedDomains) &&
@@ -178,20 +230,27 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                   key={f.id}
                   className="rounded-lg border border-black/10 bg-zinc-50/80 p-4 dark:border-white/15 dark:bg-zinc-950/80"
                 >
-                  <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                    <time dateTime={f.createdAt.toISOString()}>
-                      {f.createdAt.toLocaleString()}
-                    </time>
-                    {f.pageUrl && !isLocalDevPageUrl(f.pageUrl) ? (
-                      <a
-                        href={f.pageUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="max-w-[min(100%,280px)] truncate font-medium text-zinc-700 underline decoration-zinc-400 underline-offset-2 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
-                      >
-                        {f.pageUrl}
-                      </a>
-                    ) : null}
+                  <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+                    <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <time dateTime={f.createdAt.toISOString()}>
+                        {f.createdAt.toLocaleString()}
+                      </time>
+                      {f.pageUrl && !isLocalDevPageUrl(f.pageUrl) ? (
+                        <a
+                          href={f.pageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="max-w-[min(100%,280px)] truncate font-medium text-zinc-700 underline decoration-zinc-400 underline-offset-2 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                        >
+                          {f.pageUrl}
+                        </a>
+                      ) : null}
+                    </div>
+                    <FeedbackStatusSelect
+                      feedbackId={f.id}
+                      value={f.status}
+                      updateStatus={updateFeedbackStatus}
+                    />
                   </div>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-900 dark:text-zinc-100">
                     {f.body}

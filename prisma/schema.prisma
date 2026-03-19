@@ -56,6 +56,12 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+enum WidgetFeedbackStatus {
+  CODING
+  WAITING_FOR_REVIEW
+  MERGED
+}
+
 model RepositoryConfig {
   id                String   @id @default(cuid())
   userId            String
@@ -74,11 +80,12 @@ model RepositoryConfig {
 }
 
 model WidgetFeedback {
-  id                 String   @id @default(cuid())
+  id                 String               @id @default(cuid())
   repositoryConfigId String
   body               String
   pageUrl            String?
-  createdAt          DateTime @default(now())
+  status             WidgetFeedbackStatus @default(CODING)
+  createdAt          DateTime             @default(now())
 
   repositoryConfig RepositoryConfig @relation(fields: [repositoryConfigId], references: [id], onDelete: Cascade)
 
