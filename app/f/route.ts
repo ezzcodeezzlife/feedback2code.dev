@@ -1,5 +1,6 @@
 import { parseWidgetIdFromBody } from "@/lib/widget-embed";
 import { prisma } from "@/lib/prisma";
+import { isLocalDevPageUrl } from "@/lib/widget-origin";
 import { authorizeWidgetRequest, widgetCorsHeaders } from "@/lib/widget-resolve";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -76,11 +77,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  let storedPageUrl =
+    pageUrl && pageUrl.length > 0 ? pageUrl.slice(0, 2000) : null;
+  if (storedPageUrl && isLocalDevPageUrl(storedPageUrl)) {
+    storedPageUrl = null;
+  }
+
   const created = await prisma.widgetFeedback.create({
     data: {
       repositoryConfigId: auth.ctx.repositoryConfigId,
       body: text,
-      pageUrl: pageUrl && pageUrl.length > 0 ? pageUrl.slice(0, 2000) : null,
+      pageUrl: storedPageUrl,
     },
     select: { id: true, body: true, createdAt: true },
   });

@@ -10,6 +10,19 @@ export function hostnameFromUrl(urlString: string): string | null {
   }
 }
 
+/** True for localhost / loopback page URLs — omit from stored feedback and dashboard. */
+export function isLocalDevPageUrl(urlString: string): boolean {
+  const host = hostnameFromUrl(urlString);
+  if (!host) return false;
+  return (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "[::1]" ||
+    host === "0.0.0.0" ||
+    host.endsWith(".localhost")
+  );
+}
+
 export function originHostFromRequest(
   origin: string | null,
   referer: string | null,

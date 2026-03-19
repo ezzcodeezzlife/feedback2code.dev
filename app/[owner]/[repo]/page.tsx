@@ -3,6 +3,7 @@ import { PagePanel, PageShell } from "@/components/layout/page-shell";
 import AuthorizedDomainsFields from "@/components/repo/authorized-domains-fields";
 import EmbedSnippetCopy from "@/components/repo/embed-snippet-copy";
 import { createWidgetId } from "@/lib/widget-embed";
+import { isLocalDevPageUrl } from "@/lib/widget-origin";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { headers } from "next/headers";
@@ -42,8 +43,18 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
         fullName,
       },
     },
-    select: { authorizedDomains: true, widgetId: true },
+    select: { id: true, authorizedDomains: true, widgetId: true },
   });
+
+  const feedbacks =
+    existing != null
+      ? await prisma.widgetFeedback.findMany({
+          where: { repositoryConfigId: existing.id },
+          orderBy: { createdAt: "desc" },
+          take: 100,
+          select: { id: true, body: true, pageUrl: true, createdAt: true },
+        })
+      : [];
 
   const domains =
     Array.isArray(existing?.authorizedDomains) &&
@@ -145,6 +156,49 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
               Save this configuration once to generate your embed snippet and widget
               ID.
             </p>
+          )}
+        </div>
+
+        <div className="mt-8 border-t border-black/10 pt-8 dark:border-white/15">
+          <h2 className="text-lg font-semibold tracking-tight">Submitted feedback</h2>
+          {!existing ? (
+            <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+              Save this repository once to start collecting feedback from embedded
+              sites.
+            </p>
+          ) : feedbacks.length === 0 ? (
+            <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+              No submissions yet. After visitors post from the widget, entries appear
+              here.
+            </p>
+          ) : (
+            <ul className="mt-4 space-y-4">
+              {feedbacks.map((f) => (
+                <li
+                  key={f.id}
+                  className="rounded-lg border border-black/10 bg-zinc-50/80 p-4 dark:border-white/15 dark:bg-zinc-950/80"
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    <time dateTime={f.createdAt.toISOString()}>
+                      {f.createdAt.toLocaleString()}
+                    </time>
+                    {f.pageUrl && !isLocalDevPageUrl(f.pageUrl) ? (
+                      <a
+                        href={f.pageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="max-w-[min(100%,280px)] truncate font-medium text-zinc-700 underline decoration-zinc-400 underline-offset-2 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                      >
+                        {f.pageUrl}
+                      </a>
+                    ) : null}
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-900 dark:text-zinc-100">
+                    {f.body}
+                  </p>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </PagePanel>
