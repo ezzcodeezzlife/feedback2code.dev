@@ -1,8 +1,11 @@
 import { authOptions } from "@/auth";
 import { PagePanel, PageShell } from "@/components/layout/page-shell";
 import AuthorizedDomainsFields from "@/components/repo/authorized-domains-fields";
+import EmbedSnippetCopy from "@/components/repo/embed-snippet-copy";
+import { createWidgetId } from "@/lib/widget-embed";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -39,7 +42,7 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
         fullName,
       },
     },
-    select: { authorizedDomains: true },
+    select: { authorizedDomains: true, widgetId: true },
   });
 
   const domains =
@@ -77,6 +80,7 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
         owner,
         repo,
         fullName,
+        widgetId: createWidgetId(),
         authorizedDomains,
       },
       update: {
@@ -87,10 +91,33 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
     redirect(`/${owner}/${repo}`);
   }
 
+  const headerList = await headers();
+  const forwardedProto = headerList.get("x-forwarded-proto");
+  const forwardedHost =
+    headerList.get("x-forwarded-host") ?? headerList.get("host");
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
+    (forwardedHost
+      ? `${forwardedProto ?? "http"}://${forwardedHost}`
+      : "http://localhost:3000");
+
+  const embedScript =
+    existing?.widgetId != null
+      ? `<script src="${baseUrl}/widget/${existing.widgetId}" async></script>`
+      : null;
+
   return (
     <PageShell>
       <PagePanel>
         <div className="mb-6">
+          <div className="mb-4">
+            <Link
+              href="/"
+              className="rounded-md border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+            >
+              Back to dashboard
+            </Link>
+          </div>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">Repository</p>
           <h1 className="text-2xl font-semibold tracking-tight">{fullName}</h1>
         </div>
@@ -105,14 +132,21 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
             >
               Save
             </button>
-            <Link
-              href="/"
-              className="rounded-md border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
-            >
-              Back to dashboard
-            </Link>
           </div>
         </form>
+
+        <div className="mt-8 border-t border-black/10 pt-8 dark:border-white/15">
+          <h2 className="text-lg font-semibold tracking-tight">Embed widget</h2>
+
+          {embedScript ? (
+            <EmbedSnippetCopy code={embedScript} />
+          ) : (
+            <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+              Save this configuration once to generate your embed snippet and widget
+              ID.
+            </p>
+          )}
+        </div>
       </PagePanel>
     </PageShell>
   );

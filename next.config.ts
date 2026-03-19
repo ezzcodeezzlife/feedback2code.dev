@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Avoid bundling Prisma into the server graph (Turbopack can drop model delegates → widgetFeedback undefined).
+  serverExternalPackages: ["@prisma/client"],
 };
 
 export default nextConfig;

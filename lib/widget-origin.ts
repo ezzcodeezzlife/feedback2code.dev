@@ -41,12 +41,3 @@ export function isHostnameAuthorized(
   }
   return false;
 }
-
-export function isLocalDevHost(host: string): boolean {
-  return (
-    host === "localhost" ||
-    host === "127.0.0.1" ||
-    host === "[::1]" ||
-    host.endsWith(".localhost")
-  );
-}

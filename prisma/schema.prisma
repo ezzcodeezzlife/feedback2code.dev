@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -67,7 +67,20 @@ model RepositoryConfig {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  widgetFeedbacks   WidgetFeedback[]
 
   @@unique([userId, fullName])
+}
+
+model WidgetFeedback {
+  id                 String   @id @default(cuid())
+  repositoryConfigId String
+  body               String
+  pageUrl            String?
+  createdAt          DateTime @default(now())
+
+  repositoryConfig RepositoryConfig @relation(fields: [repositoryConfigId], references: [id], onDelete: Cascade)
+
+  @@index([repositoryConfigId, createdAt])
 }
