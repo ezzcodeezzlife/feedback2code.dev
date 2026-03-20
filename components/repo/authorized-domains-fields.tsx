@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Button from "@/components/ui/button";
+import Input from "@/components/ui/input";
 
 type Props = {
   initialDomains: string[];
@@ -32,34 +34,35 @@ export default function AuthorizedDomainsFields({ initialDomains }: Props) {
     <div>
       <div className="mb-2 flex items-center justify-between">
         <label className="block text-sm font-medium">Authorized domains</label>
-        <button
+        <Button
           type="button"
           onClick={addDomain}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-black/15 text-lg leading-none transition hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+          variant="outline"
+          size="icon"
           aria-label="Add authorized domain"
         >
           +
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-2">
         {domains.map((domain, index) => (
           <div key={`domain-${index}`} className="flex items-center gap-2">
-            <input
+            <Input
               type="text"
               name="authorizedDomains"
               value={domain}
               onChange={(event) => updateDomain(index, event.target.value)}
               placeholder="example.com"
-              className="w-full rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm outline-none ring-0 placeholder:text-zinc-400 focus:border-black/30 dark:border-white/20 dark:focus:border-white/40"
             />
-            <button
+            <Button
               type="button"
               onClick={() => removeDomain(index)}
-              className="rounded-md border border-black/15 px-2 py-2 text-sm transition hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+              variant="outline"
+              size="sm"
             >
               Remove
-            </button>
+            </Button>
           </div>
         ))}
       </div>

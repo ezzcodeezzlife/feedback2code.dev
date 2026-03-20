@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
+import Button from "@/components/ui/button";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -21,22 +22,22 @@ export default function Navbar() {
                 </p>
               ) : null}
             </div>
-            <button
+            <Button
               type="button"
               onClick={() => signOut()}
-              className="rounded-md border border-black/15 px-3 py-1.5 text-sm transition hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+              variant="outline"
             >
               Logout
-            </button>
+            </Button>
           </div>
         ) : (
-          <button
+          <Button
             type="button"
             onClick={() => signIn("github")}
-            className="rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white transition hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+            size="sm"
           >
             Login with GitHub
-          </button>
+          </Button>
         )}
       </div>
     </header>

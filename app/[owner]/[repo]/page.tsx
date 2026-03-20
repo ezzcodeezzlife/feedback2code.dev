@@ -10,6 +10,8 @@ import { getServerSession } from "next-auth";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import Button, { buttonVariants } from "@/components/ui/button";
+import Checkbox from "@/components/ui/checkbox";
 
 type PageProps = {
   params: Promise<{
@@ -138,7 +140,7 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
           <div className="mb-4">
             <Link
               href="/"
-              className="rounded-md border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+              className={buttonVariants({ variant: "outline", size: "lg" })}
             >
               Back to dashboard
             </Link>
@@ -151,13 +153,13 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
           <AuthorizedDomainsFields initialDomains={domains} />
 
           <div className="flex items-start gap-3 rounded-lg border border-black/10 bg-white/60 p-3 dark:border-white/15 dark:bg-zinc-950/40">
-            <input
+            <Checkbox
               id="receivePrCreatedEmail"
               name="receivePrCreatedEmail"
               type="checkbox"
               value="on"
               defaultChecked={existing?.receivePrCreatedEmail ?? true}
-              className="mt-1 h-4 w-4 accent-black dark:accent-white"
+              className="mt-1"
             />
             <div className="space-y-1">
               <label
@@ -179,12 +181,12 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="submit"
-              className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+              size="lg"
             >
               Save
-            </button>
+            </Button>
           </div>
         </form>
 
@@ -202,7 +204,17 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
         </div>
 
         <div className="mt-8 border-t border-black/10 pt-8 dark:border-white/15">
-          <h2 className="text-lg font-semibold tracking-tight">Submitted feedback</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold tracking-tight">
+              Submitted feedback
+            </h2>
+            <Link
+              href={`/${owner}/${repo}`}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Refresh
+            </Link>
+          </div>
           {!existing ? (
             <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
               Save this repository once to start collecting feedback from embedded

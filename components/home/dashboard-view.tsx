@@ -3,6 +3,9 @@
 import { PagePanel, PageShell } from "@/components/layout/page-shell";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import Input from "@/components/ui/input";
+import Select from "@/components/ui/select";
+import { buttonVariants } from "@/components/ui/button";
 
 function formatUtcDate(iso: string): string {
   const d = new Date(iso);
@@ -92,7 +95,10 @@ export default function DashboardView({
           <div className="flex items-center gap-2">
             <Link
               href="/"
-              className="inline-flex items-center rounded-md border border-black/15 px-3 py-2 text-sm font-medium transition hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+              className={buttonVariants({
+                variant: "outline",
+                size: "default",
+              })}
             >
               Refresh
             </Link>
@@ -100,7 +106,10 @@ export default function DashboardView({
               href={manageAccessUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-md border border-black/15 px-3 py-2 text-sm font-medium transition hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+              className={buttonVariants({
+                variant: "outline",
+                size: "default",
+              })}
             >
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs">
                 +
@@ -112,21 +121,19 @@ export default function DashboardView({
 
         {!repositoriesError && repositories.length > 0 ? (
           <div className="mb-4 flex flex-col gap-2 sm:flex-row">
-            <input
+            <Input
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search repositories..."
-              className="w-full rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm outline-none ring-0 placeholder:text-zinc-400 focus:border-black/30 dark:border-white/20 dark:focus:border-white/40"
             />
-            <select
+            <Select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value as "recent" | "name")}
-              className="rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm outline-none ring-0 focus:border-black/30 dark:border-white/20 dark:focus:border-white/40"
             >
               <option value="recent">Recently changed</option>
               <option value="name">Name (A-Z)</option>
-            </select>
+            </Select>
           </div>
         ) : null}
 
@@ -165,7 +172,10 @@ export default function DashboardView({
                     </span>
                     <Link
                       href={widgetUrl}
-                      className="rounded-md border border-black/15 px-2 py-1 text-xs font-medium transition hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+                      className={buttonVariants({
+                        variant: "outline",
+                        size: "sm",
+                      })}
                     >
                       Add widget
                     </Link>

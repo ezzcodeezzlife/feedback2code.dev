@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Button from "@/components/ui/button";
 
 type Props = {
   code: string;
@@ -27,7 +28,11 @@ export default function EmbedSnippetCopy({ code }: Props) {
         <span className="text-indigo-700 dark:text-indigo-300">&lt;script</span>
         <span className="text-zinc-500 dark:text-zinc-400"> </span>
         <span className="text-cyan-700 dark:text-cyan-300">src=</span>
-        <span className="text-emerald-700 dark:text-emerald-300">"{src}"</span>
+        <span className="text-emerald-700 dark:text-emerald-300">
+          {"\""}
+          {src}
+          {"\""}
+        </span>
         <span className="text-amber-600 dark:text-amber-400"> async</span>
         <span className="text-indigo-700 dark:text-indigo-300">&gt;</span>
         <span className="text-indigo-700 dark:text-indigo-300">&lt;/script&gt;</span>
@@ -49,14 +54,15 @@ export default function EmbedSnippetCopy({ code }: Props) {
     <div className="mt-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium">One-line embed</p>
-        <button
+        <Button
           type="button"
           onClick={handleCopy}
           aria-label={copied ? "Copied to clipboard" : "Copy embed snippet"}
-          className="rounded-md border border-black/15 px-3 py-1.5 text-xs font-medium transition hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+          variant="outline"
+          size="sm"
         >
           {copied ? "Copied" : "Copy"}
-        </button>
+        </Button>
       </div>
       <pre className="mt-2 overflow-x-auto rounded-md border border-black/15 bg-zinc-50 p-3 text-xs leading-relaxed dark:border-white/15 dark:bg-zinc-950">
         <code className="whitespace-pre">{renderHighlightedCode(code)}</code>

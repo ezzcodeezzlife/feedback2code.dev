@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Card } from "@/components/ui/card";
 
 /**
  * Shared outer width + padding for dashboard-style pages (matches across routes).
@@ -30,10 +31,8 @@ export function PagePanel({
   className?: string;
 }) {
   return (
-    <section
-      className={`w-full rounded-xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-black ${className ?? ""}`}
-    >
+    <Card className={["w-full", className ?? ""].filter(Boolean).join(" ")}>
       {children}
-    </section>
+    </Card>
   );
 }
