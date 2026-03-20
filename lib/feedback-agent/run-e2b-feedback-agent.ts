@@ -68,6 +68,7 @@ export async function startE2bFeedbackAgentWebhook(input: {
   repo: string;
   fullName: string;
   feedbackBody: string;
+  pagePath: string | null;
   dashboardPath: string;
   githubInstallationId: string | null;
 }): Promise<void> {
@@ -106,7 +107,11 @@ export async function startE2bFeedbackAgentWebhook(input: {
 
   const branch = branchNameForFeedback(input.feedbackId);
   const prTitle = `Feedback: ${input.feedbackBody.slice(0, 72)}${input.feedbackBody.length > 72 ? "…" : ""}`;
-  const prBody = `Automated PR from site widget feedback.\n\n---\n\n${input.feedbackBody}`;
+  const pathLine =
+    input.pagePath && input.pagePath.length > 0
+      ? `Page path: \`${input.pagePath}\`\n\n`
+      : "";
+  const prBody = `Automated PR from site widget feedback.\n\n${pathLine}---\n\n${input.feedbackBody}`;
 
   let sandbox: Awaited<ReturnType<typeof Sandbox.create>> | null = null;
 
@@ -170,6 +175,7 @@ export async function startE2bFeedbackAgentWebhook(input: {
       feedbackBody: input.feedbackBody,
       branchName: branch,
       customInstructions: customInstructions ?? null,
+      pagePath: input.pagePath,
     });
     await sandbox.files.write("/home/user/feedback-prompt.txt", prompt);
     await sandbox.files.write("/home/user/f2c-pr-title.txt", prTitle);

@@ -8,6 +8,7 @@ import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 
 const MAX_FEEDBACK_LEN = 2000;
+const MAX_PAGE_PATH_LEN = 2048;
 const LIST_LIMIT = 80;
 const FEEDBACK_QUOTA_LIMIT = 10;
 const FEEDBACK_QUOTA_WINDOW_DAYS = 30;
@@ -79,6 +80,10 @@ export async function POST(request: NextRequest) {
   const text = rawText.trim();
   const pageUrl =
     typeof o.pageUrl === "string" && o.pageUrl.length <= 2000 ? o.pageUrl.trim() : null;
+  const rawPagePath =
+    typeof o.pagePath === "string" && o.pagePath.length <= MAX_PAGE_PATH_LEN
+      ? o.pagePath.trim()
+      : null;
 
   if (text.length === 0) {
     return NextResponse.json(
@@ -97,6 +102,14 @@ export async function POST(request: NextRequest) {
     pageUrl && pageUrl.length > 0 ? pageUrl.slice(0, 2000) : null;
   if (storedPageUrl && isLocalDevPageUrl(storedPageUrl)) {
     storedPageUrl = null;
+  }
+
+  let storedPagePath =
+    rawPagePath && rawPagePath.length > 0
+      ? rawPagePath.slice(0, MAX_PAGE_PATH_LEN)
+      : null;
+  if (storedPagePath && !storedPagePath.startsWith("/")) {
+    storedPagePath = `/${storedPagePath}`.slice(0, MAX_PAGE_PATH_LEN);
   }
 
   const cutoff = quotaCutoffDate();
@@ -128,6 +141,7 @@ export async function POST(request: NextRequest) {
           repositoryConfigId: auth.ctx.repositoryConfigId,
           body: text,
           pageUrl: storedPageUrl,
+          pagePath: storedPagePath,
         },
         select: { id: true, body: true, createdAt: true, status: true },
       });
@@ -170,6 +184,7 @@ export async function POST(request: NextRequest) {
       repo: auth.ctx.repo,
       fullName: auth.ctx.fullName,
       feedbackBody: text,
+      pagePath: storedPagePath,
       dashboardPath,
       githubInstallationId: auth.ctx.githubInstallationId,
     }).catch((err) => {

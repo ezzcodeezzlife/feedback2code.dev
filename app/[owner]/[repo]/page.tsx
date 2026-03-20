@@ -126,6 +126,7 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
             id: true,
             body: true,
             pageUrl: true,
+            pagePath: true,
             createdAt: true,
             status: true,
             prUrl: true,
@@ -365,6 +366,14 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                           <time dateTime={f.createdAt.toISOString()}>
                             {formatRelativeTime(f.createdAt)}
                           </time>
+                          {f.pagePath && (
+                            <span
+                              className="font-mono text-[11px] text-muted-foreground border border-border px-1.5 py-0.5 max-w-[200px] truncate"
+                              title={f.pagePath}
+                            >
+                              {f.pagePath}
+                            </span>
+                          )}
                           {f.pageUrl && !isLocalDevPageUrl(f.pageUrl) && (
                             <a
                               href={f.pageUrl}

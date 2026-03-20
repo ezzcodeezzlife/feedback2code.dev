@@ -216,7 +216,7 @@ var t=ta.value.trim();
 if(!t){statusMsg.textContent="Please write something first.";statusMsg.style.color="#fca5a5";ta.focus();return;}
 statusMsg.textContent="Sending\u2026";statusMsg.style.color=C.muted;
 subBtn.disabled=true;subBtn.style.opacity=".5";subBtn.style.cursor="not-allowed";
-fetch(apiOrigin+"/f",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({w:widgetId,text:t,pageUrl:typeof location!=="undefined"?location.href:""})})
+fetch(apiOrigin+"/f",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({w:widgetId,text:t,pageUrl:typeof location!=="undefined"?location.href:"",pagePath:typeof location!=="undefined"&&location.pathname?location.pathname:""})})
 .then(function(r){return r.json();})
 .then(function(res){
 subBtn.disabled=false;subBtn.style.opacity="";subBtn.style.cursor="";

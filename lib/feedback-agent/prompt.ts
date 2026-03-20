@@ -5,6 +5,7 @@ export function buildOpencodeFeedbackPrompt(input: {
   feedbackBody: string;
   branchName: string;
   customInstructions?: string | null;
+  pagePath?: string | null;
 }): string {
   const trimmed = input.customInstructions?.trim() ?? "";
   const customInstructionsBlock =
@@ -15,9 +16,14 @@ ${trimmed}
 """`
       : "";
 
+  const pagePathLine =
+    input.pagePath && input.pagePath.length > 0
+      ? `The visitor submitted this feedback from page path: \`${input.pagePath}\`.\n\n`
+      : "";
+
   return `You are an autonomous coding agent running inside a cloud sandbox. The repository ${input.fullName} is already cloned in the current working directory.
 
-## User feedback (from an embedded site widget)
+${pagePathLine}## User feedback (from an embedded site widget)
 """
 ${input.feedbackBody}
 """

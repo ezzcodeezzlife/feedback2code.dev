@@ -88,6 +88,8 @@ model WidgetFeedback {
   repositoryConfigId String
   body               String
   pageUrl            String?
+  /// URL pathname where the widget was used, e.g. /blog
+  pagePath           String?
   status             WidgetFeedbackStatus @default(CODING)
   createdAt          DateTime             @default(now())
   e2bSandboxId       String?
