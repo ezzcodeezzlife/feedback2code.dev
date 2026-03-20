@@ -1,6 +1,7 @@
 import { startE2bFeedbackAgentWebhook } from "@/lib/feedback-agent/run-e2b-feedback-agent";
 import { parseWidgetIdFromBody } from "@/lib/widget-embed";
 import { prisma } from "@/lib/prisma";
+import type { WidgetFeedbackStatus } from "@/lib/widget-feedback-status";
 import { isLocalDevPageUrl } from "@/lib/widget-origin";
 import { authorizeWidgetRequest, widgetCorsHeaders } from "@/lib/widget-resolve";
 import { after } from "next/server";
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
     where: { repositoryConfigId: auth.ctx.repositoryConfigId },
     orderBy: { createdAt: "desc" },
     take: LIST_LIMIT,
-    select: { id: true, body: true, createdAt: true },
+    select: { id: true, body: true, createdAt: true, status: true },
   });
 
   return NextResponse.json(
@@ -48,6 +49,7 @@ export async function GET(request: NextRequest) {
         id: r.id,
         body: r.body,
         createdAt: r.createdAt.toISOString(),
+        status: r.status as WidgetFeedbackStatus,
       })),
     },
     { headers: auth.ctx.headers },
@@ -104,6 +106,7 @@ export async function POST(request: NextRequest) {
         id: string;
         body: string;
         createdAt: Date;
+        status: WidgetFeedbackStatus;
       }
     | undefined;
 
@@ -126,7 +129,7 @@ export async function POST(request: NextRequest) {
           body: text,
           pageUrl: storedPageUrl,
         },
-        select: { id: true, body: true, createdAt: true },
+        select: { id: true, body: true, createdAt: true, status: true },
       });
 
       // Log quota usage so we can count efficiently for rolling windows.
@@ -180,6 +183,7 @@ export async function POST(request: NextRequest) {
         id: created.id,
         body: created.body,
         createdAt: created.createdAt.toISOString(),
+        status: created.status,
       },
     },
     { status: 201, headers: auth.ctx.headers },

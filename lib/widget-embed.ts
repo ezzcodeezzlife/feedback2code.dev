@@ -27,6 +27,15 @@ return d.innerHTML;
 function fmt(ts){
 try{return new Date(ts).toLocaleString();}catch(e){return ts;}
 }
+function statusLabel(s){
+switch(s){
+  case "CODING": return "Coding";
+  case "WAITING_FOR_REVIEW": return "Waiting for review";
+  case "MERGED": return "Merged";
+  case "FAILED": return "Failed";
+  default: return s ? String(s) : "";
+}
+}
 function appendRoot(){(document.body||document.documentElement).appendChild(root);}
 fetch(apiOrigin+"/f?w="+encodeURIComponent(widgetId),{method:"GET",credentials:"omit"})
 .then(function(r){return r.json();})
@@ -80,7 +89,7 @@ for(var i=0;i<items.length;i++){
 var it=items[i];
 var row=document.createElement("div");
 row.style.cssText="padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);";
-row.innerHTML='<div style="font-size:11px;color:#888;margin-bottom:4px;">'+esc(fmt(it.createdAt))+'</div><div style="white-space:pre-wrap;word-break:break-word;">'+esc(it.body)+'</div>';
+row.innerHTML='<div style="font-size:11px;color:#888;margin-bottom:4px;">'+esc(fmt(it.createdAt))+'</div><div style="font-size:10px;color:#666;margin-bottom:6px;">Status: '+esc(statusLabel(it.status))+'</div><div style="white-space:pre-wrap;word-break:break-word;">'+esc(it.body)+'</div>';
 listEl.appendChild(row);
 }
 }
