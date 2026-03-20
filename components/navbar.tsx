@@ -27,7 +27,11 @@ export default async function Navbar() {
 
         {user ? (
           <div className="flex items-center gap-4 text-sm">
-            <div className="hidden sm:flex items-center gap-3">
+            <Link
+              href="/account"
+              className="group hidden sm:flex items-center gap-3 rounded-sm bg-transparent px-2 py-1.5 text-muted-foreground transition-all duration-150 hover:bg-surface-raised hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              aria-label="Open account page"
+            >
               {user.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -37,17 +41,17 @@ export default async function Navbar() {
                   height={28}
                   loading="lazy"
                   referrerPolicy="no-referrer"
-                  className="h-8 w-8 rounded-full border border-border object-cover"
+                  className="h-8 w-8 rounded-full border-2 border-border object-cover transition-colors group-hover:border-accent"
                 />
               ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface-raised text-xs font-medium text-muted-foreground">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-border bg-surface-raised text-xs font-medium text-muted-foreground transition-colors group-hover:border-accent group-hover:text-foreground">
                   {userInitial}
                 </div>
               )}
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground transition-colors group-hover:text-foreground">
                 {displayName}
               </span>
-            </div>
+            </Link>
 
             <NavbarAuthActions isAuthed />
           </div>

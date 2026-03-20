@@ -69,19 +69,12 @@ type DashboardViewProps = {
   >;
   manageAccessUrl: string;
   repositoriesError?: string;
-  feedbackQuota: {
-    limit: number;
-    used: number;
-    remaining: number;
-    resetAtIso: string | null;
-  };
 };
 
 export default function DashboardView({
   repositories,
   manageAccessUrl,
   repositoriesError,
-  feedbackQuota,
 }: DashboardViewProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -105,11 +98,6 @@ export default function DashboardView({
       return timeB - timeA;
     });
   }, [repositories, query, sortBy]);
-
-  const quotaPercent =
-    feedbackQuota.limit > 0
-      ? Math.round((feedbackQuota.used / feedbackQuota.limit) * 100)
-      : 0;
 
   return (
     <PageShell>
@@ -342,37 +330,6 @@ export default function DashboardView({
         </div>
       )}
 
-      {/* Quota section */}
-      <section className="mt-8 border border-border bg-surface p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-accent" />
-            <h2 className="text-sm font-bold uppercase tracking-wider">
-              Feedback Quota
-            </h2>
-          </div>
-          <span className="text-sm text-muted-foreground">
-            {feedbackQuota.used} / {feedbackQuota.limit} used
-          </span>
-        </div>
-        <div className="h-1.5 w-full bg-border overflow-hidden">
-          <div
-            className="h-full bg-accent transition-all duration-500"
-            style={{ width: `${quotaPercent}%` }}
-          />
-        </div>
-        <div className="mt-3 flex items-center justify-between text-xs text-muted">
-          <span>{feedbackQuota.remaining} remaining</span>
-          {feedbackQuota.resetAtIso ? (
-            <span>
-              Resets{" "}
-              {new Date(feedbackQuota.resetAtIso).toISOString().slice(0, 10)}
-            </span>
-          ) : (
-            <span>30-day rolling window</span>
-          )}
-        </div>
-      </section>
     </PageShell>
   );
 }
