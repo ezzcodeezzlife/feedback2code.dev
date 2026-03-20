@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const MAX_FEEDBACK_LEN = 2000;
 const LIST_LIMIT = 80;
-const FEEDBACK_QUOTA_LIMIT = 100;
+const FEEDBACK_QUOTA_LIMIT = 10;
 const FEEDBACK_QUOTA_WINDOW_DAYS = 30;
 
 class FeedbackQuotaExceededError extends Error {

@@ -12,7 +12,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
     <select
       ref={ref}
       className={cn(
-        "flex h-9 w-full rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm outline-none ring-0 focus:border-black/30 dark:border-white/20 dark:focus:border-white/40",
+        "flex h-9 w-full border border-border bg-surface pl-3 pr-8 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent/30",
         className,
       )}
       {...props}
@@ -21,4 +21,3 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
 });
 
 export default Select;
-

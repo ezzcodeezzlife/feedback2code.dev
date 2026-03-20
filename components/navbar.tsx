@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 import NavbarAuthActions from "./navbar-auth-actions";
+import Link from "next/link";
 import { MessageSquareCode } from "lucide-react";
 
 export default async function Navbar() {
@@ -13,48 +14,40 @@ export default async function Navbar() {
       : "?";
 
   return (
-    <header className="border-b border-black/10 bg-white dark:border-white/15 dark:bg-black">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
-        <div className="inline-flex items-center gap-1 rounded-md text-zinc-900 dark:text-zinc-100">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-md text-zinc-900 dark:text-zinc-100">
-            <MessageSquareCode className="h-5 w-5" strokeWidth={2.5} />
+    <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+        <Link href="/" className="group flex items-center gap-1">
+          <span className="flex h-9 w-9 items-center justify-center text-accent text-xs font-bold">
+            <MessageSquareCode className="h-5 w-5" aria-hidden="true" />
           </span>
-          <span className="text-lg font-bold tracking-tight">
-            <span className="bg-linear-to-r from-black to-zinc-600 bg-clip-text text-transparent dark:from-white dark:to-zinc-300">
-              feedback2code.com
-            </span>
+          <span className="text-sm font-bold tracking-wider uppercase text-foreground group-hover:text-accent transition-colors">
+            feedback2code
           </span>
-        </div>
+        </Link>
 
         {user ? (
-          <div className="flex items-center gap-3 text-sm">
-            <div className="text-right">
-              <p className="font-medium leading-none">
+          <div className="flex items-center gap-4 text-sm">
+            <div className="hidden sm:flex items-center gap-3">
+              {user.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.image}
+                  alt={`${displayName} profile`}
+                  width={28}
+                  height={28}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  className="h-8 w-8 rounded-full border border-border object-cover"
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface-raised text-xs font-medium text-muted-foreground">
+                  {userInitial}
+                </div>
+              )}
+              <span className="text-xs text-muted-foreground">
                 {displayName}
-              </p>
-              {user.email ? (
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  {user.email}
-                </p>
-              ) : null}
+              </span>
             </div>
-
-            {user.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={user.image}
-                alt={`${displayName} profile`}
-                width={36}
-                height={36}
-                loading="lazy"
-                referrerPolicy="no-referrer"
-                className="h-9 w-9 rounded-full border border-black/10 object-cover dark:border-white/15"
-              />
-            ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-zinc-100 text-xs font-medium text-zinc-700 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-200">
-                {userInitial}
-              </div>
-            )}
 
             <NavbarAuthActions isAuthed />
           </div>

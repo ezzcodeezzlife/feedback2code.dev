@@ -16,8 +16,6 @@ const ToastViewport = React.forwardRef<
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
-      // Always anchor toast stack to the top-right corner.
-      // `w-full` + `max-w-[420px]` keeps the toasts responsive on small screens.
       "fixed top-0 right-0 z-100 flex max-h-screen w-full max-w-[420px] flex-col-reverse p-4",
       className,
     )}
@@ -27,14 +25,13 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-2 overflow-hidden rounded-md border px-3 py-2 pr-8 shadow-lg outline-none data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out",
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-2 overflow-hidden border px-3 py-2 pr-8 shadow-lg outline-none data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out",
   {
     variants: {
       variant: {
-        default:
-          "border-black/10 bg-white text-zinc-900 dark:border-white/15 dark:bg-black dark:text-zinc-100",
+        default: "border-border bg-surface-raised text-foreground",
         destructive:
-          "border-red-200 bg-red-50 text-red-900 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-100",
+          "border-red-900/40 bg-red-950/40 text-red-100",
       },
     },
     defaultVariants: {
@@ -46,11 +43,7 @@ const toastVariants = cva(
 type ToastProps = React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
   VariantProps<typeof toastVariants>;
 
-function Toast({
-  className,
-  variant,
-  ...props
-}: ToastProps) {
+function Toast({ className, variant, ...props }: ToastProps) {
   return (
     <ToastPrimitives.Root
       className={cn(toastVariants({ variant }), className)}
@@ -68,7 +61,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-zinc-500 opacity-0 transition-opacity hover:text-zinc-900 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-black/20 dark:text-zinc-400 dark:hover:text-zinc-100 dark:focus:ring-white/20",
+      "absolute right-2 top-2 rounded-md p-1 text-muted opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-accent",
       className,
     )}
     toast-close=""
@@ -112,4 +105,3 @@ export {
   ToastTitle,
   ToastDescription,
 };
-

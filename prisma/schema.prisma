@@ -102,7 +102,7 @@ model WidgetFeedback {
 }
 
 /**
- * Tracks feedback submissions per user so we can enforce a rolling "100 feedbacks per 30 days"
+ * Tracks feedback submissions per user so we can enforce a rolling "10 feedbacks per 30 days"
  * quota efficiently via an indexed (userId, createdAt) range query.
  */
 model UserFeedbackLimitEvent {

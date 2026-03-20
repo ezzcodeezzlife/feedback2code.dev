@@ -1,9 +1,5 @@
 import type { ReactNode } from "react";
-import { Card } from "@/components/ui/card";
 
-/**
- * Shared outer width + padding for dashboard-style pages (matches across routes).
- */
 export function PageShell({
   children,
   className,
@@ -13,16 +9,13 @@ export function PageShell({
 }) {
   return (
     <main
-      className={`mx-auto flex w-full max-w-5xl flex-1 px-6 py-10 ${className ?? ""}`}
+      className={`mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-8 ${className ?? ""}`}
     >
       {children}
     </main>
   );
 }
 
-/**
- * Shared card panel inside PageShell.
- */
 export function PagePanel({
   children,
   className,
@@ -31,8 +24,15 @@ export function PagePanel({
   className?: string;
 }) {
   return (
-    <Card className={["w-full", className ?? ""].filter(Boolean).join(" ")}>
+    <div
+      className={[
+        "w-full border border-border bg-surface",
+        className ?? "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       {children}
-    </Card>
+    </div>
   );
 }

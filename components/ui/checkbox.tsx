@@ -3,16 +3,15 @@ import type { InputHTMLAttributes } from "react";
 
 export type CheckboxProps = InputHTMLAttributes<HTMLInputElement>;
 
-export default function Checkbox({
-  className,
-  ...props
-}: CheckboxProps) {
+export default function Checkbox({ className, ...props }: CheckboxProps) {
   return (
     <input
       type="checkbox"
-      className={cn("h-4 w-4 accent-black dark:accent-white", className)}
+      className={cn(
+        "h-4 w-4 accent-accent bg-surface border-border cursor-pointer",
+        className,
+      )}
       {...props}
     />
   );
 }
-

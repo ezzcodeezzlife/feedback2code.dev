@@ -1,5 +1,5 @@
 import { authOptions } from "@/auth";
-import { PagePanel, PageShell } from "@/components/layout/page-shell";
+import { PageShell } from "@/components/layout/page-shell";
 import AuthorizedDomainsFields from "@/components/repo/authorized-domains-fields";
 import EmbedSnippetCopy from "@/components/repo/embed-snippet-copy";
 import { createWidgetId } from "@/lib/widget-embed";
@@ -11,11 +11,20 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Button, { buttonVariants } from "@/components/ui/button";
-import Checkbox from "@/components/ui/checkbox";
 import Textarea from "@/components/ui/textarea";
 import { SaveToast } from "@/components/repo/save-toast";
 import { SonnerToaster } from "@/components/ui/sonner-toaster";
-import { SubmitEmailOnToggle } from "@/components/repo/submit-email-on-toggle";
+import { EmailNotificationToggle } from "@/components/repo/email-notification-toggle";
+import {
+  ArrowLeft,
+  Globe,
+  Mail,
+  Code,
+  MessageSquare,
+  ExternalLink,
+  AlertCircle,
+  Bot,
+} from "lucide-react";
 
 type PageProps = {
   params: Promise<{
@@ -23,6 +32,20 @@ type PageProps = {
     repo: string;
   }>;
 };
+
+function formatRelativeTime(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
 
 export default async function RepositorySettingsPage({ params }: PageProps) {
   const { owner, repo } = await params;
@@ -45,7 +68,6 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
   const fullName = `${owner}/${repo}`;
   type ExistingRepositoryConfigSelected = {
     id: string;
-    // Stored as Json in Prisma; we validate at runtime before using.
     authorizedDomains: unknown;
     widgetId: string;
     receivePrCreatedEmail: boolean;
@@ -152,8 +174,6 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
       typeof saveSection === "string" && saveSection.length > 0
         ? saveSection
         : "settings";
-    // Add a nonce so the client can suppress React StrictMode double-mount
-    // without blocking future saves of the same section.
     const toastNonce = Date.now().toString();
     redirect(
       `/${owner}/${repo}?saved=${encodeURIComponent(saved)}&toast=${toastNonce}`,
@@ -170,94 +190,255 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
       ? `${forwardedProto ?? "http"}://${forwardedHost}`
       : "http://localhost:3000");
 
+  const hasAuthorizedDomains = domains.length > 0;
+
   const embedScript =
     existing?.widgetId != null
       ? `<script src="${baseUrl}/widget/${existing.widgetId}" async></script>`
       : null;
 
+  const embedScriptPreview =
+    existing?.widgetId != null
+      ? `<script src="${baseUrl}/widget/${existing.widgetId}" async></script>`
+      : `<script src="${baseUrl}/widget/YOUR_WIDGET_ID" async></script>`;
+
   return (
     <PageShell>
-      <PagePanel>
-        <div className="mb-6">
-          <div className="mb-4">
-            <Link
-              href="/"
-              className={buttonVariants({ variant: "outline", size: "lg" })}
-            >
-              Back to dashboard
-            </Link>
-          </div>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">Repository</p>
-          <h1 className="text-2xl font-semibold tracking-tight">{fullName}</h1>
+      {/* Breadcrumb + header */}
+      <div className="mb-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors mb-4"
+        >
+          <ArrowLeft className="h-3 w-3" />
+          Back to dashboard
+        </Link>
+        <div className="flex items-center gap-3">
+          <p className="text-xs uppercase tracking-widest text-accent">
+            [ Configure ]
+          </p>
         </div>
+        <h1 className="text-2xl font-bold tracking-tight mt-1">
+          {fullName}
+        </h1>
+      </div>
 
-        <form action={saveAuthorizedDomains} className="space-y-4">
+      <form action={saveAuthorizedDomains} className="space-y-0">
+        {/* Section: Authorized Domains */}
+        <section className="border border-border bg-surface p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Globe className="h-4 w-4 text-accent" />
+            <h2 className="text-sm font-bold uppercase tracking-wider">
+              Authorized Domains
+            </h2>
+          </div>
+
           <AuthorizedDomainsFields initialDomains={domains} />
 
-          <div className="flex items-center gap-2">
+          <div className="mt-4">
             <Button
               type="submit"
-              size="lg"
+              size="default"
               name="saveSection"
               value="domains"
+              className="bg-white text-black hover:bg-white border border-white"
             >
-              Save
+              Save Domains
             </Button>
           </div>
+        </section>
 
-          <div className="mt-8 border-t border-black/10 pt-8 dark:border-white/15">
-            <h2 className="text-lg font-semibold tracking-tight">
-              Email me when feedback creates a PR
-            </h2>
-            <div className="mt-4 flex items-start gap-3 rounded-lg border border-black/10 bg-white/60 p-3 dark:border-white/15 dark:bg-zinc-950/40">
-              <Checkbox
-                id="receivePrCreatedEmail"
-                name="receivePrCreatedEmail"
-                type="checkbox"
-                value="on"
-                defaultChecked={existing?.receivePrCreatedEmail ?? true}
-                className="mt-1"
-              />
-              <div className="space-y-1">
-                <label
-                  htmlFor="receivePrCreatedEmail"
-                  className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
-                >
-                  Email me when feedback creates a PR
-                  {user.email ? (
-                    <span className="ml-2 text-xs font-normal text-zinc-500 dark:text-zinc-400">
-                      ({user.email})
-                    </span>
-                  ) : null}
-                </label>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  When enabled, you’ll get a notification once a PR is created
-                  from submitted feedback in this repository.
+        {/* Section: Embed Widget */}
+        <section className="border border-border border-t-0 bg-surface p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Code className="h-4 w-4 text-accent" />
+            <h2 className="text-sm font-bold uppercase tracking-wider">Embed Widget</h2>
+          </div>
+
+          {embedScript && hasAuthorizedDomains ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                One-line embed. Paste this snippet into the HTML of your site where
+                you want the feedback widget to appear — typically right before
+                <code className="mx-1 px-1 py-0.5 rounded border border-border-bright bg-background/60">
+                  {"</body>"}
+                </code>
+              </p>
+              <EmbedSnippetCopy code={embedScript} />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="border border-dashed border-border-bright bg-background/40 p-4">
+                <p className="text-sm text-muted-foreground mb-2">
+                  <span className="font-medium text-foreground">One-line embed</span>
+                  . Paste this script into your page HTML to load the widget (textarea
+                  + submit button).
+                </p>
+                <div className="rounded border border-border bg-background/60 px-3 py-2 opacity-70">
+                  <code className="block overflow-x-auto text-xs text-muted-foreground whitespace-nowrap">
+                    {embedScriptPreview}
+                  </code>
+                </div>
+                <p className="mt-2 text-xs text-muted text-left">
+                  {embedScript
+                    ? "Add at least one authorized domain to create the embed widget JavaScript."
+                    : "Save your configuration first to generate the embed snippet."}
                 </p>
               </div>
             </div>
+          )}
+        </section>
 
-            <button
-              id="saveEmailSubmit"
-              type="submit"
-              name="saveSection"
-              value="email"
-              className="hidden"
-              aria-hidden="true"
-              tabIndex={-1}
-            />
-            <SubmitEmailOnToggle />
-          </div>
+        {hasAuthorizedDomains ? (
+          <>
+            {/* Section: Submitted Feedback */}
+            <section className="border border-border border-t-0 bg-surface p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-accent" />
+                  <h2 className="text-sm font-bold uppercase tracking-wider">
+                    Submitted Feedback
+                  </h2>
+                  {feedbacks.length > 0 && (
+                    <span className="text-xs text-accent border border-accent px-1.5 py-0.5 ml-1">
+                      {feedbacks.length}
+                    </span>
+                  )}
+                </div>
+                <Link
+                  href={`/${owner}/${repo}`}
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  Refresh
+                </Link>
+              </div>
 
-          <div className="mt-8 border-t border-black/10 pt-8 dark:border-white/15">
-            <h2 className="text-lg font-semibold tracking-tight">
-              Agent instructions
-            </h2>
-            <div className="mt-4 space-y-2 rounded-lg border border-black/10 bg-white/60 p-3 dark:border-white/15 dark:bg-zinc-950/40">
-              <label
-                htmlFor="customInstructions"
-                className="sr-only"
-              >
+              {!existing ? (
+                <div className="border border-dashed border-border-bright p-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Save this repository once to start collecting feedback.
+                  </p>
+                </div>
+              ) : feedbacks.length === 0 ? (
+                <div className="border border-dashed border-border-bright p-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No submissions yet. Entries appear here once visitors post from
+                    the widget.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {feedbacks.map((f) => (
+                    <div
+                      key={f.id}
+                      className="border border-border bg-background p-4 group hover:border-border-bright transition-colors"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-3 text-xs text-muted">
+                          <time dateTime={f.createdAt.toISOString()}>
+                            {formatRelativeTime(f.createdAt)}
+                          </time>
+                          {f.pageUrl && !isLocalDevPageUrl(f.pageUrl) && (
+                            <a
+                              href={f.pageUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 max-w-[250px] truncate text-muted-foreground hover:text-accent transition-colors"
+                            >
+                              {f.pageUrl}
+                              <ExternalLink className="h-3 w-3 shrink-0" />
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="text-[11px] uppercase tracking-wider border border-border px-2 py-0.5 text-muted-foreground"
+                            title={
+                              f.e2bSandboxId
+                                ? `E2B sandbox: ${f.e2bSandboxId}`
+                                : undefined
+                            }
+                          >
+                            {feedbackStatusLabel(f.status)}
+                          </span>
+                          {f.prUrl && (
+                            <a
+                              href={f.prUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] uppercase tracking-wider bg-accent text-black px-2 py-0.5 font-medium hover:bg-accent-hover transition-colors"
+                            >
+                              View PR
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {f.agentError && (
+                        <div className="flex items-start gap-2 mb-2 border border-red-900/40 bg-red-950/30 p-2">
+                          <AlertCircle className="h-3.5 w-3.5 text-red-400 mt-0.5 shrink-0" />
+                          <pre className="text-[11px] leading-snug text-red-400 overflow-auto max-h-32">
+                            {f.agentError}
+                          </pre>
+                        </div>
+                      )}
+
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                        {f.body}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Section: Email Notifications */}
+            <section className="border border-border border-t-0 bg-surface p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Mail className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-bold uppercase tracking-wider">
+                  Email Notifications
+                </h2>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <EmailNotificationToggle
+                  defaultChecked={existing?.receivePrCreatedEmail ?? true}
+                />
+                <div>
+                  <span className="text-sm text-foreground">
+                    Email me when feedback creates a PR
+                  </span>
+                  {user.email && (
+                    <span className="ml-2 text-xs text-muted">({user.email})</span>
+                  )}
+                  <p className="text-xs text-muted mt-1">
+                    Get notified once a PR is opened from submitted feedback.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                id="saveEmailSubmit"
+                type="submit"
+                name="saveSection"
+                value="email"
+                className="hidden"
+                aria-hidden="true"
+                tabIndex={-1}
+              />
+            </section>
+
+            {/* Section: Agent Instructions */}
+            <section className="border border-border border-t-0 bg-surface p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Bot className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-bold uppercase tracking-wider">
+                  Custom Agent Instructions
+                </h2>
+              </div>
+
+              <label htmlFor="customInstructions" className="sr-only">
                 Agent instructions (optional)
               </label>
               <Textarea
@@ -265,123 +446,38 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                 name="customInstructions"
                 rows={4}
                 defaultValue={existing?.customInstructions ?? ""}
-                placeholder="e.g., Always add a title called prototype to the index! Leave empty to use default behavior."
+                placeholder='e.g., "Always use TailwindCSS for styling!" — Leave empty for default behavior.'
               />
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Included in the agent prompt for every submitted feedback in
-                this repository.
+              <p className="text-xs text-muted mt-2">
+                Included in the agent prompt for every feedback submission.
+              </p>
+
+              <div className="mt-4">
+                <Button
+                  type="submit"
+                  size="default"
+                  name="saveSection"
+                  value="instructions"
+                  className="bg-white text-black hover:bg-white border border-white"
+                >
+                  Save Instructions
+                </Button>
+              </div>
+            </section>
+          </>
+        ) : (
+          <section className="border border-border border-t-0 bg-surface p-6">
+            <div className="flex items-start gap-3 rounded border border-accent/30 bg-accent/5 p-3">
+              <AlertCircle className="h-4 w-4 text-accent mt-0.5 shrink-0" />
+              <p className="text-sm text-accent-foreground">
+                Add at least one authorized domain to unlock feedback, email
+                notifications, and agent instructions.
               </p>
             </div>
+          </section>
+        )}
+      </form>
 
-            <div className="flex items-center gap-2 mt-4">
-              <Button
-                type="submit"
-                size="lg"
-                name="saveSection"
-                value="instructions"
-              >
-                Save
-              </Button>
-            </div>
-          </div>
-
-        </form>
-
-        <div className="mt-8 border-t border-black/10 pt-8 dark:border-white/15">
-          <h2 className="text-lg font-semibold tracking-tight">Embed widget</h2>
-
-          {embedScript ? (
-            <EmbedSnippetCopy code={embedScript} />
-          ) : (
-            <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-              Save this configuration once to generate your embed snippet and widget
-              ID.
-            </p>
-          )}
-        </div>
-
-        <div className="mt-8 border-t border-black/10 pt-8 dark:border-white/15">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold tracking-tight">
-              Submitted feedback
-            </h2>
-            <Link
-              href={`/${owner}/${repo}`}
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              Refresh
-            </Link>
-          </div>
-          {!existing ? (
-            <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-              Save this repository once to start collecting feedback from embedded
-              sites.
-            </p>
-          ) : feedbacks.length === 0 ? (
-            <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-              No submissions yet. After visitors post from the widget, entries appear
-              here.
-            </p>
-          ) : (
-            <ul className="mt-4 space-y-4">
-              {feedbacks.map((f) => (
-                <li
-                  key={f.id}
-                  className="rounded-lg border border-black/10 bg-zinc-50/80 p-4 dark:border-white/15 dark:bg-zinc-950/80"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                    <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <time dateTime={f.createdAt.toISOString()}>
-                        {f.createdAt.toLocaleString()}
-                      </time>
-                      {f.pageUrl && !isLocalDevPageUrl(f.pageUrl) ? (
-                        <a
-                          href={f.pageUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="max-w-[min(100%,280px)] truncate font-medium text-zinc-700 underline decoration-zinc-400 underline-offset-2 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
-                        >
-                          {f.pageUrl}
-                        </a>
-                      ) : null}
-                    </div>
-                    <div className="flex flex-wrap items-center justify-end gap-2">
-                      <span
-                        className="rounded-full border border-black/15 bg-white px-2.5 py-0.5 text-[11px] font-medium text-zinc-800 dark:border-white/20 dark:bg-zinc-900 dark:text-zinc-200"
-                        title={
-                          f.e2bSandboxId
-                            ? `E2B sandbox: ${f.e2bSandboxId}`
-                            : undefined
-                        }
-                      >
-                        {feedbackStatusLabel(f.status)}
-                      </span>
-                      {f.prUrl ? (
-                        <a
-                          href={f.prUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[11px] font-medium text-white hover:bg-emerald-700"
-                        >
-                          View PR
-                        </a>
-                      ) : null}
-                    </div>
-                  </div>
-                  {f.agentError ? (
-                    <pre className="mt-2 max-h-32 overflow-auto rounded-md border border-red-200 bg-red-50 p-2 text-[11px] leading-snug text-red-900 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-100">
-                      {f.agentError}
-                    </pre>
-                  ) : null}
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-900 dark:text-zinc-100">
-                    {f.body}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </PagePanel>
       <SonnerToaster />
       <SaveToast />
     </PageShell>

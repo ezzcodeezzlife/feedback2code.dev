@@ -1,13 +1,20 @@
 import { createPrivateKey } from "node:crypto";
 import { SignJWT, importPKCS8 } from "jose";
 
-type InstalledRepo = {
+export type InstalledRepo = {
   id: number;
   name: string;
   full_name: string;
   html_url: string;
   private: boolean;
   pushed_at?: string;
+
+  // Extra fields for richer dashboard cards.
+  description?: string | null;
+  language?: string | null;
+  stargazers_count?: number;
+  forks_count?: number;
+  open_issues_count?: number;
 };
 
 function getPrivateKey() {
@@ -75,7 +82,9 @@ export async function getInstallationAccessToken(
   return data.token;
 }
 
-export async function getInstallationRepositories(installationId: string) {
+export async function getInstallationRepositories(
+  installationId: string,
+): Promise<InstalledRepo[]> {
   const token = await getInstallationAccessToken(installationId);
 
   const response = await fetch(

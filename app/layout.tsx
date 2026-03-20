@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import AuthSessionProvider from "@/components/session-provider";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -16,7 +11,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "feedback2code",
-  description: "feedback2code project",
+  description: "Turn user feedback into code changes — automatically",
 };
 
 export default function RootLayout({
@@ -25,11 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-black">
+    <html lang="en" className={`${geistMono.variable} h-full antialiased dark`}>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
         <Navbar />
         <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>

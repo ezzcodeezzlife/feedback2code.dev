@@ -13,22 +13,22 @@ export default function NavbarAuthActions({ isAuthed }: Props) {
     <Button
       type="button"
       onClick={() => signOut({ callbackUrl: "/" })}
-      variant="outline"
+      variant="ghost"
+      size="default"
       className="cursor-pointer"
     >
-      <LogOut className="h-4 w-4" />
-      Logout
+      <LogOut className="h-3.5 w-3.5" />
+      Sign out
     </Button>
   ) : (
     <Button
       type="button"
       onClick={() => signIn("github", { callbackUrl: "/" })}
-      size="sm"
+      size="default"
       className="cursor-pointer"
     >
-      <Github className="h-4 w-4" />
-      Login with GitHub
+      <Github className="h-3.5 w-3.5" />
+      Sign in
     </Button>
   );
 }
-

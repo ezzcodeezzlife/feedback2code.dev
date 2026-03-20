@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
+import { Plus, X } from "lucide-react";
 
 type Props = {
   initialDomains: string[];
@@ -32,8 +33,10 @@ export default function AuthorizedDomainsFields({ initialDomains }: Props) {
 
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between">
-        <label className="block text-sm font-medium">Authorized domains</label>
+      <div className="mb-3 flex items-center justify-between">
+        <label className="text-xs uppercase tracking-widest text-muted-foreground">
+          Authorized domains
+        </label>
         <Button
           type="button"
           onClick={addDomain}
@@ -41,7 +44,7 @@ export default function AuthorizedDomainsFields({ initialDomains }: Props) {
           size="icon"
           aria-label="Add authorized domain"
         >
-          +
+          <Plus className="h-3.5 w-3.5" />
         </Button>
       </div>
 
@@ -58,17 +61,18 @@ export default function AuthorizedDomainsFields({ initialDomains }: Props) {
             <Button
               type="button"
               onClick={() => removeDomain(index)}
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="icon"
+              aria-label="Remove domain"
             >
-              Remove
+              <X className="h-3.5 w-3.5" />
             </Button>
           </div>
         ))}
       </div>
 
-      <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-        Add one domain per field.
+      <p className="mt-2 text-xs text-muted">
+        One domain per field. Only these origins can load the widget.
       </p>
     </div>
   );

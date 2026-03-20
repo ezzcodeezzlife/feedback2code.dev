@@ -4,21 +4,19 @@ import { forwardRef } from "react";
 
 export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement>;
 
-const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { className, ...props },
-  ref,
-) {
-  return (
-    <textarea
-      ref={ref}
-      className={cn(
-        "flex min-h-[84px] w-full rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm outline-none ring-0 placeholder:text-zinc-400 focus:border-black/30 dark:border-white/20 dark:focus:border-white/40 disabled:cursor-not-allowed disabled:opacity-50",
-        className,
-      )}
-      {...props}
-    />
-  );
-});
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
+  function Textarea({ className, ...props }, ref) {
+    return (
+      <textarea
+        ref={ref}
+        className={cn(
+          "flex min-h-[84px] w-full border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted transition-colors focus:border-accent focus:ring-1 focus:ring-accent/30 disabled:cursor-not-allowed disabled:opacity-40",
+          className,
+        )}
+        {...props}
+      />
+    );
+  },
+);
 
 export default Textarea;
-

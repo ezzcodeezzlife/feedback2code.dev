@@ -1,19 +1,11 @@
 import { authOptions } from "@/auth";
 import DashboardView from "@/components/home/dashboard-view";
 import LandingView from "@/components/home/landing-view";
+import type { InstalledRepo } from "@/lib/github-app";
 import { getInstallationRepositories } from "@/lib/github-app";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-
-type InstalledRepo = {
-  id: number;
-  name: string;
-  full_name: string;
-  html_url: string;
-  private: boolean;
-  pushed_at?: string;
-};
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -22,7 +14,7 @@ export default async function Home() {
     return <LandingView />;
   }
 
-  const FEEDBACK_QUOTA_LIMIT = 100;
+  const FEEDBACK_QUOTA_LIMIT = 10;
   const FEEDBACK_QUOTA_WINDOW_DAYS = 30;
   const now = new Date();
   const cutoff = new Date(
@@ -76,11 +68,59 @@ export default async function Home() {
     repositoriesError =
       error instanceof Error ? error.message : "Failed to load repositories.";
   }
+
+  // Enrich the GitHub repo list with your DB data (feedback counts + latest feedback).
+  const fullNames = repos.map((r) => r.full_name);
+
+  const repoConfigStats =
+    fullNames.length > 0
+      ? await prisma.repositoryConfig.findMany({
+          where: {
+            userId: user.id,
+            fullName: { in: fullNames },
+          },
+          select: {
+            fullName: true,
+            _count: { select: { widgetFeedbacks: true } },
+            widgetFeedbacks: {
+              take: 1,
+              orderBy: { createdAt: "desc" },
+              select: {
+                status: true,
+                createdAt: true,
+                body: true,
+              },
+            },
+          },
+        })
+      : [];
+
+  const repoConfigStatsByFullName = new Map(
+    repoConfigStats.map((cfg) => [cfg.fullName, cfg]),
+  );
+
+  const enrichedRepos = repos.map((repo) => {
+    const cfg = repoConfigStatsByFullName.get(repo.full_name);
+    const latest = cfg?.widgetFeedbacks?.[0];
+
+    return {
+      ...repo,
+      feedbackCount: cfg?._count?.widgetFeedbacks ?? 0,
+      latestFeedback: latest
+        ? {
+            status: latest.status,
+            createdAtIso: latest.createdAt.toISOString(),
+            body: latest.body,
+          }
+        : null,
+    };
+  });
+
   const manageAccessUrl = `https://github.com/settings/installations/${user.githubInstallationId}`;
 
   return (
     <DashboardView
-      repositories={repos}
+      repositories={enrichedRepos}
       manageAccessUrl={manageAccessUrl}
       repositoriesError={repositoriesError}
       feedbackQuota={{
