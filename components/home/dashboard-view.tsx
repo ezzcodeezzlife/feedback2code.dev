@@ -4,6 +4,13 @@ import { PagePanel, PageShell } from "@/components/layout/page-shell";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+function formatUtcDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  // Deterministic across server/client and user locales.
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
 type Repo = {
   id: number;
   name: string;
@@ -17,12 +24,20 @@ type DashboardViewProps = {
   repositories: Repo[];
   manageAccessUrl: string;
   repositoriesError?: string;
+  feedbackQuota: {
+    limit: number;
+    used: number;
+    remaining: number;
+    /** ISO timestamp when the oldest in-window submission falls out of the window. */
+    resetAtIso: string | null;
+  };
 };
 
 export default function DashboardView({
   repositories,
   manageAccessUrl,
   repositoriesError,
+  feedbackQuota,
 }: DashboardViewProps) {
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"recent" | "name">("recent");
@@ -47,6 +62,29 @@ export default function DashboardView({
   return (
     <PageShell>
       <PagePanel>
+        <div className="mb-6 rounded-md border border-black/10 p-4 dark:border-white/15">
+          <h2 className="text-lg font-semibold tracking-tight">Feedback quota</h2>
+          <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
+            Used {feedbackQuota.used} / {feedbackQuota.limit} in the last 30 days.
+          </p>
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            Remaining:{" "}
+            <span className="font-medium">
+              {feedbackQuota.remaining}
+            </span>
+          </p>
+          {feedbackQuota.resetAtIso ? (
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              Next slot expected on{" "}
+              {formatUtcDate(feedbackQuota.resetAtIso)}.
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              Submit your first feedback to start tracking usage.
+            </p>
+          )}
+        </div>
+
         <div className="mb-5 flex items-center justify-between">
           <h1 className="text-2xl font-semibold tracking-tight">
             Installed Repositories

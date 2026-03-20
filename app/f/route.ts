@@ -8,6 +8,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 const MAX_FEEDBACK_LEN = 2000;
 const LIST_LIMIT = 80;
+const FEEDBACK_QUOTA_LIMIT = 100;
+const FEEDBACK_QUOTA_WINDOW_DAYS = 30;
+
+class FeedbackQuotaExceededError extends Error {
+  constructor() {
+    super("FEEDBACK_QUOTA_EXCEEDED");
+  }
+}
+
+function quotaCutoffDate(now = Date.now()) {
+  return new Date(now - FEEDBACK_QUOTA_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+}
 
 export async function OPTIONS(request: NextRequest) {
   const origin = request.headers.get("Origin");
@@ -85,14 +97,66 @@ export async function POST(request: NextRequest) {
     storedPageUrl = null;
   }
 
-  const created = await prisma.widgetFeedback.create({
-    data: {
-      repositoryConfigId: auth.ctx.repositoryConfigId,
-      body: text,
-      pageUrl: storedPageUrl,
-    },
-    select: { id: true, body: true, createdAt: true },
-  });
+  const cutoff = quotaCutoffDate();
+
+  let created:
+    | {
+        id: string;
+        body: string;
+        createdAt: Date;
+      }
+    | undefined;
+
+  try {
+    created = await prisma.$transaction(async (tx) => {
+      const usedInWindow = await tx.userFeedbackLimitEvent.count({
+        where: {
+          userId: auth.ctx.userId,
+          createdAt: { gte: cutoff },
+        },
+      });
+
+      if (usedInWindow >= FEEDBACK_QUOTA_LIMIT) {
+        throw new FeedbackQuotaExceededError();
+      }
+
+      const created = await tx.widgetFeedback.create({
+        data: {
+          repositoryConfigId: auth.ctx.repositoryConfigId,
+          body: text,
+          pageUrl: storedPageUrl,
+        },
+        select: { id: true, body: true, createdAt: true },
+      });
+
+      // Log quota usage so we can count efficiently for rolling windows.
+      await tx.userFeedbackLimitEvent.create({
+        data: {
+          userId: auth.ctx.userId,
+          widgetFeedbackId: created.id,
+        },
+      });
+
+      return created;
+    });
+  } catch (err) {
+    if (err instanceof FeedbackQuotaExceededError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: `Feedback quota exceeded. You can submit at most ${FEEDBACK_QUOTA_LIMIT} feedbacks per ${FEEDBACK_QUOTA_WINDOW_DAYS} days.`,
+        },
+        { status: 429, headers: auth.ctx.headers },
+      );
+    }
+    throw err;
+  }
+
+  if (!created) {
+    // Should be impossible because the quota-exceeded branch returns above,
+    // but keep TS control-flow sound.
+    throw new Error("Unexpected: feedback creation returned no result.");
+  }
 
   const dashboardPath = `/${auth.ctx.owner}/${auth.ctx.repo}`;
   after(() => {

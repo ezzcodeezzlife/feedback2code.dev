@@ -27,6 +27,8 @@ export type AuthorizedWidgetContext = {
   fullName: string;
   owner: string;
   repo: string;
+  /** Dashboard user who owns this repository config (used for quota/rate limiting). */
+  userId: string;
   /** GitHub App installation for this dashboard user; used for agent git + PRs. */
   githubInstallationId: string | null;
 };
@@ -59,6 +61,7 @@ export async function authorizeWidgetRequest(
       fullName: true,
       owner: true,
       repo: true,
+      userId: true,
       user: { select: { githubInstallationId: true } },
     },
   });
@@ -132,6 +135,7 @@ export async function authorizeWidgetRequest(
       fullName: config.fullName,
       owner: config.owner,
       repo: config.repo,
+      userId: config.userId,
       githubInstallationId: config.user.githubInstallationId,
     },
   };
