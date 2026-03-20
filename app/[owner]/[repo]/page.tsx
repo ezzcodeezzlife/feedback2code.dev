@@ -47,6 +47,32 @@ function formatRelativeTime(date: Date): string {
   return `${Math.floor(months / 12)}y ago`;
 }
 
+function feedbackStatusTheme(status: string): { item: string; badge: string } {
+  switch (status) {
+    case "FAILED":
+      return {
+        item: "border-red-900/50 bg-red-950/15",
+        badge: "border-red-900/50 bg-red-950/30 text-red-400",
+      };
+    case "MERGED":
+      return {
+        item: "border-accent/40 bg-accent/10",
+        badge: "border-accent/40 bg-accent/10 text-accent",
+      };
+    case "WAITING_FOR_REVIEW":
+      return {
+        item: "border-border-bright bg-background",
+        badge: "border-border-bright bg-transparent text-foreground",
+      };
+    case "CODING":
+    default:
+      return {
+        item: "border-border bg-background",
+        badge: "border-border bg-transparent text-muted-foreground",
+      };
+  }
+}
+
 export default async function RepositorySettingsPage({ params }: PageProps) {
   const { owner, repo } = await params;
 
@@ -197,11 +223,6 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
       ? `<script src="${baseUrl}/widget/${existing.widgetId}" async></script>`
       : null;
 
-  const embedScriptPreview =
-    existing?.widgetId != null
-      ? `<script src="${baseUrl}/widget/${existing.widgetId}" async></script>`
-      : `<script src="${baseUrl}/widget/YOUR_WIDGET_ID" async></script>`;
-
   return (
     <PageShell>
       {/* Breadcrumb + header */}
@@ -218,8 +239,19 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
             [ Configure ]
           </p>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight mt-1">
-          {fullName}
+        <h1 className="mt-1 min-w-0 text-2xl font-bold tracking-tight">
+          <span className="flex min-w-0 flex-col sm:flex-row sm:items-center sm:gap-2">
+            <span className="min-w-0 break-all text-muted-foreground sm:break-normal sm:truncate">
+              {owner}
+            </span>
+            <span className="hidden shrink-0 text-muted-foreground sm:inline">/</span>
+            <span className="min-w-0 break-all sm:hidden">
+              /{repo}
+            </span>
+            <span className="hidden min-w-0 sm:inline sm:break-normal sm:truncate">
+              {repo}
+            </span>
+          </span>
         </h1>
       </div>
 
@@ -257,34 +289,23 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
 
           {embedScript && hasAuthorizedDomains ? (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted">
                 One-line embed. Paste this snippet into the HTML of your site where
-                you want the feedback widget to appear — typically right before
+                you want the feedback widget to appear — typically right before{" "}
                 <code className="mx-1 px-1 py-0.5 rounded border border-border-bright bg-background/60">
-                  {"</body>"}
+                  &lt;/body&gt;
                 </code>
+                .
               </p>
               <EmbedSnippetCopy code={embedScript} />
             </div>
           ) : (
-            <div className="space-y-3">
-              <div className="border border-dashed border-border-bright bg-background/40 p-4">
-                <p className="text-sm text-muted-foreground mb-2">
-                  <span className="font-medium text-foreground">One-line embed</span>
-                  . Paste this script into your page HTML to load the widget (textarea
-                  + submit button).
-                </p>
-                <div className="rounded border border-border bg-background/60 px-3 py-2 opacity-70">
-                  <code className="block overflow-x-auto text-xs text-muted-foreground whitespace-nowrap">
-                    {embedScriptPreview}
-                  </code>
-                </div>
-                <p className="mt-2 text-xs text-muted text-left">
-                  {embedScript
-                    ? "Add at least one authorized domain to create the embed widget JavaScript."
-                    : "Save your configuration first to generate the embed snippet."}
-                </p>
-              </div>
+            <div className="border border-dashed border-border-bright p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                {!existing
+                  ? "Save your configuration first to generate the embed snippet."
+                  : "Add at least one authorized domain to create the embed widget JavaScript."}
+              </p>
             </div>
           )}
         </section>
@@ -313,6 +334,12 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                 </Link>
               </div>
 
+              {existing && (
+                <p className="text-xs text-muted my-4">
+                  Latest visitor feedback submissions for this project.
+                </p>
+              )}
+
               {!existing ? (
                 <div className="border border-dashed border-border-bright p-6 text-center">
                   <p className="text-sm text-muted-foreground">
@@ -331,7 +358,7 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                   {feedbacks.map((f) => (
                     <div
                       key={f.id}
-                      className="border border-border bg-background p-4 group hover:border-border-bright transition-colors"
+                      className={`${feedbackStatusTheme(f.status).item} p-4 group hover:border-border-bright transition-colors border`}
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                         <div className="flex items-center gap-3 text-xs text-muted">
@@ -352,7 +379,7 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                         </div>
                         <div className="flex items-center gap-2">
                           <span
-                            className="text-[11px] uppercase tracking-wider border border-border px-2 py-0.5 text-muted-foreground"
+                            className={`text-[11px] uppercase tracking-wider px-2 py-0.5 border ${feedbackStatusTheme(f.status).badge}`}
                             title={
                               f.e2bSandboxId
                                 ? `E2B sandbox: ${f.e2bSandboxId}`
@@ -383,7 +410,10 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                         </div>
                       )}
 
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                      <p
+                        className="line-clamp-4 wrap-break-word text-sm leading-relaxed text-foreground"
+                        title={f.body}
+                      >
                         {f.body}
                       </p>
                     </div>
@@ -401,19 +431,14 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                 </h2>
               </div>
 
-              <div className="flex items-start gap-3">
+              <div className="flex items-center gap-3">
                 <EmailNotificationToggle
                   defaultChecked={existing?.receivePrCreatedEmail ?? true}
                 />
                 <div>
-                  <span className="text-sm text-foreground">
+                  <p className="text-xs text-muted">
                     Email me when feedback creates a PR
-                  </span>
-                  {user.email && (
-                    <span className="ml-2 text-xs text-muted">({user.email})</span>
-                  )}
-                  <p className="text-xs text-muted mt-1">
-                    Get notified once a PR is opened from submitted feedback.
+                    {user.email ? ` (${user.email})` : ""}.
                   </p>
                 </div>
               </div>
@@ -441,16 +466,17 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
               <label htmlFor="customInstructions" className="sr-only">
                 Agent instructions (optional)
               </label>
+              <p className="text-xs text-muted my-4">
+                Included in the agent prompt for every feedback submission.
+              </p>
               <Textarea
                 id="customInstructions"
                 name="customInstructions"
                 rows={4}
                 defaultValue={existing?.customInstructions ?? ""}
-                placeholder='e.g., "Always use TailwindCSS for styling!" — Leave empty for default behavior.'
+                placeholder='e.g., "Always use TailwindCSS for styling." — Leave empty for default behavior.'
               />
-              <p className="text-xs text-muted mt-2">
-                Included in the agent prompt for every feedback submission.
-              </p>
+  
 
               <div className="mt-4">
                 <Button

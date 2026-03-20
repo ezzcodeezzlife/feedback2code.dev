@@ -222,11 +222,16 @@ export default function DashboardView({
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2 min-w-0">
                       <GitBranch className="h-4 w-4 text-accent shrink-0" />
-                      <span className="text-sm text-muted shrink-0">{owner}</span>
-                      <span className="text-muted shrink-0">/</span>
-                      <span className="text-sm font-bold text-foreground transition-colors group-hover:text-accent truncate">
-                        {repoName}
-                      </span>
+                      <div className="min-w-0 flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                        <span className="text-sm text-muted truncate">{owner}</span>
+                        <span className="hidden text-muted shrink-0 sm:inline">/</span>
+                        <span className="text-sm font-bold text-foreground transition-colors group-hover:text-accent truncate sm:hidden">
+                          /{repoName}
+                        </span>
+                        <span className="hidden text-sm font-bold text-foreground transition-colors group-hover:text-accent truncate sm:inline">
+                          {repoName}
+                        </span>
+                      </div>
                     </div>
                     <a
                       href={repo.html_url}

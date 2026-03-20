@@ -33,21 +33,9 @@ export default function AuthorizedDomainsFields({ initialDomains }: Props) {
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
-        <label className="text-xs uppercase tracking-widest text-muted-foreground">
-          Authorized domains
-        </label>
-        <Button
-          type="button"
-          onClick={addDomain}
-          variant="outline"
-          size="icon"
-          aria-label="Add authorized domain"
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-
+       <p className="my-4 text-xs text-muted">
+        One domain per field. Only these origins can load the widget.
+      </p>
       <div className="space-y-2">
         {domains.map((domain, index) => (
           <div key={`domain-${index}`} className="flex items-center gap-2">
@@ -71,9 +59,18 @@ export default function AuthorizedDomainsFields({ initialDomains }: Props) {
         ))}
       </div>
 
-      <p className="mt-2 text-xs text-muted">
-        One domain per field. Only these origins can load the widget.
-      </p>
+      <Button
+        type="button"
+        onClick={addDomain}
+        variant="outline"
+        size="sm"
+        className="mt-2"
+      >
+        <Plus className="mr-1 h-3.5 w-3.5" />
+        Add domain
+      </Button>
+
+        
     </div>
   );
 }

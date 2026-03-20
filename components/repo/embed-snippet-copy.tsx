@@ -48,16 +48,17 @@ export default function EmbedSnippetCopy({ code }: Props) {
 
   return (
     <div className="mt-4">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">
-          One-line embed
-        </p>
+      <div className="flex items-stretch gap-2">
+        <pre className="flex-1 overflow-x-auto border border-border bg-background p-4 text-xs leading-relaxed">
+          <code className="whitespace-pre">{renderHighlightedCode(code)}</code>
+        </pre>
         <Button
           type="button"
           onClick={handleCopy}
           aria-label={copied ? "Copied to clipboard" : "Copy embed snippet"}
           variant="outline"
           size="sm"
+          className="shrink-0 h-auto self-stretch"
         >
           {copied ? (
             <>
@@ -70,9 +71,6 @@ export default function EmbedSnippetCopy({ code }: Props) {
           )}
         </Button>
       </div>
-      <pre className="overflow-x-auto border border-border bg-background p-4 text-xs leading-relaxed">
-        <code className="whitespace-pre">{renderHighlightedCode(code)}</code>
-      </pre>
     </div>
   );
 }

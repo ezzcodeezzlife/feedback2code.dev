@@ -23,13 +23,21 @@ export function SaveToast() {
     }
 
     if (saved === "domains") {
-      toast("Authorized domains saved.");
+      toast.success("Domains updated", {
+        description: "Your authorized domains were saved successfully.",
+      });
     } else if (saved === "instructions") {
-      toast("Agent instructions saved.");
+      toast.success("Instructions updated", {
+        description: "Custom agent instructions are now active.",
+      });
     } else if (saved === "email") {
-      toast("Email notification setting saved.");
+      toast.success("Email setting updated", {
+        description: "Notification preference has been saved.",
+      });
     } else {
-      toast("Saved.");
+      toast.success("Saved", {
+        description: "Your changes were saved successfully.",
+      });
     }
 
     // Remove `saved` from the URL so refresh doesn't re-trigger the toast.
