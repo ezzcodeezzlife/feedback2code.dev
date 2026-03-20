@@ -65,29 +65,6 @@ export default function DashboardView({
   return (
     <PageShell>
       <PagePanel>
-        <div className="mb-6 rounded-md border border-black/10 p-4 dark:border-white/15">
-          <h2 className="text-lg font-semibold tracking-tight">Feedback quota</h2>
-          <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
-            Used {feedbackQuota.used} / {feedbackQuota.limit} in the last 30 days.
-          </p>
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            Remaining:{" "}
-            <span className="font-medium">
-              {feedbackQuota.remaining}
-            </span>
-          </p>
-          {feedbackQuota.resetAtIso ? (
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              Next slot expected on{" "}
-              {formatUtcDate(feedbackQuota.resetAtIso)}.
-            </p>
-          ) : (
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              Submit your first feedback to start tracking usage.
-            </p>
-          )}
-        </div>
-
         <div className="mb-5 flex items-center justify-between">
           <h1 className="text-2xl font-semibold tracking-tight">
             Installed Repositories
@@ -185,6 +162,34 @@ export default function DashboardView({
             })}
           </ul>
         )}
+
+        <div className="mt-8">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-2xl font-semibold tracking-tight">Feedback quota</h2>
+          </div>
+
+          <div className="rounded-md border border-black/10 p-4 dark:border-white/15">
+            <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              Used {feedbackQuota.used} / {feedbackQuota.limit} in the last 30 days.
+            </p>
+            <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
+              Remaining:{" "}
+              <span className="font-medium">
+                {feedbackQuota.remaining}
+              </span>
+            </p>
+            {feedbackQuota.resetAtIso ? (
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                Next slot expected on{" "}
+                {formatUtcDate(feedbackQuota.resetAtIso)}.
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                Submit your first feedback to start tracking usage.
+              </p>
+            )}
+          </div>
+        </div>
       </PagePanel>
     </PageShell>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn, signOut } from "next-auth/react";
+import { LogOut } from "lucide-react";
 import Button from "@/components/ui/button";
 
 type Props = {
@@ -13,7 +14,9 @@ export default function NavbarAuthActions({ isAuthed }: Props) {
       type="button"
       onClick={() => signOut({ callbackUrl: "/" })}
       variant="outline"
+      className="cursor-pointer"
     >
+      <LogOut className="h-4 w-4" />
       Logout
     </Button>
   ) : (
@@ -21,6 +24,7 @@ export default function NavbarAuthActions({ isAuthed }: Props) {
       type="button"
       onClick={() => signIn("github", { callbackUrl: "/" })}
       size="sm"
+      className="cursor-pointer"
     >
       Login with GitHub
     </Button>
