@@ -63,6 +63,7 @@ function lf(s: string) {
  */
 export async function startE2bFeedbackAgentWebhook(input: {
   feedbackId: string;
+  repositoryConfigId: string;
   owner: string;
   repo: string;
   fullName: string;
@@ -151,12 +152,24 @@ export async function startE2bFeedbackAgentWebhook(input: {
       JSON.stringify(opencodeConfig, null, 2),
     );
 
+    const repoConfig = await prisma.repositoryConfig.findUnique({
+      where: { id: input.repositoryConfigId },
+      // Prisma client types can lag behind schema changes during dev (querying a new column).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      select: { customInstructions: true } as any,
+    });
+
+    const customInstructions = (repoConfig as
+      | { customInstructions?: string | null }
+      | null)?.customInstructions;
+
     const prompt = buildOpencodeFeedbackPrompt({
       owner: input.owner,
       repo: input.repo,
       fullName: input.fullName,
       feedbackBody: input.feedbackBody,
       branchName: branch,
+      customInstructions: customInstructions ?? null,
     });
     await sandbox.files.write("/home/user/feedback-prompt.txt", prompt);
     await sandbox.files.write("/home/user/f2c-pr-title.txt", prTitle);

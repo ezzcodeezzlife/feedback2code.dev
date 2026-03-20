@@ -4,13 +4,25 @@ export function buildOpencodeFeedbackPrompt(input: {
   fullName: string;
   feedbackBody: string;
   branchName: string;
+  customInstructions?: string | null;
 }): string {
+  const trimmed = input.customInstructions?.trim() ?? "";
+  const customInstructionsBlock =
+    trimmed.length > 0
+      ? `## Repository-specific instructions (optional, provided by the repo owner)
+"""
+${trimmed}
+"""`
+      : "";
+
   return `You are an autonomous coding agent running inside a cloud sandbox. The repository ${input.fullName} is already cloned in the current working directory.
 
 ## User feedback (from an embedded site widget)
 """
 ${input.feedbackBody}
 """
+
+${customInstructionsBlock}
 
 ## Your task
 1. Understand the feedback and explore the codebase as needed.

@@ -73,6 +73,7 @@ model RepositoryConfig {
   widgetId          String   @unique @default(cuid())
   authorizedDomains Json
   receivePrCreatedEmail Boolean @default(true)
+  customInstructions String?  @db.Text
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

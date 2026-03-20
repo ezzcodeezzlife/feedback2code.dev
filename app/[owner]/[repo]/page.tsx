@@ -12,6 +12,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Button, { buttonVariants } from "@/components/ui/button";
 import Checkbox from "@/components/ui/checkbox";
+import Textarea from "@/components/ui/textarea";
+import { SaveToast } from "@/components/repo/save-toast";
+import { SonnerToaster } from "@/components/ui/sonner-toaster";
+import { SubmitEmailOnToggle } from "@/components/repo/submit-email-on-toggle";
 
 type PageProps = {
   params: Promise<{
@@ -39,15 +43,30 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
   }
 
   const fullName = `${owner}/${repo}`;
-  const existing = await prisma.repositoryConfig.findUnique({
+  type ExistingRepositoryConfigSelected = {
+    id: string;
+    // Stored as Json in Prisma; we validate at runtime before using.
+    authorizedDomains: unknown;
+    widgetId: string;
+    receivePrCreatedEmail: boolean;
+    customInstructions: string | null;
+  } | null;
+
+  const existing = (await prisma.repositoryConfig.findUnique({
     where: {
       userId_fullName: {
         userId: user.id,
         fullName,
       },
     },
-    select: { id: true, authorizedDomains: true, widgetId: true, receivePrCreatedEmail: true },
-  });
+    select: {
+      id: true,
+      authorizedDomains: true,
+      widgetId: true,
+      receivePrCreatedEmail: true,
+      customInstructions: true,
+    },
+  })) as ExistingRepositoryConfigSelected;
 
   const feedbacks =
     existing != null
@@ -70,7 +89,9 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
 
   const domains =
     Array.isArray(existing?.authorizedDomains) &&
-    existing.authorizedDomains.every((entry) => typeof entry === "string")
+    (existing.authorizedDomains as unknown[]).every(
+      (entry: unknown) => typeof entry === "string",
+    )
       ? (existing.authorizedDomains as string[])
       : [];
 
@@ -93,6 +114,14 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
 
     const receivePrCreatedEmail = formData.get("receivePrCreatedEmail") === "on";
 
+    const customInstructionsRaw = formData.get("customInstructions");
+    const customInstructions =
+      typeof customInstructionsRaw === "string"
+        ? customInstructionsRaw.trimEnd()
+        : "";
+    const customInstructionsFinal =
+      customInstructions.length > 0 ? customInstructions : null;
+
     await prisma.repositoryConfig.upsert({
       where: {
         userId_fullName: {
@@ -108,14 +137,27 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
         widgetId: createWidgetId(),
         authorizedDomains,
         receivePrCreatedEmail,
+        customInstructions: customInstructionsFinal,
       },
       update: {
         authorizedDomains,
         receivePrCreatedEmail,
+        customInstructions: customInstructionsFinal,
       },
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
-    redirect(`/${owner}/${repo}`);
+    const saveSection = formData.get("saveSection");
+    const saved =
+      typeof saveSection === "string" && saveSection.length > 0
+        ? saveSection
+        : "settings";
+    // Add a nonce so the client can suppress React StrictMode double-mount
+    // without blocking future saves of the same section.
+    const toastNonce = Date.now().toString();
+    redirect(
+      `/${owner}/${repo}?saved=${encodeURIComponent(saved)}&toast=${toastNonce}`,
+    );
   }
 
   const headerList = await headers();
@@ -152,42 +194,97 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
         <form action={saveAuthorizedDomains} className="space-y-4">
           <AuthorizedDomainsFields initialDomains={domains} />
 
-          <div className="flex items-start gap-3 rounded-lg border border-black/10 bg-white/60 p-3 dark:border-white/15 dark:bg-zinc-950/40">
-            <Checkbox
-              id="receivePrCreatedEmail"
-              name="receivePrCreatedEmail"
-              type="checkbox"
-              value="on"
-              defaultChecked={existing?.receivePrCreatedEmail ?? true}
-              className="mt-1"
-            />
-            <div className="space-y-1">
-              <label
-                htmlFor="receivePrCreatedEmail"
-                className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
-              >
-                Email me when feedback creates a PR
-                {user.email ? (
-                  <span className="ml-2 text-xs font-normal text-zinc-500 dark:text-zinc-400">
-                    ({user.email})
-                  </span>
-                ) : null}
-              </label>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                When enabled, you’ll get a notification once a PR is created from
-                submitted feedback in this repository.
-              </p>
-            </div>
-          </div>
-
           <div className="flex items-center gap-2">
             <Button
               type="submit"
               size="lg"
+              name="saveSection"
+              value="domains"
             >
               Save
             </Button>
           </div>
+
+          <div className="mt-8 border-t border-black/10 pt-8 dark:border-white/15">
+            <h2 className="text-lg font-semibold tracking-tight">
+              Email me when feedback creates a PR
+            </h2>
+            <div className="mt-4 flex items-start gap-3 rounded-lg border border-black/10 bg-white/60 p-3 dark:border-white/15 dark:bg-zinc-950/40">
+              <Checkbox
+                id="receivePrCreatedEmail"
+                name="receivePrCreatedEmail"
+                type="checkbox"
+                value="on"
+                defaultChecked={existing?.receivePrCreatedEmail ?? true}
+                className="mt-1"
+              />
+              <div className="space-y-1">
+                <label
+                  htmlFor="receivePrCreatedEmail"
+                  className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
+                >
+                  Email me when feedback creates a PR
+                  {user.email ? (
+                    <span className="ml-2 text-xs font-normal text-zinc-500 dark:text-zinc-400">
+                      ({user.email})
+                    </span>
+                  ) : null}
+                </label>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  When enabled, you’ll get a notification once a PR is created
+                  from submitted feedback in this repository.
+                </p>
+              </div>
+            </div>
+
+            <button
+              id="saveEmailSubmit"
+              type="submit"
+              name="saveSection"
+              value="email"
+              className="hidden"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+            <SubmitEmailOnToggle />
+          </div>
+
+          <div className="mt-8 border-t border-black/10 pt-8 dark:border-white/15">
+            <h2 className="text-lg font-semibold tracking-tight">
+              Agent instructions
+            </h2>
+            <div className="mt-4 space-y-2 rounded-lg border border-black/10 bg-white/60 p-3 dark:border-white/15 dark:bg-zinc-950/40">
+              <label
+                htmlFor="customInstructions"
+                className="sr-only"
+              >
+                Agent instructions (optional)
+              </label>
+              <Textarea
+                id="customInstructions"
+                name="customInstructions"
+                rows={4}
+                defaultValue={existing?.customInstructions ?? ""}
+                placeholder="e.g., Always add a title called prototype to the index! Leave empty to use default behavior."
+              />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Included in the agent prompt for every submitted feedback in
+                this repository.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 mt-4">
+              <Button
+                type="submit"
+                size="lg"
+                name="saveSection"
+                value="instructions"
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+
         </form>
 
         <div className="mt-8 border-t border-black/10 pt-8 dark:border-white/15">
@@ -285,6 +382,8 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
           )}
         </div>
       </PagePanel>
+      <SonnerToaster />
+      <SaveToast />
     </PageShell>
   );
 }

@@ -165,6 +165,7 @@ export async function POST(request: NextRequest) {
   after(() => {
     void startE2bFeedbackAgentWebhook({
       feedbackId: created.id,
+      repositoryConfigId: auth.ctx.repositoryConfigId,
       owner: auth.ctx.owner,
       repo: auth.ctx.repo,
       fullName: auth.ctx.fullName,
