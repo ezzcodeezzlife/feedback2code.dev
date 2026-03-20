@@ -5,12 +5,14 @@
 export type WidgetFeedbackStatus =
   | "CODING"
   | "WAITING_FOR_REVIEW"
-  | "MERGED";
+  | "MERGED"
+  | "FAILED";
 
 export const FEEDBACK_STATUS_VALUES: readonly WidgetFeedbackStatus[] = [
   "CODING",
   "WAITING_FOR_REVIEW",
   "MERGED",
+  "FAILED",
 ];
 
 export function feedbackStatusLabel(status: WidgetFeedbackStatus): string {
@@ -21,6 +23,8 @@ export function feedbackStatusLabel(status: WidgetFeedbackStatus): string {
       return "Waiting for review";
     case "MERGED":
       return "Merged";
+    case "FAILED":
+      return "Failed";
     default:
       return status;
   }

@@ -1,7 +1,9 @@
+import { startE2bFeedbackAgentWebhook } from "@/lib/feedback-agent/run-e2b-feedback-agent";
 import { parseWidgetIdFromBody } from "@/lib/widget-embed";
 import { prisma } from "@/lib/prisma";
 import { isLocalDevPageUrl } from "@/lib/widget-origin";
 import { authorizeWidgetRequest, widgetCorsHeaders } from "@/lib/widget-resolve";
+import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 
 const MAX_FEEDBACK_LEN = 2000;
@@ -90,6 +92,21 @@ export async function POST(request: NextRequest) {
       pageUrl: storedPageUrl,
     },
     select: { id: true, body: true, createdAt: true },
+  });
+
+  const dashboardPath = `/${auth.ctx.owner}/${auth.ctx.repo}`;
+  after(() => {
+    void startE2bFeedbackAgentWebhook({
+      feedbackId: created.id,
+      owner: auth.ctx.owner,
+      repo: auth.ctx.repo,
+      fullName: auth.ctx.fullName,
+      feedbackBody: text,
+      dashboardPath,
+      githubInstallationId: auth.ctx.githubInstallationId,
+    }).catch((err) => {
+      console.error("[startE2bFeedbackAgentWebhook]", err);
+    });
   });
 
   return NextResponse.json(

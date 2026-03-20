@@ -25,6 +25,10 @@ export type AuthorizedWidgetContext = {
   widgetId: string;
   repositoryConfigId: string;
   fullName: string;
+  owner: string;
+  repo: string;
+  /** GitHub App installation for this dashboard user; used for agent git + PRs. */
+  githubInstallationId: string | null;
 };
 
 export async function authorizeWidgetRequest(
@@ -49,7 +53,14 @@ export async function authorizeWidgetRequest(
 
   const config = await prisma.repositoryConfig.findUnique({
     where: { widgetId },
-    select: { id: true, authorizedDomains: true, fullName: true },
+    select: {
+      id: true,
+      authorizedDomains: true,
+      fullName: true,
+      owner: true,
+      repo: true,
+      user: { select: { githubInstallationId: true } },
+    },
   });
 
   if (!config) {
@@ -119,6 +130,9 @@ export async function authorizeWidgetRequest(
       widgetId,
       repositoryConfigId: config.id,
       fullName: config.fullName,
+      owner: config.owner,
+      repo: config.repo,
+      githubInstallationId: config.user.githubInstallationId,
     },
   };
 }

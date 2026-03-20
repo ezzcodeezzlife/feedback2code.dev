@@ -2,19 +2,14 @@ import { authOptions } from "@/auth";
 import { PagePanel, PageShell } from "@/components/layout/page-shell";
 import AuthorizedDomainsFields from "@/components/repo/authorized-domains-fields";
 import EmbedSnippetCopy from "@/components/repo/embed-snippet-copy";
-import FeedbackStatusSelect from "@/components/repo/feedback-status-select";
 import { createWidgetId } from "@/lib/widget-embed";
-import {
-  type WidgetFeedbackStatus,
-  isWidgetFeedbackStatus,
-} from "@/lib/widget-feedback-status";
+import { feedbackStatusLabel } from "@/lib/widget-feedback-status";
 import { isLocalDevPageUrl } from "@/lib/widget-origin";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 
 type PageProps = {
   params: Promise<{
@@ -64,49 +59,12 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
             pageUrl: true,
             createdAt: true,
             status: true,
+            prUrl: true,
+            agentError: true,
+            e2bSandboxId: true,
           },
         })
       : [];
-
-  async function updateFeedbackStatus(
-    feedbackId: string,
-    status: WidgetFeedbackStatus,
-  ) {
-    "use server";
-
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) return;
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true },
-    });
-    if (!user) return;
-
-    if (!isWidgetFeedbackStatus(status)) return;
-
-    const config = await prisma.repositoryConfig.findUnique({
-      where: {
-        userId_fullName: {
-          userId: user.id,
-          fullName,
-        },
-      },
-      select: { id: true },
-    });
-    if (!config) return;
-
-    const updated = await prisma.widgetFeedback.updateMany({
-      where: {
-        id: feedbackId,
-        repositoryConfigId: config.id,
-      },
-      data: { status },
-    });
-    if (updated.count === 0) return;
-
-    revalidatePath(`/${owner}/${repo}`);
-  }
 
   const domains =
     Array.isArray(existing?.authorizedDomains) &&
@@ -246,12 +204,34 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                         </a>
                       ) : null}
                     </div>
-                    <FeedbackStatusSelect
-                      feedbackId={f.id}
-                      value={f.status}
-                      updateStatus={updateFeedbackStatus}
-                    />
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <span
+                        className="rounded-full border border-black/15 bg-white px-2.5 py-0.5 text-[11px] font-medium text-zinc-800 dark:border-white/20 dark:bg-zinc-900 dark:text-zinc-200"
+                        title={
+                          f.e2bSandboxId
+                            ? `E2B sandbox: ${f.e2bSandboxId}`
+                            : undefined
+                        }
+                      >
+                        {feedbackStatusLabel(f.status)}
+                      </span>
+                      {f.prUrl ? (
+                        <a
+                          href={f.prUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[11px] font-medium text-white hover:bg-emerald-700"
+                        >
+                          View PR
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
+                  {f.agentError ? (
+                    <pre className="mt-2 max-h-32 overflow-auto rounded-md border border-red-200 bg-red-50 p-2 text-[11px] leading-snug text-red-900 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-100">
+                      {f.agentError}
+                    </pre>
+                  ) : null}
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-900 dark:text-zinc-100">
                     {f.body}
                   </p>

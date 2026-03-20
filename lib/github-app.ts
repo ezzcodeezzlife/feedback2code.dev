@@ -43,7 +43,10 @@ async function createAppJwt() {
     .sign(key);
 }
 
-async function createInstallationToken(installationId: string) {
+/** Short-lived token for this installation (clone, push, REST API including PRs). */
+export async function getInstallationAccessToken(
+  installationId: string,
+): Promise<string> {
   const appJwt = await createAppJwt();
   const response = await fetch(
     `https://api.github.com/app/installations/${installationId}/access_tokens`,
@@ -73,7 +76,7 @@ async function createInstallationToken(installationId: string) {
 }
 
 export async function getInstallationRepositories(installationId: string) {
-  const token = await createInstallationToken(installationId);
+  const token = await getInstallationAccessToken(installationId);
 
   const response = await fetch(
     "https://api.github.com/installation/repositories?per_page=100",
