@@ -30,7 +30,7 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { id: true },
+    select: { id: true, email: true },
   });
   if (!user) {
     redirect("/");
@@ -44,7 +44,7 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
         fullName,
       },
     },
-    select: { id: true, authorizedDomains: true, widgetId: true },
+    select: { id: true, authorizedDomains: true, widgetId: true, receivePrCreatedEmail: true },
   });
 
   const feedbacks =
@@ -89,6 +89,8 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
       .map((value) => String(value).trim().toLowerCase())
       .filter(Boolean);
 
+    const receivePrCreatedEmail = formData.get("receivePrCreatedEmail") === "on";
+
     await prisma.repositoryConfig.upsert({
       where: {
         userId_fullName: {
@@ -103,9 +105,11 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
         fullName,
         widgetId: createWidgetId(),
         authorizedDomains,
+        receivePrCreatedEmail,
       },
       update: {
         authorizedDomains,
+        receivePrCreatedEmail,
       },
     });
 
@@ -145,6 +149,34 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
 
         <form action={saveAuthorizedDomains} className="space-y-4">
           <AuthorizedDomainsFields initialDomains={domains} />
+
+          <div className="flex items-start gap-3 rounded-lg border border-black/10 bg-white/60 p-3 dark:border-white/15 dark:bg-zinc-950/40">
+            <input
+              id="receivePrCreatedEmail"
+              name="receivePrCreatedEmail"
+              type="checkbox"
+              value="on"
+              defaultChecked={existing?.receivePrCreatedEmail ?? true}
+              className="mt-1 h-4 w-4 accent-black dark:accent-white"
+            />
+            <div className="space-y-1">
+              <label
+                htmlFor="receivePrCreatedEmail"
+                className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
+              >
+                Email me when feedback creates a PR
+                {user.email ? (
+                  <span className="ml-2 text-xs font-normal text-zinc-500 dark:text-zinc-400">
+                    ({user.email})
+                  </span>
+                ) : null}
+              </label>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                When enabled, you’ll get a notification once a PR is created from
+                submitted feedback in this repository.
+              </p>
+            </div>
+          </div>
 
           <div className="flex items-center gap-2">
             <button

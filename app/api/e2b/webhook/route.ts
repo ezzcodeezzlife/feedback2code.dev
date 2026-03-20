@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { Sandbox } from "e2b";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { sendPrCreatedEmail } from "@/lib/email/send-pr-created-email";
 
 // Allow enough time for polling the PR URL file.
 export const maxDuration = 60;
@@ -90,6 +91,23 @@ export async function POST(request: NextRequest) {
       prUrl: payloadPrUrl,
     });
 
+    const feedbackRow = await prisma.widgetFeedback.findUnique({
+      where: { id: feedbackId },
+      select: { repositoryConfigId: true, status: true, prUrl: true },
+    });
+
+    const repositoryConfig = feedbackRow
+      ? await prisma.repositoryConfig.findUnique({
+          where: { id: feedbackRow.repositoryConfigId },
+          select: {
+            owner: true,
+            repo: true,
+            receivePrCreatedEmail: true,
+            user: { select: { email: true, name: true } },
+          },
+        })
+      : null;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await (prisma.widgetFeedback as any).updateMany({
       where: { id: feedbackId },
@@ -99,6 +117,30 @@ export async function POST(request: NextRequest) {
         agentFinishedAt: new Date(),
       },
     });
+
+    const shouldSend =
+      repositoryConfig &&
+      repositoryConfig.receivePrCreatedEmail &&
+      PR_URL_RE.test(payloadPrUrl) &&
+      // Send only the first time we see a PR URL for this feedback item.
+      (feedbackRow?.prUrl == null || feedbackRow.prUrl !== payloadPrUrl);
+
+    if (shouldSend) {
+      console.log("[email] attempting PR-created email (custom callback)", {
+        prUrl: payloadPrUrl,
+        intendedUserEmail: repositoryConfig.user?.email ?? null,
+        intendedUserName: repositoryConfig.user?.name ?? null,
+        mode: process.env.RESEND_EMAIL_MODE ?? "production",
+      });
+
+      await sendPrCreatedEmail({
+        intendedToEmails: repositoryConfig.user?.email ? [repositoryConfig.user.email] : [],
+        intendedRecipientName: repositoryConfig.user?.name ?? null,
+        repositoryFullName: `${repositoryConfig.owner}/${repositoryConfig.repo}`,
+        prUrl: payloadPrUrl,
+      });
+    }
+
     revalidatePath("/");
 
     // Best-effort kill.
@@ -166,7 +208,12 @@ export async function POST(request: NextRequest) {
 
   const repositoryConfig = await prisma.repositoryConfig.findUnique({
     where: { id: row.repositoryConfigId },
-    select: { owner: true, repo: true },
+    select: {
+      owner: true,
+      repo: true,
+      receivePrCreatedEmail: true,
+      user: { select: { email: true, name: true } },
+    },
   });
   if (!repositoryConfig) return NextResponse.json({ ok: true });
 
@@ -210,11 +257,28 @@ export async function POST(request: NextRequest) {
 
   if (prUrl && PR_URL_RE.test(prUrl)) {
     console.log("[e2b webhook] PR URL found", { feedbackId: row.id });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (prisma.widgetFeedback as any).updateMany({
+    const updated =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (prisma.widgetFeedback as any).updateMany({
       where: { id: row.id, status: "CODING" },
       data: { status: "WAITING_FOR_REVIEW", prUrl, agentFinishedAt: new Date() },
     });
+
+    if (updated?.count > 0 && repositoryConfig.receivePrCreatedEmail) {
+      console.log("[email] attempting PR-created email", {
+        prUrl,
+        intendedUserEmail: repositoryConfig.user?.email ?? null,
+        intendedUserName: repositoryConfig.user?.name ?? null,
+        mode: process.env.RESEND_EMAIL_MODE ?? "production",
+      });
+      await sendPrCreatedEmail({
+        intendedToEmails: repositoryConfig.user?.email ? [repositoryConfig.user.email] : [],
+        intendedRecipientName: repositoryConfig.user?.name ?? null,
+        repositoryFullName: `${repositoryConfig.owner}/${repositoryConfig.repo}`,
+        prUrl,
+      });
+    }
+
     revalidatePath(dashboardPath);
     revalidatePath("/");
 
