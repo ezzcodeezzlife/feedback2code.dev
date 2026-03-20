@@ -1,6 +1,8 @@
+import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   // Allow the Cloudflare TryCloudflare tunnel domain to access dev resources.
   // (Without this, Next.js may block hot-reload/HMR fetches and break client-side interactions.)
   allowedDevOrigins: ["reel-modelling-cooperation-appointments.trycloudflare.com"],
@@ -13,4 +15,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withMDX = createMDX({});
+
+export default withMDX(nextConfig);

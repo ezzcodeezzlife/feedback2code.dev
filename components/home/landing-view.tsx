@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -450,47 +451,6 @@ export default function LandingView() {
         </div>
       </section>
 
-      {/* ─── EMBED CODE SECTION ───────────────────────────────── */}
-      <section className="border-b border-border py-20 sm:py-28">
-        <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>Get started</SectionLabel>
-          <SectionHeading>One line. That&apos;s it.</SectionHeading>
-          <p className="mt-4 text-center text-sm text-muted-foreground max-w-lg mx-auto">
-            Paste this script tag into your HTML — right before{" "}
-            <code className="px-1.5 py-0.5 border border-border-bright bg-surface text-xs">
-              &lt;/body&gt;
-            </code>
-            . The feedback widget appears automatically.
-          </p>
-
-          <div className="mt-10 max-w-3xl mx-auto">
-            <EmbedSnippetCopy code={EXAMPLE_EMBED} />
-          </div>
-
-          <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
-            {[
-              {
-                icon: MousePointerClick,
-                text: "No npm install needed",
-              },
-              { icon: Zap, text: "Loads async, zero performance hit" },
-              {
-                icon: Globe,
-                text: "Works with any framework or static site",
-              },
-            ].map((item) => (
-              <div
-                key={item.text}
-                className="flex items-center gap-3 text-sm text-muted-foreground"
-              >
-                <item.icon className="h-4 w-4 text-accent shrink-0" />
-                {item.text}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ─── DASHBOARD PREVIEW ────────────────────────────────── */}
       <section className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
@@ -551,6 +511,47 @@ export default function LandingView() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── EMBED CODE SECTION ───────────────────────────────── */}
+      <section className="border-b border-border py-20 sm:py-28">
+        <div className="mx-auto w-full max-w-6xl px-6">
+          <SectionLabel>Get started</SectionLabel>
+          <SectionHeading>One line. That&apos;s it.</SectionHeading>
+          <p className="mt-4 text-center text-sm text-muted-foreground max-w-lg mx-auto">
+            Paste this script tag into your HTML — right before{" "}
+            <code className="px-1.5 py-0.5 border border-border-bright bg-surface text-xs">
+              &lt;/body&gt;
+            </code>
+            . The feedback widget appears automatically.
+          </p>
+
+          <div className="mt-10 max-w-3xl mx-auto">
+            <EmbedSnippetCopy code={EXAMPLE_EMBED} />
+          </div>
+
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            {[
+              {
+                icon: MousePointerClick,
+                text: "No npm install needed",
+              },
+              { icon: Zap, text: "Loads async, zero performance hit" },
+              {
+                icon: Globe,
+                text: "Works with any framework or static site",
+              },
+            ].map((item) => (
+              <div
+                key={item.text}
+                className="flex items-center gap-3 text-sm text-muted-foreground"
+              >
+                <item.icon className="h-4 w-4 text-accent shrink-0" />
+                {item.text}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -1038,10 +1039,18 @@ export default function LandingView() {
               feedback2code
             </span>
           </div>
-          <p className="text-xs text-muted">
-            &copy; {new Date().getFullYear()} feedback2code. Turn user feedback
-            into code changes — automatically.
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-center sm:text-left">
+            <Link
+              href="/legal"
+              className="text-xs text-muted hover:text-accent transition-colors"
+            >
+              Legal &amp; contact
+            </Link>
+            <p className="text-xs text-muted">
+              &copy; {new Date().getFullYear()} feedback2code. Turn user feedback
+              into code changes — automatically.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
