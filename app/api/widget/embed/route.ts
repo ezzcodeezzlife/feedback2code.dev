@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const apiOrigin = request.nextUrl.origin;
+  // Use configured public base URL so the widget doesn't accidentally call back to localhost.
+  const apiOrigin =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? request.nextUrl.origin;
   const body = buildEmbedScript(apiOrigin, widgetId);
 
   return new Response(body, {

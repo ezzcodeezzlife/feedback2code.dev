@@ -1,4 +1,4 @@
-import { runE2bFeedbackAgent } from "@/lib/feedback-agent/run-e2b-feedback-agent";
+import { startE2bFeedbackAgentWebhook } from "@/lib/feedback-agent/run-e2b-feedback-agent";
 import { parseWidgetIdFromBody } from "@/lib/widget-embed";
 import { prisma } from "@/lib/prisma";
 import { isLocalDevPageUrl } from "@/lib/widget-origin";
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
 
   const dashboardPath = `/${auth.ctx.owner}/${auth.ctx.repo}`;
   after(() => {
-    void runE2bFeedbackAgent({
+    void startE2bFeedbackAgentWebhook({
       feedbackId: created.id,
       owner: auth.ctx.owner,
       repo: auth.ctx.repo,
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       dashboardPath,
       githubInstallationId: auth.ctx.githubInstallationId,
     }).catch((err) => {
-      console.error("[runE2bFeedbackAgent]", err);
+      console.error("[startE2bFeedbackAgentWebhook]", err);
     });
   });
 

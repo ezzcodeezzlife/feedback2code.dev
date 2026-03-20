@@ -1,0 +1,251 @@
+import { prisma } from "@/lib/prisma";
+import { PR_URL_FILE } from "@/lib/feedback-agent/run-e2b-feedback-agent";
+import { revalidatePath } from "next/cache";
+import { NextRequest, NextResponse } from "next/server";
+import { Sandbox } from "e2b";
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+// Allow enough time for polling the PR URL file.
+export const maxDuration = 60;
+
+const PR_URL_RE = /^https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/[0-9]+$/;
+
+function dashboardPathForFeedback(repositoryConfigOwner: string, repositoryConfigRepo: string) {
+  return `/${repositoryConfigOwner}/${repositoryConfigRepo}`;
+}
+
+function hmacSha256Hex(secret: string, rawBody: string): string {
+  return createHmac("sha256", secret).update(rawBody, "utf8").digest("hex");
+}
+
+function constantTimeEquals(a: string, b: string): boolean {
+  // Both must be same byte length for timingSafeEqual.
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  return timingSafeEqual(ab, bb);
+}
+
+function extractProvidedSignature(req: NextRequest): string | null {
+  const headers = req.headers;
+  // E2B may use different header names depending on their webhook implementation.
+  // Try several common variations.
+  return (
+    headers.get("x-e2b-signature") ??
+    headers.get("x-e2b-signature-256") ??
+    headers.get("x-e2b-webhook-signature") ??
+    headers.get("x-signature") ??
+    headers.get("x-signature-256") ??
+    headers.get("x-hub-signature-256") ??
+    headers.get("x-hub-signature") ??
+    null
+  );
+}
+
+function isProductionEnv(): boolean {
+  return process.env.NODE_ENV === "production";
+}
+
+export async function POST(request: NextRequest) {
+  const rawBody = await request.text();
+  let payload: unknown;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ ok: false }, { status: 400 });
+  }
+
+  const p = payload as Record<string, unknown>;
+  const type = typeof p.type === "string" ? p.type : undefined;
+  const sandboxId = typeof p.sandboxId === "string" ? p.sandboxId : undefined;
+  const sandboxExecutionId =
+    typeof p.sandboxExecutionId === "string" ? p.sandboxExecutionId : undefined;
+  const feedbackId =
+    typeof p.feedbackId === "string" ? p.feedbackId : undefined;
+  const payloadPrUrl = typeof p.prUrl === "string" ? p.prUrl : undefined;
+  const connectSandboxId = sandboxId ?? sandboxExecutionId;
+
+  if (!type) {
+    return NextResponse.json({ ok: true });
+  }
+
+  console.log("[e2b webhook]", { type, sandboxId });
+
+  // Custom callback from inside the sandbox (more reliable than lifecycle timing).
+  if (type === "f2c.feedback.completed") {
+    if (!feedbackId || !payloadPrUrl) {
+      return NextResponse.json({ ok: true });
+    }
+
+    // Authenticate with bearer secret.
+    const webhookSecret = process.env.E2B_WEBHOOK_SECRET;
+    const authorization = request.headers.get("authorization");
+    const expectedBearer = webhookSecret ? `Bearer ${webhookSecret}` : "";
+    if (!webhookSecret || authorization !== expectedBearer) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    console.log("[e2b webhook] custom callback update", {
+      feedbackId,
+      prUrl: payloadPrUrl,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await (prisma.widgetFeedback as any).updateMany({
+      where: { id: feedbackId },
+      data: {
+        status: "WAITING_FOR_REVIEW",
+        prUrl: payloadPrUrl,
+        agentFinishedAt: new Date(),
+      },
+    });
+    revalidatePath("/");
+
+    // Best-effort kill.
+    if (connectSandboxId) {
+      try {
+        const sandboxToKill = await Sandbox.connect(connectSandboxId);
+        await sandboxToKill.kill();
+        console.log("[e2b webhook] sandbox killed after custom callback", {
+          feedbackId,
+          e2bResultCount: result?.count ?? null,
+        });
+      } catch (e) {
+        console.warn("[e2b webhook] failed to kill sandbox after custom callback:", e);
+      }
+    }
+
+    return NextResponse.json({ ok: true });
+  }
+
+  // Optional signature verification (recommended in prod).
+  const webhookSecret = process.env.E2B_WEBHOOK_SECRET;
+  if (webhookSecret) {
+    const authorization = request.headers.get("authorization");
+    const expectedBearer = `Bearer ${webhookSecret}`;
+    if (authorization !== expectedBearer) {
+      const providedSignature = extractProvidedSignature(request);
+      const strict =
+        isProductionEnv() || process.env.E2B_WEBHOOK_STRICT_SIGNATURE === "true";
+
+      if (!providedSignature) {
+        console.warn("[e2b webhook] missing signature header");
+        if (strict) return NextResponse.json({ ok: false }, { status: 401 });
+      } else {
+        const normalizedProvided = providedSignature.replace(/^sha256=/i, "");
+        const computed = hmacSha256Hex(webhookSecret, rawBody);
+        if (!constantTimeEquals(normalizedProvided, computed)) {
+          console.warn("[e2b webhook] signature mismatch (continuing in dev):", {
+            strict,
+          });
+          if (strict) return NextResponse.json({ ok: false }, { status: 401 });
+        }
+      }
+    }
+  }
+
+  const candidateIds = [sandboxId, sandboxExecutionId].filter(
+    (x): x is string => typeof x === "string" && x.length > 0,
+  );
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const row = await (prisma.widgetFeedback as any).findFirst({
+    where: { e2bSandboxId: { in: candidateIds } },
+    select: { id: true, status: true, repositoryConfigId: true },
+  });
+
+  if (!row) return NextResponse.json({ ok: true });
+  if (row.status !== "CODING") return NextResponse.json({ ok: true });
+
+  console.log("[e2b webhook] matched feedback", { feedbackId: row.id, status: row.status });
+
+  // We only care about reads when the sandbox state changes.
+  if (type !== "sandbox.lifecycle.updated" && type !== "sandbox.lifecycle.killed") {
+    return NextResponse.json({ ok: true });
+  }
+
+  const repositoryConfig = await prisma.repositoryConfig.findUnique({
+    where: { id: row.repositoryConfigId },
+    select: { owner: true, repo: true },
+  });
+  if (!repositoryConfig) return NextResponse.json({ ok: true });
+
+  const dashboardPath = dashboardPathForFeedback(
+    repositoryConfig.owner,
+    repositoryConfig.repo,
+  );
+
+  async function attemptReadPrUrl(): Promise<string | null> {
+    const sandbox = await Sandbox.connect(connectSandboxId!);
+    try {
+      // `sandbox.lifecycle.updated` can arrive before the PR URL file exists.
+      // Poll briefly to give the sandbox time to finish `finalize-feedback.sh`.
+      for (let i = 0; i < 40; i++) {
+        try {
+          const text = await sandbox.files.read(PR_URL_FILE);
+          const prUrl = typeof text === "string" ? text.trim() : String(text).trim();
+          if (prUrl.length > 0) return prUrl;
+        } catch {
+          /* file not ready yet */
+        }
+
+        // 750ms spacing => ~30s total.
+        await new Promise((r) => setTimeout(r, 750));
+      }
+
+      return null;
+    } finally {
+      try {
+        // Some SDK versions expose `disconnect`, others rely on GC.
+        // This is best-effort to avoid dangling connections.
+        // @ts-expect-error - SDK method may not exist.
+        await sandbox.disconnect?.();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  const prUrl = await attemptReadPrUrl();
+
+  if (prUrl && PR_URL_RE.test(prUrl)) {
+    console.log("[e2b webhook] PR URL found", { feedbackId: row.id });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (prisma.widgetFeedback as any).updateMany({
+      where: { id: row.id, status: "CODING" },
+      data: { status: "WAITING_FOR_REVIEW", prUrl, agentFinishedAt: new Date() },
+    });
+    revalidatePath(dashboardPath);
+    revalidatePath("/");
+
+    // Stop the sandbox so it doesn't linger after we extracted the PR URL.
+    try {
+      const sandboxToKill = await Sandbox.connect(connectSandboxId!);
+      await sandboxToKill.kill();
+      console.log("[e2b webhook] sandbox killed after success", {
+        feedbackId: row.id,
+      });
+    } catch (e) {
+      console.warn("[e2b webhook] failed to kill sandbox after success:", e);
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  if (type === "sandbox.lifecycle.killed") {
+    console.log("[e2b webhook] sandbox killed without PR URL", { feedbackId: row.id });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (prisma.widgetFeedback as any).updateMany({
+      where: { id: row.id, status: "CODING" },
+      data: {
+        status: "FAILED",
+        agentError: "Sandbox finished but PR URL file was not found or invalid.",
+        agentFinishedAt: new Date(),
+      },
+    });
+    revalidatePath(dashboardPath);
+    revalidatePath("/");
+  }
+
+  return NextResponse.json({ ok: true });
+}
+

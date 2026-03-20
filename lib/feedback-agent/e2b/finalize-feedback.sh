@@ -52,4 +52,19 @@ if ! [[ "$PR_URL" =~ ^https://github\.com/[^/]+/[^/]+/pull/[0-9]+$ ]]; then
   cat /tmp/f2c_pr_url.txt >&2
   exit 1
 fi
+# Webhook handler reads this file to update the DB.
+printf '%s' "$PR_URL" > /home/user/f2c-pr-url.txt
+# Only the PR URL may write to stdout so the sandbox logs stay clean.
 printf '%s' "$PR_URL"
+
+# Push result to our app immediately (avoids relying on E2B lifecycle timing).
+# These env vars are optional; the callback is best-effort.
+if [ -n "${F2C_WEBHOOK_URL:-}" ] && [ -n "${F2C_WEBHOOK_SECRET:-}" ] && [ -n "${F2C_FEEDBACK_ID:-}" ]; then
+  # If the app URL is behind Cloudflare/Tunnel, it may require full https URL.
+  curl -fsS \
+    -X POST "$F2C_WEBHOOK_URL" \
+    -H "Authorization: Bearer ${F2C_WEBHOOK_SECRET}" \
+    -H "Content-Type: application/json" \
+    -d "{\"type\":\"f2c.feedback.completed\",\"feedbackId\":\"${F2C_FEEDBACK_ID}\",\"sandboxId\":\"${F2C_SANDBOX_ID:-}\",\"prUrl\":\"${PR_URL}\"}" \
+    >/dev/null 2>&1 || { echo "[f2c] webhook callback failed" >&2; true; }
+fi
