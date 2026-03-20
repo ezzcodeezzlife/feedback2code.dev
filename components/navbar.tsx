@@ -26,17 +26,17 @@ export default async function Navbar() {
         </Link>
 
         {user ? (
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4 text-sm">
             <Link
               href="/account"
-              className="group hidden sm:flex items-center gap-3 rounded-sm bg-transparent px-2 py-1.5 text-muted-foreground transition-all duration-150 hover:bg-surface-raised hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
-              aria-label="Open account page"
+              className="group flex shrink-0 items-center gap-2 sm:gap-3 rounded-sm bg-transparent px-1 py-1 sm:px-2 sm:py-1.5 text-muted-foreground transition-all duration-150 hover:bg-surface-raised hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              aria-label={`Account — ${displayName}`}
             >
               {user.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={user.image}
-                  alt={`${displayName} profile`}
+                  alt=""
                   width={28}
                   height={28}
                   loading="lazy"
@@ -44,11 +44,11 @@ export default async function Navbar() {
                   className="h-8 w-8 rounded-full border-2 border-border object-cover transition-colors group-hover:border-accent"
                 />
               ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-border bg-surface-raised text-xs font-medium text-muted-foreground transition-colors group-hover:border-accent group-hover:text-foreground">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-border bg-surface-raised text-xs font-medium text-muted-foreground transition-colors group-hover:border-accent group-hover:text-foreground">
                   {userInitial}
                 </div>
               )}
-              <span className="text-xs text-muted-foreground transition-colors group-hover:text-foreground">
+              <span className="hidden max-w-[140px] truncate sm:inline text-xs text-muted-foreground transition-colors group-hover:text-foreground">
                 {displayName}
               </span>
             </Link>

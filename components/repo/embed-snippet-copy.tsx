@@ -1,8 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Button from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
+
+/** VS Code Dark+–style tokens so the snippet reads like normal editor JS/HTML, not app theme colors. */
+const t = {
+  punct: "text-[#808080]",
+  tag: "text-[#569cd6]",
+  attr: "text-[#9cdcfe]",
+  str: "text-[#ce9178]",
+  plain: "text-[#d4d4d4]",
+} as const;
 
 type Props = {
   code: string;
@@ -11,27 +20,32 @@ type Props = {
 export default function EmbedSnippetCopy({ code }: Props) {
   const [copied, setCopied] = useState(false);
 
-  function renderHighlightedCode(snippet: string): React.ReactNode {
+  function renderHighlightedCode(snippet: string): ReactNode {
     const match = snippet.match(
       /^<script\s+src="([^"]+)"\s+async><\/script>\s*$/i,
     );
-    if (!match) return snippet;
+    if (!match) return <span className={t.plain}>{snippet}</span>;
 
     const src = match[1];
 
     return (
       <>
-        <span className="text-accent">&lt;script</span>
-        <span className="text-muted"> </span>
-        <span className="text-blue-400">src=</span>
-        <span className="text-emerald-400">
+        <span className={t.punct}>&lt;</span>
+        <span className={t.tag}>script</span>
+        <span className={t.plain}> </span>
+        <span className={t.attr}>src</span>
+        <span className={t.plain}>=</span>
+        <span className={t.str}>
           {"\""}
           {src}
           {"\""}
         </span>
-        <span className="text-yellow-400"> async</span>
-        <span className="text-accent">&gt;</span>
-        <span className="text-accent">&lt;/script&gt;</span>
+        <span className={t.plain}> </span>
+        <span className={t.attr}>async</span>
+        <span className={t.punct}>&gt;</span>
+        <span className={t.punct}>&lt;/</span>
+        <span className={t.tag}>script</span>
+        <span className={t.punct}>&gt;</span>
       </>
     );
   }
@@ -49,7 +63,7 @@ export default function EmbedSnippetCopy({ code }: Props) {
   return (
     <div className="mt-4">
       <div className="flex items-stretch gap-2">
-        <pre className="flex-1 overflow-x-auto border border-border bg-background p-4 text-xs leading-relaxed">
+        <pre className="flex-1 overflow-x-auto rounded-sm border border-[#3c3c3c] bg-[#1e1e1e] p-4 font-mono text-xs leading-relaxed text-[#d4d4d4]">
           <code className="whitespace-pre">{renderHighlightedCode(code)}</code>
         </pre>
         <Button

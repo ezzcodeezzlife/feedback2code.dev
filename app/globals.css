@@ -87,3 +87,10 @@ body {
 .animate-glow {
   animation: glow-pulse 2s ease-in-out infinite;
 }
+
+.hero-grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 107, 0, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 107, 0, 0.15) 1px, transparent 1px);
+  background-size: 60px 60px;
+}

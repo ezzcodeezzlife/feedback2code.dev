@@ -14,11 +14,12 @@ export default function NavbarAuthActions({ isAuthed }: Props) {
       type="button"
       onClick={() => signOut({ callbackUrl: "/" })}
       variant="ghost"
-      size="default"
-      className="cursor-pointer"
+      size="sm"
+      className="cursor-pointer shrink-0 px-2 sm:h-9 sm:px-4"
+      aria-label="Sign out"
     >
       <LogOut className="h-3.5 w-3.5" />
-      Sign out
+      <span className="hidden sm:inline">Sign out</span>
     </Button>
   ) : (
     <Button
