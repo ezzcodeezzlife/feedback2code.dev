@@ -8,7 +8,8 @@
     "dev": "next dev",
     "build": "prisma migrate deploy && next build && next-sitemap",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "billing:setup-stripe": "node scripts/setup-stripe-plans.mjs"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
@@ -25,6 +26,7 @@
     "react-dom": "19.2.4",
     "resend": "^6.9.4",
     "sonner": "^2.0.7",
+    "stripe": "^20.4.1",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {

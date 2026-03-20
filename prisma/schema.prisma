@@ -15,6 +15,12 @@ model User {
   image         String?
   githubAppInstalled Boolean @default(false)
   githubInstallationId String?
+  planTier      PlanTier  @default(FREE)
+  stripeCustomerId String? @unique
+  stripeSubscriptionId String?
+  stripePriceId String?
+  stripeSubscriptionStatus String?
+  stripeCurrentPeriodEnd DateTime?
   accounts      Account[]
   sessions      Session[]
   repositoryConfigs RepositoryConfig[]
@@ -104,8 +110,8 @@ model WidgetFeedback {
 }
 
 /**
- * Tracks feedback submissions per user so we can enforce a rolling "10 feedbacks per 30 days"
- * quota efficiently via an indexed (userId, createdAt) range query.
+ * Tracks feedback submissions per user so we can enforce rolling quotas (free vs pro limits
+ * in app code) via an indexed (userId, createdAt) range query.
  */
 model UserFeedbackLimitEvent {
   id                String   @id @default(cuid())
@@ -117,4 +123,9 @@ model UserFeedbackLimitEvent {
   widgetFeedback WidgetFeedback @relation(fields: [widgetFeedbackId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+enum PlanTier {
+  FREE
+  PRO
 }

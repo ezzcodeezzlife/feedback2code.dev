@@ -1,4 +1,8 @@
 import { startE2bFeedbackAgentWebhook } from "@/lib/feedback-agent/run-e2b-feedback-agent";
+import {
+  FEEDBACK_QUOTA_WINDOW_DAYS,
+  feedbackQuotaLimitForPlan,
+} from "@/lib/billing";
 import { parseWidgetIdFromBody } from "@/lib/widget-embed";
 import { prisma } from "@/lib/prisma";
 import type { WidgetFeedbackStatus } from "@/lib/widget-feedback-status";
@@ -10,14 +14,21 @@ import { NextRequest, NextResponse } from "next/server";
 const MAX_FEEDBACK_LEN = 2000;
 const MAX_PAGE_PATH_LEN = 2048;
 const LIST_LIMIT = 80;
-const FEEDBACK_QUOTA_LIMIT = 10;
-const FEEDBACK_QUOTA_WINDOW_DAYS = 30;
-
 class FeedbackQuotaExceededError extends Error {
-  constructor() {
+  readonly limit: number;
+  constructor(limit: number) {
     super("FEEDBACK_QUOTA_EXCEEDED");
+    this.name = "FeedbackQuotaExceededError";
+    this.limit = limit;
   }
 }
+
+type UserPlanLookup = {
+  findUnique(args: {
+    where: { id: string };
+    select: { planTier: true };
+  }): Promise<{ planTier: "FREE" | "PRO" } | null>;
+};
 
 function quotaCutoffDate(now = Date.now()) {
   return new Date(now - FEEDBACK_QUOTA_WINDOW_DAYS * 24 * 60 * 60 * 1000);
@@ -125,15 +136,20 @@ export async function POST(request: NextRequest) {
 
   try {
     created = await prisma.$transaction(async (tx) => {
+      const user = await (tx.user as unknown as UserPlanLookup).findUnique({
+        where: { id: auth.ctx.userId },
+        select: { planTier: true },
+      });
+      const quotaLimit = feedbackQuotaLimitForPlan(user?.planTier);
+
       const usedInWindow = await tx.userFeedbackLimitEvent.count({
         where: {
           userId: auth.ctx.userId,
           createdAt: { gte: cutoff },
         },
       });
-
-      if (usedInWindow >= FEEDBACK_QUOTA_LIMIT) {
-        throw new FeedbackQuotaExceededError();
+      if (usedInWindow >= quotaLimit) {
+        throw new FeedbackQuotaExceededError(quotaLimit);
       }
 
       const created = await tx.widgetFeedback.create({
@@ -146,7 +162,7 @@ export async function POST(request: NextRequest) {
         select: { id: true, body: true, createdAt: true, status: true },
       });
 
-      // Log quota usage so we can count efficiently for rolling windows.
+      // Log quota usage for rolling-window counts (free + pro).
       await tx.userFeedbackLimitEvent.create({
         data: {
           userId: auth.ctx.userId,
@@ -161,7 +177,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           ok: false,
-          message: `Feedback quota exceeded. You can submit at most ${FEEDBACK_QUOTA_LIMIT} feedbacks per ${FEEDBACK_QUOTA_WINDOW_DAYS} days.`,
+          message: `Feedback quota exceeded. You can submit at most ${err.limit} feedbacks per ${FEEDBACK_QUOTA_WINDOW_DAYS} days.`,
         },
         { status: 429, headers: auth.ctx.headers },
       );

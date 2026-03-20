@@ -53,3 +53,49 @@ Set these **server-only** variables (see `.env.example`):
 ## Deploy on Vercel
 
 See [Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying). Configure env vars and database migrations (`prisma migrate deploy` runs in `npm run build`).
+
+## Stripe subscriptions (Free + Pro)
+
+This app supports:
+
+- `FREE` plan: 10 feedback submissions / rolling 30 days
+- `PRO` plan: 100 feedback submissions / rolling 30 days
+
+Required server env vars:
+
+- `STRIPE_SECRET_KEY`
+- `STRIPE_PRO_PRICE_ID`
+- `STRIPE_WEBHOOK_SECRET`
+
+Create Stripe products/prices via API:
+
+```bash
+npm run billing:setup-stripe
+```
+
+Then copy the printed `price_...` into `STRIPE_PRO_PRICE_ID`.
+
+Webhook endpoint:
+
+- `POST /api/stripe/webhook`
+- In local dev with Stripe CLI:
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+**Finish Stripe Dashboard setup**
+
+1. **One webhook only** — If two destinations point at the same URL, Stripe may deliver **every event twice**. Delete or disable the duplicate; keep a **single** endpoint for `/api/stripe/webhook`.
+2. **Events to send** (enough for this app; you don’t need 200+):
+
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+
+3. **Signing secret** — Each endpoint has its **own** `whsec_...`. Put the secret for the endpoint you keep into `STRIPE_WEBHOOK_SECRET` (if you delete/recreate the endpoint, the secret changes).
+4. **Customer portal** — For “Manage billing” to work, enable the portal in [Stripe Customer portal settings](https://dashboard.stripe.com/test/settings/billing/portal).
+5. **Tunnel URLs** (e.g. Cloudflare Try) change when the tunnel restarts — update the webhook URL in Stripe when it does.
+
+Copy env var names from [`.env.example`](./.env.example) into `.env.local` (do not commit real keys).
