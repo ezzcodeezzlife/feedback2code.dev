@@ -98,11 +98,11 @@ const EXAMPLE_EMBED = `<script src="https://www.feedback2code.dev/widget/your_un
 
 const MOCK_FEEDBACKS = [
   {
-    id: "1",
-    body: "The signup button doesn't work on mobile — it overlaps with the nav bar on small screens.",
-    status: "MERGED" as const,
-    time: "2h ago",
-    prUrl: "#",
+    id: "3",
+    body: "Add a loading spinner when the dashboard data is fetching. Right now it just shows a blank screen.",
+    status: "CODING" as const,
+    time: "12m ago",
+    prUrl: null,
   },
   {
     id: "2",
@@ -112,10 +112,10 @@ const MOCK_FEEDBACKS = [
     prUrl: "#",
   },
   {
-    id: "3",
-    body: "Add a loading spinner when the dashboard data is fetching. Right now it just shows a blank screen.",
-    status: "CODING" as const,
-    time: "12m ago",
+    id: "1",
+    body: "The signup button doesn't work on mobile — it overlaps with the nav bar on small screens.",
+    status: "MERGED" as const,
+    time: "2h ago",
     prUrl: null,
   },
 ];
@@ -596,8 +596,8 @@ export default function LandingView() {
 
           <div className="mt-14 border border-border bg-background">
             {/* Mock dashboard header */}
-            <div className="border-b border-border px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-3 border-b border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-accent" />
                 <span className="text-sm font-bold uppercase tracking-wider">
                   Submitted Feedback
@@ -606,7 +606,7 @@ export default function LandingView() {
                   3
                 </span>
               </div>
-              <span className="text-xs text-muted uppercase tracking-widest">
+              <span className="text-xs text-muted uppercase tracking-widest sm:text-right">
                 acme / web-app
               </span>
             </div>
@@ -1126,8 +1126,8 @@ export default function LandingView() {
                   </li>
                 ))}
               </ul>
-              <a
-                href="mailto:hello@feedback2code.dev?subject=Enterprise%20plan%20inquiry"
+              <Link
+                href="/legal"
                 className={cn(
                   buttonVariants({ variant: "outline" }),
                   "w-full cursor-pointer",
@@ -1135,7 +1135,7 @@ export default function LandingView() {
               >
                 <Mail className="h-4 w-4" />
                 Contact us
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -1234,3 +1234,6 @@ export default function LandingView() {
     </div>
   );
 }
+
+
+

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import LegalContactForm from "@/components/legal/legal-contact-form";
 import LegalContent from "@/content/legal.mdx";
 import { PageShell } from "@/components/layout/page-shell";
 import { ArrowLeft } from "lucide-react";
@@ -25,6 +26,10 @@ export default function LegalPage() {
         </div>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">Legal &amp; contact</h1>
       </div>
+
+      <section className="mb-8 border border-border bg-surface p-6 sm:p-8">
+        <LegalContactForm />
+      </section>
 
       <section className="border border-border bg-surface p-6 sm:p-8">
         <LegalContent />
