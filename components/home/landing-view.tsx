@@ -344,7 +344,7 @@ export default function LandingView() {
                 <div className="px-8 py-10 sm:px-10">
                   <div className="space-y-8">
                     <div className="inline-flex items-center gap-2 border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-accent">
-                      Live product site
+                      Product site
                     </div>
                     <div className="max-w-2xl space-y-5">
                       <div className="h-3 w-28 bg-accent/70" />
@@ -967,12 +967,12 @@ export default function LandingView() {
               },
               {
                 name: "AI Agent",
-                detail: "Full codebase understanding with web search",
+                detail: "Full codebase understanding",
                 icon: Bot,
               },
               {
                 name: "Stripe Billing",
-                detail: "Simple, transparent Free & Pro plans",
+                detail: "Simple, transparent Free, Pro, and Enterprise plans",
                 icon: Shield,
               },
             ].map((tech) => (
@@ -1158,7 +1158,7 @@ export default function LandingView() {
             />
             <FAQItem
               question="What happens if the agent makes a bad change?"
-              answer="Nothing ships without your approval. Every change becomes a Pull Request on GitHub that you review and merge (or close). You always have the final say. The agent also follows your custom instructions if you provide them."
+              answer="Nothing ships without your approval. The agent does not have direct git access to push straight to production. Every change becomes a Pull Request on GitHub that you review and merge (or close). You always have the final say. The agent also follows your custom instructions if you provide them."
             />
             <FAQItem
               question="Which languages and frameworks are supported?"
@@ -1189,7 +1189,7 @@ export default function LandingView() {
             <span className="text-accent">Start shipping fixes.</span>
           </h2>
           <p className="mt-6 text-base text-muted-foreground max-w-md mx-auto">
-            Set up in under 5 minutes. Your first automated PR is one feedback
+            Set up in under 3 minutes. Your first automated PR is one feedback
             submission away.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -1234,8 +1234,3 @@ export default function LandingView() {
     </div>
   );
 }
-
-
-
-
-

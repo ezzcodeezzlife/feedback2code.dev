@@ -15,7 +15,8 @@
     "tunnel:tailscale": "node scripts/tailscale-dev-tunnel.mjs",
     "tunnel:tailscale:funnel": "node scripts/tailscale-dev-tunnel.mjs --funnel",
     "test:e2b-feedback-sandbox": "dotenv -e .env.development -- npx tsx scripts/test-e2b-feedback-sandbox.ts",
-    "test:e2b-production-like": "dotenv -e .env.development -- npx tsx scripts/test-e2b-production-like.ts"
+    "test:e2b-production-like": "dotenv -e .env.development -- npx tsx scripts/test-e2b-production-like.ts",
+    "purge:prod-widget-feedback": "dotenv -e .env.production -- npx tsx scripts/purge-user-widget-feedback.ts"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
