@@ -49,7 +49,7 @@ export function BillingActions({ isPro }: { isPro: boolean }) {
           disabled={pending !== null}
           className="leading-none min-h-8 max-h-8"
         >
-          {pending === "upgrade" ? "Redirecting..." : "Upgrade to Pro ($10/mo)"}
+          {pending === "upgrade" ? "Redirecting..." : "Upgrade to Pro ($20/mo)"}
         </Button>
       )}
       {error ? <p className="text-xs text-red-400">{error}</p> : null}

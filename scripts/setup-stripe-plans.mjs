@@ -32,7 +32,7 @@ async function ensureRecurringPrice(productId, lookupKey, amountCents) {
 async function main() {
   const freeProduct = await ensureProduct("feedback2code Free", { tier: "FREE" });
   const proProduct = await ensureProduct("feedback2code Pro", { tier: "PRO" });
-  const proPrice = await ensureRecurringPrice(proProduct.id, "feedback2code_pro_monthly_10_usd", 1000);
+  const proPrice = await ensureRecurringPrice(proProduct.id, "feedback2code_pro_monthly_20_usd", 2000);
 
   console.log("Free product:", freeProduct.id);
   console.log("Pro product:", proProduct.id);

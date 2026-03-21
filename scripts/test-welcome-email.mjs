@@ -76,8 +76,6 @@ const baseUrl = (
 const dashboardUrl = `${baseUrl}/`;
 const profileUrl = `${baseUrl}/profile`;
 const legalUrl = `${baseUrl}/legal`;
-const widgetSnippet = `<script src="${baseUrl}/widget/your_widget_id" async></script>`;
-
 const subject =
   mode === "test"
     ? process.env.RESEND_WELCOME_SUBJECT_TEST ?? "[test] Welcome to feedback2code"
@@ -113,16 +111,30 @@ const html = `<!doctype html>
 
                 <p style="margin:10px 0 0;color:#a0a0a0;font-size:14px;line-height:1.6;">
                   Add a new project: click <strong>Manage Access</strong> to grant more repositories, then open a repo to configure
-                  authorized domains and copy the widget snippet.
+                  authorized domains and get the widget snippet.
                 </p>
 
                 <div style="margin:18px 0 0;padding:14px 16px;border:1px solid #222222;background:#111111;">
-                  <p style="margin:0 0 6px;color:#a0a0a0;font-size:13px;text-transform:uppercase;letter-spacing:0.16em;">Add the feedback widget</p>
+                  <p style="margin:0 0 6px;color:#a0a0a0;font-size:13px;text-transform:uppercase;letter-spacing:0.16em;">Add the
+                    feedback widget</p>
                   <p style="margin:0 0 10px;color:#ededed;font-size:14px;line-height:1.6;">
-                    Paste the one-line JavaScript snippet into your site (right before <code style="font-family:inherit;">&lt;/body&gt;</code>).
+                    Paste the widget snippet (before <code style="font-family:inherit;">&lt;/body&gt;</code>) so the popup appears on every page.
                   </p>
-                  <div style="border:1px solid #222222;background:#0a0a0a;padding:10px 12px;font-size:12px;color:#ededed;word-break:break-all;">
-                    ${widgetSnippet.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+                </div>
+
+                <div style="margin:8px 0 0;border:1px solid #222222;background:#0a0a0a;padding:14px 16px;border-radius:12px;">
+                  <p style="margin:0 0 6px;color:#a0a0a0;font-size:13px;text-transform:uppercase;letter-spacing:0.16em;">Widget preview</p>
+                  <div style="border:1px solid #333333;background:#111111;border-radius:10px;padding:14px;">
+                    <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:#888888;text-transform:uppercase;letter-spacing:0.16em;">
+                      <span style="padding:2px 8px;border:1px solid #ff6b00;border-radius:999px;color:#ff6b00;">Feedback</span>
+                      <span>Chat bubble</span>
+                    </div>
+                    <p style="margin:12px 0 6px;color:#ededed;font-size:14px;">Share what you're stuck on</p>
+                    <div style="margin:0 0 12px;padding:10px;background:#0a0a0a;border:1px solid #222222;border-radius:8px;font-size:13px;color:#a0a0a0;line-height:1.5;">
+                      <div style="margin-bottom:6px;">"The signup button overlaps the nav on mobile"</div>
+                      <div style="font-size:11px;color:#666666;">Status - Merged - 2h ago</div>
+                    </div>
+                    <button style="width:100%;padding:10px 0;border:none;border-radius:8px;background:#ff6b00;color:#000;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Share feedback</button>
                   </div>
                 </div>
 
@@ -189,9 +201,9 @@ Welcome to feedback2code. Your account is ready.
 Start here (dashboard): ${dashboardUrl}
 
 Add the feedback widget:
-- Copy the one-line JavaScript snippet from your repo page.
-- Paste it before </body> on your site.
-- Example: ${widgetSnippet}
+- Click "Manage Access" to grant repositories and grab the widget snippet from a repo page.
+- Paste that snippet before </body> on your site so the popup loads everywhere.
+- Preview the widget above to see how it looks once installed.
 
 Add a new project:
 - In the dashboard, click "Manage Access" to grant more repositories.
@@ -210,20 +222,10 @@ Need help? Just reply to this email.${testModeNote ? `\n\n${testModeNote}` : ""}
 
 const resend = new Resend(apiKey);
 
-try {
-  const result = await resend.emails.send({
-    from,
-    to,
-    subject,
-    html,
-    text,
-  });
-  console.log("Sent OK.", {
-    mode,
-    to,
-    resendId: result?.id ?? null,
-  });
-} catch (error) {
-  console.error("Resend error:", error);
-  process.exit(1);
-}
+// Temporarily skip actually sending the email while we tweak the template.
+// When we're ready again, we can restore the `resend.emails.send` call above.
+console.log("Welcome email send is currently disabled; preview ready.", {
+  mode,
+  to,
+  subject,
+});

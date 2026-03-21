@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import Button from "@/components/ui/button";
+import Button, { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import EmbedSnippetCopy from "@/components/repo/embed-snippet-copy";
 import {
@@ -882,7 +883,7 @@ export default function LandingView() {
             No hidden fees. No usage surprises. Upgrade when you need more.
           </p>
 
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div className="mt-14 grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {/* Free tier */}
             <div className="border border-border bg-background p-8 flex flex-col">
               <span className="text-xs uppercase tracking-widest text-muted mb-2">
@@ -926,24 +927,34 @@ export default function LandingView() {
                 Pro
               </span>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-foreground">$19</span>
+                <span className="text-4xl font-bold text-foreground">$20</span>
                 <span className="text-sm text-muted">/ month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
                 For teams and production apps with active user bases.
               </p>
               <ul className="space-y-3 text-sm text-muted-foreground mb-8 flex-1">
-                {[
-                  "100 feedbacks per 30-day window",
-                  "Everything in Free",
-                  "Priority sandbox execution",
-                  "Custom agent instructions",
-                  "Page path context tracking",
-                  "Advanced dashboard analytics",
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
+                {(
+                  [
+                    { text: "100 feedbacks per 30-day window" },
+                    { text: "Everything in Free" },
+                    { text: "Priority sandbox execution" },
+                    { text: "Custom agent instructions" },
+                    { text: "Page path context tracking" },
+                    { text: "Advanced dashboard analytics" },
+                    { text: "Choose AI Agent model", comingSoon: true },
+                  ] as const
+                ).map((f) => (
+                  <li key={f.text} className="flex items-start gap-2">
                     <Check className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-                    {f}
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span>{f.text}</span>
+                      {"comingSoon" in f && f.comingSoon ? (
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border border-border px-1.5 py-0.5 rounded-sm">
+                          Coming soon
+                        </span>
+                      ) : null}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -954,6 +965,58 @@ export default function LandingView() {
                 <Github className="h-4 w-4" />
                 Start with Pro
               </Button>
+            </div>
+
+            {/* Enterprise tier */}
+            <div className="border border-border bg-background p-8 flex flex-col">
+              <span className="text-xs uppercase tracking-widest text-muted mb-2">
+                Enterprise
+              </span>
+              <div className="flex items-baseline gap-1 mb-4">
+                <span className="text-4xl font-bold text-foreground">Custom</span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-6">
+                For organizations that need unlimited scale, compliance support, and a
+                tailored setup.
+              </p>
+              <ul className="space-y-3 text-sm text-muted-foreground mb-8 flex-1">
+                {(
+                  [
+                    { text: "Unlimited feedbacks" },
+                    { text: "Everything in Pro" },
+                    { text: "Priority sandbox execution" },
+                    { text: "Custom agent instructions & advanced analytics" },
+                    { text: "Data Processing Agreement (DPA)" },
+                    { text: "GDPR-aligned handling & subprocessor transparency" },
+                    {
+                      text: "Security questionnaires, reviews & custom enterprise terms",
+                    },
+                    { text: "Choose AI Agent model", comingSoon: true },
+                  ] as const
+                ).map((f) => (
+                  <li key={f.text} className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span>{f.text}</span>
+                      {"comingSoon" in f && f.comingSoon ? (
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border border-border px-1.5 py-0.5 rounded-sm">
+                          Coming soon
+                        </span>
+                      ) : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="mailto:hello@feedback2code.dev?subject=Enterprise%20plan%20inquiry"
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "w-full cursor-pointer",
+                )}
+              >
+                <Mail className="h-4 w-4" />
+                Contact us
+              </a>
             </div>
           </div>
         </div>

@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     const feedbackRow = await prisma.widgetFeedback.findUnique({
       where: { id: feedbackId },
-      select: { repositoryConfigId: true, status: true, prUrl: true },
+      select: { repositoryConfigId: true, status: true, prUrl: true, body: true },
     });
 
     const repositoryConfig = feedbackRow
@@ -138,6 +138,7 @@ export async function POST(request: NextRequest) {
         intendedRecipientName: repositoryConfig.user?.name ?? null,
         repositoryFullName: `${repositoryConfig.owner}/${repositoryConfig.repo}`,
         prUrl: payloadPrUrl,
+        feedbackBody: feedbackRow?.body ?? null,
       });
     }
 
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const row = await (prisma.widgetFeedback as any).findFirst({
     where: { e2bSandboxId: { in: candidateIds } },
-    select: { id: true, status: true, repositoryConfigId: true },
+    select: { id: true, status: true, repositoryConfigId: true, body: true },
   });
 
   if (!row) return NextResponse.json({ ok: true });
@@ -271,12 +272,13 @@ export async function POST(request: NextRequest) {
         intendedUserName: repositoryConfig.user?.name ?? null,
         mode: process.env.RESEND_EMAIL_MODE ?? "production",
       });
-      await sendPrCreatedEmail({
-        intendedToEmails: repositoryConfig.user?.email ? [repositoryConfig.user.email] : [],
-        intendedRecipientName: repositoryConfig.user?.name ?? null,
-        repositoryFullName: `${repositoryConfig.owner}/${repositoryConfig.repo}`,
-        prUrl,
-      });
+        await sendPrCreatedEmail({
+          intendedToEmails: repositoryConfig.user?.email ? [repositoryConfig.user.email] : [],
+          intendedRecipientName: repositoryConfig.user?.name ?? null,
+          repositoryFullName: `${repositoryConfig.owner}/${repositoryConfig.repo}`,
+          prUrl,
+          feedbackBody: row.body ?? null,
+        });
     }
 
     revalidatePath(dashboardPath);
@@ -312,4 +314,3 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
-

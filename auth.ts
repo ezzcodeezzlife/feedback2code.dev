@@ -17,10 +17,10 @@ export const authOptions: NextAuthOptions = {
     async createUser({ user }) {
       const email = user.email?.trim();
       if (!email) return;
-      await sendWelcomeEmail({
-        intendedToEmail: email,
-        intendedRecipientName: user.name ?? null,
-      });
+      // await sendWelcomeEmail({
+      //   intendedToEmail: email,
+      //   intendedRecipientName: user.name ?? null,
+      // });
     },
   },
 };
