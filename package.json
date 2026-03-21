@@ -11,7 +11,9 @@
     "start": "next start",
     "lint": "eslint",
     "billing:setup-stripe": "dotenv -e .env.development -- node scripts/setup-stripe-plans.mjs",
-    "migrate:dev": "dotenv -e .env.development -- prisma migrate dev"
+    "migrate:dev": "dotenv -e .env.development -- prisma migrate dev",
+    "tunnel:tailscale": "node scripts/tailscale-dev-tunnel.mjs",
+    "tunnel:tailscale:funnel": "node scripts/tailscale-dev-tunnel.mjs --funnel"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
