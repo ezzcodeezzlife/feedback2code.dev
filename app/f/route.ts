@@ -11,6 +11,16 @@ import { authorizeWidgetRequest, widgetCorsHeaders } from "@/lib/widget-resolve"
 import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Upper bound for this route’s **serverless invocation**, not for the coding agent.
+ * The agent runs for a long time **inside E2B**; completion is pushed via `/api/e2b/webhook`.
+ *
+ * Next runs `after()` **after the response is sent**, so the visitor already has `201` before
+ * bootstrap starts. This value only needs to cover: E2B `Sandbox.create`, file writes, and
+ * starting the **background** shell job (returns once the process is spawned).
+ */
+export const maxDuration = 120;
+
 const MAX_FEEDBACK_LEN = 2000;
 const MAX_PAGE_PATH_LEN = 2048;
 const LIST_LIMIT = 80;
@@ -192,20 +202,25 @@ export async function POST(request: NextRequest) {
   }
 
   const dashboardPath = `/${auth.ctx.owner}/${auth.ctx.repo}`;
-  after(() => {
-    void startE2bFeedbackAgentWebhook({
-      feedbackId: created.id,
-      repositoryConfigId: auth.ctx.repositoryConfigId,
-      owner: auth.ctx.owner,
-      repo: auth.ctx.repo,
-      fullName: auth.ctx.fullName,
-      feedbackBody: text,
-      pagePath: storedPagePath,
-      dashboardPath,
-      githubInstallationId: auth.ctx.githubInstallationId,
-    }).catch((err) => {
+  // Await only **bootstrap** (see `startE2bFeedbackAgentWebhook`): not OpenCode/PR time.
+  // We must await (not `void`) so Next’s after-queue + `waitUntil` keep the invocation alive
+  // until the sandbox exists and the pipeline is started in the background.
+  after(async () => {
+    try {
+      await startE2bFeedbackAgentWebhook({
+        feedbackId: created.id,
+        repositoryConfigId: auth.ctx.repositoryConfigId,
+        owner: auth.ctx.owner,
+        repo: auth.ctx.repo,
+        fullName: auth.ctx.fullName,
+        feedbackBody: text,
+        pagePath: storedPagePath,
+        dashboardPath,
+        githubInstallationId: auth.ctx.githubInstallationId,
+      });
+    } catch (err) {
       console.error("[startE2bFeedbackAgentWebhook]", err);
-    });
+    }
   });
 
   return NextResponse.json(

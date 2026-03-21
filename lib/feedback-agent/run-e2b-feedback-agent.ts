@@ -66,9 +66,9 @@ function publicAppBaseUrl(): string {
 
 /**
  * Webhook-based runner:
- * - starts the sandbox pipeline in the background so the HTTP request won't block
- * - does NOT update `widgetFeedback` when the agent finishes; that is handled by
- *   the E2B lifecycle webhook route by reading `/home/user/f2c-pr-url.txt`
+ * - Creates the sandbox, writes files, then runs the bash pipeline with **`background: true`**
+ *   (returns once the VM process is started — **not** when OpenCode / PR work finishes).
+ * - Completion is reported via `/api/e2b/webhook` (and the in-sandbox POST callback).
  *
  * The sandbox is left to complete on its own (up to `SANDBOX_TIMEOUT_MS`).
  */
