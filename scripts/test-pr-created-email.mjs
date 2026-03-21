@@ -83,6 +83,49 @@ const subject =
 
 const testModeNote = mode === "test" ? `Test mode. Intended recipient(s): ${toEmail}` : "";
 
+function resolveBaseUrl() {
+  const vercel = process.env.VERCEL_URL?.trim();
+  const candidates = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.APP_URL,
+    process.env.NEXTAUTH_URL,
+    vercel ? `https://${vercel.replace(/^https?:\/\//i, "")}` : undefined,
+  ];
+  for (const c of candidates) {
+    const t = typeof c === "string" ? c.trim() : "";
+    if (!t) continue;
+    try {
+      const withProtocol = /^https?:\/\//i.test(t) ? t : `https://${t}`;
+      const u = new URL(withProtocol);
+      if (u.protocol !== "http:" && u.protocol !== "https:") continue;
+      return u.origin;
+    } catch {
+      continue;
+    }
+  }
+  return "https://www.feedback2code.dev";
+}
+
+function projectSettingsUrl(fullName) {
+  const t = fullName.trim();
+  const i = t.indexOf("/");
+  if (i <= 0 || i >= t.length - 1) return null;
+  const owner = t.slice(0, i);
+  const repo = t.slice(i + 1);
+  if (!owner || !repo || repo.includes("/")) return null;
+  return `${resolveBaseUrl()}/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+}
+
+const settingsUrl = projectSettingsUrl(repositoryFullName);
+const settingsLinkHtml = settingsUrl
+  ? `<p style="margin:16px 0 0;padding-top:16px;border-top:1px solid #222222;color:#666666;font-size:12px;line-height:1.55;">
+                  You can turn off PR email notifications for this repo anytime in your <a href="${escapeHtml(settingsUrl)}" style="color:#888888;text-decoration:underline;">project settings</a>.
+                </p>`
+  : "";
+const settingsLine = settingsUrl
+  ? `\nYou can turn off PR email notifications for this repo anytime in project settings: ${settingsUrl}\n`
+  : "";
+
 const html = `<!doctype html>
 <html lang="en">
   <body style="margin:0;padding:0;background:#000000;color:#ededed;font-family:'Fira Code','JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">
@@ -144,6 +187,8 @@ const html = `<!doctype html>
                   Need help? Reply to this email and we can take a look together.
                 </p>
 
+                ${settingsLinkHtml}
+
                 ${testModeNote ? `<p style="margin:18px 0 0;color:#888888;font-size:12px;">${escapeHtml(testModeNote)}</p>` : ""}
               </td>
             </tr>
@@ -164,7 +209,7 @@ Your automated feedback PR is ready for review.
 Repository: ${repositoryFullName}
 ${pagePath ? `\nFrom ${pagePath}\n` : ""}${feedbackBody ? `\nUser feedback:\n${feedbackBody}\n` : ""}
 Review the pull request: ${prUrl}
-
+${settingsLine}
 Need help? Reply to this email.${testModeNote ? `\n\n${testModeNote}` : ""}`;
 
 const resend = new Resend(apiKey);

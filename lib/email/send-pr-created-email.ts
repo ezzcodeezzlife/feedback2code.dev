@@ -3,6 +3,9 @@ import { Resend } from "resend";
 type SendPrCreatedEmailInput = {
   intendedToEmails: string[];
   repositoryFullName: string;
+  /** Prefer DB route segments for the project dashboard URL (`/[owner]/[repo]`). */
+  owner?: string | null;
+  repo?: string | null;
   prUrl: string;
   feedbackBody?: string | null;
   /** Widget `location.pathname` where feedback was sent from, e.g. `/blog/post`. */
@@ -34,6 +37,63 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
+/**
+ * Absolute origin for links in transactional email.
+ * Empty-string env vars do not trigger `??` fallbacks, which previously produced
+ * relative `/owner/repo` hrefs that clients resolve against the wrong host (home/index).
+ */
+function resolveBaseUrl(): string {
+  const candidates = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.APP_URL,
+    process.env.NEXTAUTH_URL,
+    process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL.replace(/^https?:\/\//i, "")}`
+      : undefined,
+  ];
+
+  for (const c of candidates) {
+    const t = typeof c === "string" ? c.trim() : "";
+    if (!t) continue;
+    try {
+      const withProtocol = /^https?:\/\//i.test(t) ? t : `https://${t}`;
+      const u = new URL(withProtocol);
+      if (u.protocol !== "http:" && u.protocol !== "https:") continue;
+      return u.origin;
+    } catch {
+      continue;
+    }
+  }
+
+  return "https://www.feedback2code.dev";
+}
+
+function projectSettingsUrlFromFullName(repositoryFullName: string): string | null {
+  const t = repositoryFullName.trim();
+  const i = t.indexOf("/");
+  if (i <= 0 || i >= t.length - 1) return null;
+  const owner = t.slice(0, i);
+  const repo = t.slice(i + 1);
+  if (!owner || !repo || repo.includes("/")) return null;
+  const base = resolveBaseUrl();
+  return `${base}/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+}
+
+/** Project dashboard (settings + PR email toggle): `https://…/owner/repo`. */
+function projectDashboardAbsoluteUrl(input: {
+  repositoryFullName: string;
+  owner?: string | null;
+  repo?: string | null;
+}): string | null {
+  const base = resolveBaseUrl();
+  const o = input.owner?.trim();
+  const r = input.repo?.trim();
+  if (o && r && !r.includes("/")) {
+    return `${base}/${encodeURIComponent(o)}/${encodeURIComponent(r)}`;
+  }
+  return projectSettingsUrlFromFullName(input.repositoryFullName);
+}
+
 function buildPrCreatedEmailHtml(options: {
   recipientName: string;
   repositoryFullName: string;
@@ -41,8 +101,23 @@ function buildPrCreatedEmailHtml(options: {
   feedbackBody?: string | null;
   pagePath?: string | null;
   testModeNote?: string;
+  projectSettingsUrl: string | null;
 }): string {
-  const { recipientName, repositoryFullName, prUrl, feedbackBody, pagePath, testModeNote } = options;
+  const {
+    recipientName,
+    repositoryFullName,
+    prUrl,
+    feedbackBody,
+    pagePath,
+    testModeNote,
+    projectSettingsUrl: settingsUrl,
+  } = options;
+
+  const settingsLinkHtml = settingsUrl
+    ? `<p style="margin:16px 0 0;padding-top:16px;border-top:1px solid #222222;color:#666666;font-size:12px;line-height:1.55;">
+                  You can turn off PR email notifications for this repo anytime in your <a href="${escapeHtml(settingsUrl)}" style="color:#888888;text-decoration:underline;">project settings</a>.
+                </p>`
+    : "";
 
   return `<!doctype html>
 <html lang="en">
@@ -105,6 +180,8 @@ function buildPrCreatedEmailHtml(options: {
                   Need help? Reply to this email and we can take a look together.
                 </p>
 
+                ${settingsLinkHtml}
+
                 ${
                   testModeNote
                     ? `<p style="margin:18px 0 0;color:#888888;font-size:12px;">${escapeHtml(testModeNote)}</p>`
@@ -130,8 +207,21 @@ function buildPrCreatedEmailText(options: {
   feedbackBody?: string | null;
   pagePath?: string | null;
   testModeNote?: string;
+  projectSettingsUrl: string | null;
 }): string {
-  const { recipientName, repositoryFullName, prUrl, feedbackBody, pagePath, testModeNote } = options;
+  const {
+    recipientName,
+    repositoryFullName,
+    prUrl,
+    feedbackBody,
+    pagePath,
+    testModeNote,
+    projectSettingsUrl: settingsUrl,
+  } = options;
+
+  const settingsLine = settingsUrl
+    ? `\nYou can turn off PR email notifications for this repo anytime in project settings: ${settingsUrl}\n`
+    : "";
 
   return `Hi ${recipientName},
 
@@ -140,7 +230,7 @@ Your automated feedback PR is ready for review.
 Repository: ${repositoryFullName}
 ${pagePath ? `\nFrom ${pagePath}\n` : ""}${feedbackBody ? `\nUser feedback:\n${feedbackBody}\n` : ""}
 Review the pull request: ${prUrl}
-
+${settingsLine}
 Need help? Reply to this email.${testModeNote ? `\n\n${testModeNote}` : ""}`;
 }
 
@@ -187,6 +277,12 @@ export async function sendPrCreatedEmail(input: SendPrCreatedEmailInput) {
   const testModeNote =
     mode === "test" ? `Test mode. Intended recipient(s): ${intendedRecipientsLine}` : undefined;
 
+  const settingsUrl = projectDashboardAbsoluteUrl({
+    repositoryFullName,
+    owner: input.owner,
+    repo: input.repo,
+  });
+
   const html = buildPrCreatedEmailHtml({
     recipientName: safeRecipientName,
     repositoryFullName: escapeHtml(repositoryFullName),
@@ -194,6 +290,7 @@ export async function sendPrCreatedEmail(input: SendPrCreatedEmailInput) {
     feedbackBody: input.feedbackBody ? escapeHtml(input.feedbackBody.trim()) : undefined,
     pagePath: safePagePath,
     testModeNote,
+    projectSettingsUrl: settingsUrl,
   });
 
   const text = buildPrCreatedEmailText({
@@ -203,6 +300,7 @@ export async function sendPrCreatedEmail(input: SendPrCreatedEmailInput) {
     feedbackBody: input.feedbackBody?.trim(),
     pagePath: pagePathTrimmed || undefined,
     testModeNote,
+    projectSettingsUrl: settingsUrl,
   });
 
   const resend = new Resend(apiKey);

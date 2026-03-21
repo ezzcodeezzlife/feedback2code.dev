@@ -20,9 +20,9 @@ const LANDING_FAQ = [
       "No. It stays off the public internet, so there is no web browsing or arbitrary outbound access.",
   },
   {
-    question: "Which LLM and provider does the agent use?",
+    question: "Which LLM does the agent use?",
     answer:
-      "The coding agent runs on MiniMax-M2.5. Model selection will be configurable on higher tiers later.",
+      "The coding agent runs on OpenCode with MiniMax-M2.5, an open source model. Model selection will be configurable on higher tiers later.",
   },
   {
     question: "What happens if the agent makes a bad change?",
