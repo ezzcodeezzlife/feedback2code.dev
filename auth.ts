@@ -7,6 +7,19 @@ import GitHubProvider from "next-auth/providers/github";
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
+  callbacks: {
+    async session({ session, user }) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { planTier: true },
+      });
+      if (session.user) {
+        session.user.id = user.id;
+        session.user.planTier = dbUser?.planTier ?? "FREE";
+      }
+      return session;
+    },
+  },
   providers: [
     GitHubProvider({
       clientId: process.env.AUTH_GITHUB_ID ?? "",

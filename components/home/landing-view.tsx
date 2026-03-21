@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import Button, { buttonVariants } from "@/components/ui/button";
+import { PRO_TIER_FEATURES } from "@/lib/plan-features";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import EmbedSnippetCopy from "@/components/repo/embed-snippet-copy";
@@ -1015,20 +1016,22 @@ export default function LandingView() {
               <p className="text-sm text-muted-foreground mb-6">
                 Perfect for trying out feedback2code on personal projects.
               </p>
-              <ul className="space-y-3 text-sm text-muted-foreground mb-8 flex-1">
-                {[
-                  "10 feedbacks per 30-day window",
-                  "AI agent with sandbox execution",
-                  "Automatic Pull Requests",
-                  "Email notifications",
-                  "Unlimited repositories",
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
+              <div className="flex flex-col flex-1 mb-8 min-h-0">
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  {[
+                    "10 feedbacks per 30-day window",
+                    "AI agent with sandbox execution",
+                    "Automatic Pull Requests",
+                    "Email notifications",
+                    "Unlimited repositories",
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
               <Button
                 onClick={() => signIn("github", { callbackUrl: "/" })}
                 variant="outline"
@@ -1053,22 +1056,12 @@ export default function LandingView() {
                 For teams and production apps with active user bases.
               </p>
               <ul className="space-y-3 text-sm text-muted-foreground mb-8 flex-1">
-                {(
-                  [
-                    { text: "100 feedbacks per 30-day window" },
-                    { text: "Everything in Free" },
-                    { text: "Priority sandbox execution" },
-                    { text: "Custom agent instructions" },
-                    { text: "Page path context tracking" },
-                    { text: "Advanced dashboard analytics" },
-                    { text: "Choose AI Agent model", comingSoon: true },
-                  ] as const
-                ).map((f) => (
+                {PRO_TIER_FEATURES.map((f) => (
                   <li key={f.text} className="flex items-start gap-2">
                     <Check className="h-4 w-4 text-accent shrink-0 mt-0.5" />
                     <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span>{f.text}</span>
-                      {"comingSoon" in f && f.comingSoon ? (
+                      {f.comingSoon ? (
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border border-border px-1.5 py-0.5 rounded-sm">
                           Coming soon
                         </span>

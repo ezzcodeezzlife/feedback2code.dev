@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
+import CookieConsentGate from "@/components/cookie-consent-gate";
 import Navbar from "@/components/navbar";
 import AuthSessionProvider from "@/components/session-provider";
 
@@ -27,8 +27,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Navbar />
         <AuthSessionProvider>{children}</AuthSessionProvider>
+        <CookieConsentGate gaMeasurementId={gaMeasurementId} />
       </body>
-      {gaMeasurementId ? <GoogleAnalytics gaId={gaMeasurementId} /> : null}
     </html>
   );
 }
