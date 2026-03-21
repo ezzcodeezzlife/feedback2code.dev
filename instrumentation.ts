@@ -1,11 +1,4 @@
-import { loadEnvConfig } from "@next/env";
+import "./lib/generated/server-env";
 
-/**
- * Vercel/serverless often does not populate process.env from committed `.env.production`.
- * Load it once per Node runtime so NextAuth and Prisma see secrets at request time.
- */
-export function register() {
-  if (process.env.NEXT_RUNTIME === "nodejs") {
-    loadEnvConfig(process.cwd());
-  }
-}
+/** Ensures bundled env injection runs as early as the runtime allows. */
+export function register() {}

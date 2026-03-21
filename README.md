@@ -17,6 +17,8 @@ Do not add `.env`, `.env.local`, or other dotenv files: Next would load them and
 
 **Prisma:** `npm run build` runs `prisma migrate deploy` with [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) so `DATABASE_URL` is read from `.env.production`. For local migrations use `npm run migrate:dev`.
 
+**Vercel / serverless:** Deployed Lambdas often do not ship `.env*` files, so `prebuild` / `predev` runs [`scripts/generate-server-env.mjs`](./scripts/generate-server-env.mjs) and writes `lib/generated/server-env.ts` (gitignored). That module assigns `process.env` at import time so NextAuth and Prisma always see secrets inside the server bundle.
+
 ## Getting Started
 
 ```bash
