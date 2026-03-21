@@ -1146,8 +1146,8 @@ export default function LandingView() {
               answer="No. It stays off the public internet, so there is no web browsing or arbitrary outbound access."
             />
             <FAQItem
-              question="Which model does the agent use?"
-              answer="Right now the coding agent runs on MiniMax-M2.5. Model selection will be configurable on higher tiers later."
+              question="Which LLM and provider does the agent use?"
+              answer="The coding agent runs on MiniMax-M2.5, with inference from MiniMax. Model selection will be configurable on higher tiers later."
             />
             <FAQItem
               question="What happens if the agent makes a bad change?"

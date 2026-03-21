@@ -10,9 +10,32 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = (
+  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.APP_URL ??
+  process.env.NEXTAUTH_URL ??
+  "http://localhost:3000"
+).replace(/\/$/, "");
+
+const title = "feedback2code";
+const description = "Turn user feedback into code changes — automatically";
+
 export const metadata: Metadata = {
-  title: "feedback2code",
-  description: "Turn user feedback into code changes — automatically",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    url: "/",
+    siteName: title,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
