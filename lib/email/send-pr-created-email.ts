@@ -220,7 +220,7 @@ export async function sendPrCreatedEmail(input: SendPrCreatedEmailInput) {
 
   const mode = getEmailMode();
 
-  const fromEmail = (process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev").trim();
+  const fromEmail = (process.env.RESEND_FROM_EMAIL ?? "notifications@feedback2code.dev").trim();
   const fromName = (process.env.RESEND_FROM_NAME ?? "Feedback2Code").trim();
   const from = `${fromName} <${fromEmail}>`;
 
