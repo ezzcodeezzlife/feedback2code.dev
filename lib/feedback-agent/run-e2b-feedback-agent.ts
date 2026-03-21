@@ -1,20 +1,20 @@
+import {
+  branchNameForFeedback,
+  createSandboxOpts,
+  feedbackPipelineEnvs,
+  feedbackPipelineWrapperCmd,
+  feedbackSandboxTemplate,
+  writeFeedbackSandboxFiles,
+} from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
 import { buildOpencodeFeedbackPrompt } from "@/lib/feedback-agent/prompt";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Sandbox } from "e2b";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 
-const REPO_PATH = "/home/user/feedback-repo";
-const E2B_ASSET_DIR = join(process.cwd(), "lib/feedback-agent/e2b");
 const SANDBOX_TIMEOUT_MS = 3_600_000; // 1h (E2B hobby max)
 
-export const PR_URL_FILE = "/home/user/f2c-pr-url.txt";
-
-function branchNameForFeedback(feedbackId: string): string {
-  const safe = feedbackId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 24);
-  return `feedback/f2c-${safe || "item"}`;
-}
+export { PR_URL_FILE, branchNameForFeedback } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
+export { runE2bFeedbackAgentBlockingIntegrationTest } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
 
 function revalidateRepo(dashboardPath: string) {
   try {
@@ -44,13 +44,12 @@ async function markFailed(
   revalidateRepo(dashboardPath);
 }
 
-function readE2bAsset(name: string): string {
-  return readFileSync(join(E2B_ASSET_DIR, name), "utf8");
-}
-
-/** Linux bash in E2B breaks on CRLF if the repo was checked out on Windows. */
-function lf(s: string) {
-  return s.replace(/\r\n/g, "\n");
+function publicAppBaseUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
+    process.env.APP_URL?.replace(/\/$/, "") ??
+    ""
+  );
 }
 
 /**
@@ -113,53 +112,27 @@ export async function startE2bFeedbackAgentWebhook(input: {
       : "";
   const prBody = `Automated PR from site widget feedback.\n\n${pathLine}---\n\n${input.feedbackBody}`;
 
+  const publicBase = publicAppBaseUrl();
+  const webhookUrl = publicBase ? `${publicBase}/api/e2b/webhook` : "";
+  const sandboxOpts = createSandboxOpts(e2bKey, SANDBOX_TIMEOUT_MS);
+
   let sandbox: Awaited<ReturnType<typeof Sandbox.create>> | null = null;
 
   try {
-    sandbox = await Sandbox.create({
-      apiKey: e2bKey,
-      timeoutMs: SANDBOX_TIMEOUT_MS,
-    });
+    const template = feedbackSandboxTemplate();
+    sandbox = template
+      ? await Sandbox.create(template, sandboxOpts)
+      : await Sandbox.create(sandboxOpts);
 
     await prisma.widgetFeedback.update({
       where: { id: input.feedbackId },
+      // Prisma client types can lag behind schema changes during dev (querying a new column).
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: { e2bSandboxId: sandbox.sandboxId } as any,
     });
 
-    const pkPem = appPk.includes("\\n") ? appPk.replace(/\\n/g, "\n") : appPk;
-
-    // Assets used inside the VM.
-    await sandbox.files.write("/home/user/e2b-github.mjs", lf(readE2bAsset("e2b-github.mjs")));
-    await sandbox.files.write("/home/user/bootstrap-clone.sh", lf(readE2bAsset("bootstrap-clone.sh")));
-    await sandbox.files.write("/home/user/finalize-feedback.sh", lf(readE2bAsset("finalize-feedback.sh")));
-    await sandbox.files.write("/home/user/.f2c-gh-app-key.pem", pkPem);
-
-    // Prompt & PR inputs for OpenCode.
-    const opencodeConfig = {
-      $schema: "https://opencode.ai/config.json",
-      provider: {
-        minimax: {
-          options: {
-            baseURL: "https://api.minimax.io/anthropic/v1",
-            apiKey: minimaxKey,
-          },
-          models: {
-            "MiniMax-M2.5": { name: "MiniMax-M2.5" },
-          },
-        },
-      },
-      model: "minimax/MiniMax-M2.5",
-    };
-
-    await sandbox.files.write(
-      "/home/user/.config/opencode/opencode.json",
-      JSON.stringify(opencodeConfig, null, 2),
-    );
-
     const repoConfig = await prisma.repositoryConfig.findUnique({
       where: { id: input.repositoryConfigId },
-      // Prisma client types can lag behind schema changes during dev (querying a new column).
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       select: { customInstructions: true } as any,
     });
@@ -177,44 +150,29 @@ export async function startE2bFeedbackAgentWebhook(input: {
       customInstructions: customInstructions ?? null,
       pagePath: input.pagePath,
     });
-    await sandbox.files.write("/home/user/feedback-prompt.txt", prompt);
-    await sandbox.files.write("/home/user/f2c-pr-title.txt", prTitle);
-    await sandbox.files.write("/home/user/f2c-pr-body.txt", prBody);
 
-    // Start the full pipeline in the background.
-    // NOTE: we don't wait for completion here; webhook handler will read `PR_URL_FILE`.
-    const wrapperCmd = `bash -lc 'set -euo pipefail
-      chmod +x /home/user/bootstrap-clone.sh /home/user/finalize-feedback.sh
-      bash /home/user/bootstrap-clone.sh
-      export PATH=\"/usr/local/bin:/usr/bin:$PATH\"
-      cd \"${REPO_PATH}\"
-      if command -v opencode >/dev/null 2>&1; then OCMD=\"opencode\"; else OCMD=\"npx --yes opencode-ai\"; fi
-      \"$OCMD\" run \"$(cat /home/user/feedback-prompt.txt)\" --model \"minimax/MiniMax-M2.5\"
-      bash /home/user/finalize-feedback.sh
-      rm -f /home/user/.f2c-gh-app-key.pem /home/user/e2b-github.mjs /home/user/bootstrap-clone.sh /home/user/finalize-feedback.sh || true
-    '`;
+    await writeFeedbackSandboxFiles(sandbox, {
+      minimaxKey,
+      appPk,
+      branch,
+      prTitle,
+      prBody,
+      prompt,
+    });
 
-    const publicBase =
-      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
-      process.env.APP_URL?.replace(/\/$/, "") ??
-      "";
-    const webhookUrl = publicBase ? `${publicBase}/api/e2b/webhook` : "";
-
-    await sandbox.commands.run(wrapperCmd, {
+    await sandbox.commands.run(feedbackPipelineWrapperCmd(), {
       background: true,
       timeoutMs: SANDBOX_TIMEOUT_MS,
-      envs: {
-        F2C_WEBHOOK_URL: webhookUrl,
-        F2C_WEBHOOK_SECRET: process.env.E2B_WEBHOOK_SECRET ?? "",
-        F2C_FEEDBACK_ID: input.feedbackId,
-        F2C_SANDBOX_ID: sandbox.sandboxId,
-        GITHUB_APP_PRIVATE_KEY_FILE: "/home/user/.f2c-gh-app-key.pem",
-        GITHUB_APP_ID: appId,
-        GITHUB_INSTALLATION_ID: input.githubInstallationId,
-        F2C_OWNER: input.owner,
-        F2C_REPO: input.repo,
-        F2C_BRANCH: branch,
-      },
+      envs: feedbackPipelineEnvs({
+        feedbackId: input.feedbackId,
+        sandboxId: sandbox.sandboxId,
+        owner: input.owner,
+        repo: input.repo,
+        branch,
+        githubInstallationId: input.githubInstallationId,
+        appId,
+        webhookUrl,
+      }),
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

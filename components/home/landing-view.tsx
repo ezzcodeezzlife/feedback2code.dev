@@ -94,7 +94,7 @@ function FAQItem({
   );
 }
 
-const EXAMPLE_EMBED = `<script src="https://www.feedback2code.dev/widget/a1b2c3d4e5" async></script>`;
+const EXAMPLE_EMBED = `<script src="https://www.feedback2code.dev/widget/your_unique_widget_id" async></script>`;
 
 const MOCK_FEEDBACKS = [
   {
@@ -151,6 +151,12 @@ function statusLabel(status: string): string {
 }
 
 export default function LandingView() {
+  const [widgetPreviewTab, setWidgetPreviewTab] = useState<"submit" | "history">(
+    "submit",
+  );
+  const [widgetPreviewText, setWidgetPreviewText] = useState("");
+  const [widgetPreviewSent, setWidgetPreviewSent] = useState(false);
+
   return (
     <div className="flex flex-col">
       {/* ─── HERO ─────────────────────────────────────────────── */}
@@ -175,7 +181,7 @@ export default function LandingView() {
 
           <StaggerChild delay={200}>
             <p className="mt-6 max-w-xl text-center text-base sm:text-lg leading-relaxed text-muted-foreground">
-              Embed a widget on your site. Visitors leave feedback. An AI agent
+              Embed a widget on your site. Users leave feedback. An AI agent
               reads your codebase, implements changes, and opens a Pull Request
               — automatically.
             </p>
@@ -214,7 +220,7 @@ export default function LandingView() {
         <div className="mx-auto grid w-full max-w-6xl grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
           {[
             { value: "1 line", label: "of code to embed" },
-            { value: "< 5 min", label: "setup time" },
+            { value: "< 3 min", label: "setup time" },
             { value: "Auto PRs", label: "from feedback to code" },
           ].map((stat) => (
             <div
@@ -255,7 +261,7 @@ export default function LandingView() {
               {
                 step: "02",
                 icon: MessageSquare,
-                title: "Visitors leave feedback",
+                title: "Users leave feedback",
                 description:
                   "Users describe what's broken, confusing, or could be improved. Feedback is sent to your dashboard in real time.",
               },
@@ -317,53 +323,195 @@ export default function LandingView() {
             Beautiful. Unobtrusive. Ready to go.
           </SectionHeading>
           <p className="mt-4 text-center text-sm text-muted-foreground max-w-lg mx-auto">
-            The widget matches your site&apos;s color scheme, supports dark and
-            light mode, and shows submission history to your visitors.
+            The widget uses a polished built-in terminal aesthetic, supports
+            dark and light mode, and shows submission history to your visitors.
           </p>
 
-          <div className="mt-14 flex justify-center">
-            <div className="w-full max-w-md border border-border-bright bg-background shadow-2xl shadow-black/50">
-              {/* Widget header */}
-              <div className="flex items-center justify-between border-b border-border px-6 py-4">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-bold uppercase tracking-widest text-accent">
-                    [ feedback ]
-                  </span>
+          <div className="mt-14">
+            <div className="mx-auto w-full max-w-5xl overflow-hidden border border-border-bright bg-background shadow-2xl shadow-black/50">
+              <div className="flex items-center gap-3 border-b border-border bg-surface px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-accent/90" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-border-bright" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-border" />
                 </div>
-                <span className="text-xl text-muted cursor-default">&times;</span>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex border-b border-border">
-                <div className="flex-1 border-b-2 border-accent px-4 py-3 text-center text-xs font-bold uppercase tracking-widest text-accent">
-                  Submit
-                </div>
-                <div className="flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-widest text-muted">
-                  History (3)
+                <div className="flex-1 border border-border bg-background px-4 py-2 text-xs uppercase tracking-[0.18em] text-muted">
+                  https://acme.example/dashboard
                 </div>
               </div>
 
-              {/* Textarea mock */}
-              <div className="border-b border-border px-6 py-5">
-                <p className="text-sm text-muted leading-relaxed">
-                  What&apos;s broken, confusing, or could be improved?
-                </p>
-              </div>
+              <div className="relative min-h-[560px] bg-[radial-gradient(circle_at_top,rgba(255,107,0,0.12),transparent_32%),linear-gradient(180deg,#111111_0%,#0a0a0a_100%)]">
+                <div className="px-8 py-10 sm:px-10">
+                  <div className="space-y-8">
+                    <div className="inline-flex items-center gap-2 border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-accent">
+                      Live product site
+                    </div>
+                    <div className="max-w-2xl space-y-5">
+                      <div className="h-3 w-28 bg-accent/70" />
+                      <div className="space-y-3">
+                        <div className="h-10 max-w-xl bg-foreground/95" />
+                        <div className="h-10 max-w-lg bg-foreground/80" />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="h-3.5 max-w-2xl bg-muted/40" />
+                        <div className="h-3.5 max-w-xl bg-muted/30" />
+                        <div className="h-3.5 max-w-lg bg-muted/20" />
+                      </div>
+                    </div>
 
-              {/* Submit bar */}
-              <div className="flex items-center justify-between px-6 py-4">
-                <span className="text-xs text-muted">0 / 2000</span>
-                <span className="inline-flex items-center gap-2 bg-accent text-black px-5 py-2 text-xs font-bold uppercase tracking-wider">
-                  Send <ArrowRight className="h-3 w-3" />
-                </span>
-              </div>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="border border-border bg-surface/70 p-4">
+                        <div className="h-3 w-16 bg-accent/70" />
+                        <div className="mt-4 h-7 w-20 bg-foreground/90" />
+                        <div className="mt-3 h-2.5 w-24 bg-muted/30" />
+                      </div>
+                      <div className="border border-border bg-surface/70 p-4">
+                        <div className="h-3 w-20 bg-accent/50" />
+                        <div className="mt-4 h-7 w-24 bg-foreground/85" />
+                        <div className="mt-3 h-2.5 w-28 bg-muted/25" />
+                      </div>
+                      <div className="border border-border bg-surface/70 p-4">
+                        <div className="h-3 w-14 bg-accent/40" />
+                        <div className="mt-4 h-7 w-16 bg-foreground/80" />
+                        <div className="mt-3 h-2.5 w-20 bg-muted/20" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-              {/* FAB preview */}
-              <div className="flex justify-end px-6 pb-5 pt-2">
-                <span className="inline-flex items-center gap-2 border border-accent bg-accent px-5 py-3 text-xs font-bold uppercase tracking-wider text-black shadow-lg shadow-accent/30">
-                  <MessageSquare className="h-4 w-4" />
-                  [ feedback ]
-                </span>
+                <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
+
+                <div className="absolute bottom-6 right-6 w-[min(440px,calc(100%-3rem))] border border-border-bright bg-background shadow-2xl shadow-black/60">
+                  <div className="flex items-center justify-between border-b border-border px-6 py-4">
+                    <span className="text-sm font-bold uppercase tracking-widest text-accent">
+                      Feedback
+                    </span>
+                    <span className="text-xl text-muted cursor-default">&times;</span>
+                  </div>
+
+                  <div className="flex border-b border-border">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWidgetPreviewTab("submit");
+                        setWidgetPreviewSent(false);
+                      }}
+                      className={`flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer ${
+                        widgetPreviewTab === "submit"
+                          ? "border-b-2 border-accent text-accent"
+                          : "text-muted hover:text-foreground"
+                      }`}
+                    >
+                      Submit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWidgetPreviewTab("history")}
+                      className={`flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer ${
+                        widgetPreviewTab === "history"
+                          ? "border-b-2 border-accent text-accent"
+                          : "text-muted hover:text-foreground"
+                      }`}
+                    >
+                      History (3)
+                    </button>
+                  </div>
+
+                  {widgetPreviewTab === "submit" ? (
+                    widgetPreviewSent ? (
+                      <div className="flex flex-col items-center gap-4 px-6 py-10 text-center">
+                        <div className="flex h-14 w-14 items-center justify-center border border-accent text-accent">
+                          <Check className="h-6 w-6" />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-base font-bold text-foreground">
+                            Feedback received
+                          </p>
+                          <p className="text-sm leading-relaxed text-muted">
+                            Thanks. Your feedback has been sent for review.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setWidgetPreviewSent(false);
+                            setWidgetPreviewText("");
+                          }}
+                          className="border border-border px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted transition-colors hover:border-border-bright hover:text-foreground cursor-pointer"
+                        >
+                          Send more
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="border-b border-border px-6 py-5">
+                          <textarea
+                            value={widgetPreviewText}
+                            onChange={(event) => setWidgetPreviewText(event.target.value)}
+                            placeholder="What&apos;s broken, confusing, or could be improved?"
+                            className="min-h-[132px] w-full resize-none border-0 bg-transparent text-sm leading-relaxed text-foreground outline-none placeholder:text-muted"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between px-6 py-4">
+                          <span className="text-xs text-muted">
+                            {widgetPreviewText.length} / 2000
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!widgetPreviewText.trim()) return;
+                              setWidgetPreviewSent(true);
+                              setWidgetPreviewText("");
+                            }}
+                            className="inline-flex items-center gap-2 bg-accent px-5 py-2 text-xs font-bold uppercase tracking-wider text-black transition-opacity cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={!widgetPreviewText.trim()}
+                          >
+                            Send <ArrowRight className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </>
+                    )
+                  ) : (
+                    <div className="divide-y divide-border">
+                      <div className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="border border-accent/40 bg-accent/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
+                            Merged
+                          </span>
+                          <span className="text-xs text-muted">2h ago</span>
+                        </div>
+                        <p className="mt-3 text-sm leading-relaxed text-muted">
+                          Fixed the signup button overlap on smaller screens.
+                        </p>
+                      </div>
+
+                      <div className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="border border-border-bright px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground">
+                            Awaiting review
+                          </span>
+                          <span className="text-xs text-muted">5h ago</span>
+                        </div>
+                        <p className="mt-3 text-sm leading-relaxed text-muted">
+                          Dark mode contrast could be improved on the pricing cards.
+                        </p>
+                      </div>
+
+                      <div className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="border border-border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
+                            Coding
+                          </span>
+                          <span className="text-xs text-muted">12m ago</span>
+                        </div>
+                        <p className="mt-3 text-sm leading-relaxed text-muted">
+                          Adding a loading state for dashboard data fetches.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -385,18 +533,6 @@ export default function LandingView() {
                 title: "AI Coding Agent",
                 description:
                   "Powered by E2B sandboxes, the agent clones your repo, understands the codebase, and writes production-ready changes.",
-              },
-              {
-                icon: GitPullRequest,
-                title: "Automatic Pull Requests",
-                description:
-                  "Every piece of feedback becomes a reviewable PR on GitHub. Merge with confidence — you always have the final say.",
-              },
-              {
-                icon: Globe,
-                title: "One-Line Embed",
-                description:
-                  "A single script tag. No npm packages, no build steps, no iframes. Works with any site — React, Vue, plain HTML.",
               },
               {
                 icon: Shield,
@@ -427,12 +563,6 @@ export default function LandingView() {
                 title: "Feedback Dashboard",
                 description:
                   "Track every submission, see agent status in real-time: Coding → Waiting for Review → Merged. Full history at a glance.",
-              },
-              {
-                icon: Cpu,
-                title: "Smart Context",
-                description:
-                  "The agent knows which page the feedback came from. Page path context helps it find the right files to change.",
               },
             ].map((feature) => (
               <Card
@@ -522,27 +652,28 @@ export default function LandingView() {
           <SectionLabel>Get started</SectionLabel>
           <SectionHeading>One line. That&apos;s it.</SectionHeading>
           <p className="mt-4 text-center text-sm text-muted-foreground max-w-lg mx-auto">
-            Paste this script tag into your HTML — right before{" "}
-            <code className="px-1.5 py-0.5 border border-border-bright bg-surface text-xs">
-              &lt;/body&gt;
-            </code>
-            . The feedback widget appears automatically.
+            We generate a unique widget id for your site, then give you a script tag to paste into your HTML. The feedback widget appears automatically.
           </p>
 
-          <div className="mt-10 max-w-3xl mx-auto">
-            <EmbedSnippetCopy code={EXAMPLE_EMBED} />
+          <div className="mt-10 w-full min-w-0 max-w-3xl mx-auto">
+            <EmbedSnippetCopy
+              code={EXAMPLE_EMBED}
+              copyable={false}
+              selectable={false}
+              centered
+            />
           </div>
 
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
             {[
-              {
-                icon: MousePointerClick,
-                text: "No npm install needed",
-              },
               { icon: Zap, text: "Loads async, zero performance hit" },
               {
                 icon: Globe,
                 text: "Works with any framework or static site",
+              },
+              {
+                icon: MousePointerClick,
+                text: "No npm install needed",
               },
             ].map((item) => (
               <div
@@ -658,25 +789,13 @@ export default function LandingView() {
           <SectionLabel>Use cases</SectionLabel>
           <SectionHeading>Built for teams who ship fast</SectionHeading>
 
-          <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
             {[
               {
                 title: "SaaS Products",
                 description:
                   "Let your users report bugs and request features directly from your app. Each submission turns into a reviewable PR.",
                 icon: Globe,
-              },
-              {
-                title: "Open Source Projects",
-                description:
-                  "Lower the barrier for contributions. Visitors don't need to know Git — they just describe the problem.",
-                icon: Github,
-              },
-              {
-                title: "Marketing Sites",
-                description:
-                  "Catch broken links, typos, and layout issues from real visitors. The agent fixes them before you even see the report.",
-                icon: MousePointerClick,
               },
               {
                 title: "Documentation Sites",
@@ -1030,12 +1149,12 @@ export default function LandingView() {
 
           <div className="mt-14 max-w-3xl mx-auto space-y-px">
             <FAQItem
-              question="How does the AI agent know what to change?"
-              answer="When feedback is submitted, the agent spins up a secure sandbox, clones your repository, and analyzes the codebase. It reads the feedback, understands the context (including which page the visitor was on), and implements the changes. It's like having an on-call developer for every piece of feedback."
+              question="Does the sandbox have internet access?"
+              answer="No. It stays off the public internet, so there is no web browsing or arbitrary outbound access."
             />
             <FAQItem
-              question="Is my code safe?"
-              answer="Absolutely. Each agent runs in an isolated E2B sandbox — a Firecracker microVM that's completely separate from your production environment. The agent only has access to the specific repository via a GitHub App with fine-grained permissions. Your code never leaves the sandbox."
+              question="Which model does the agent use?"
+              answer="Right now the coding agent runs on MiniMax-M2.5. Model selection will be configurable on higher tiers later."
             />
             <FAQItem
               question="What happens if the agent makes a bad change?"
@@ -1043,15 +1162,11 @@ export default function LandingView() {
             />
             <FAQItem
               question="Which languages and frameworks are supported?"
-              answer="If it runs on Linux, it works. The sandbox supports JavaScript, TypeScript, Python, Ruby, Go, Rust, and more. It can install packages, use browsers, and run terminal commands — just like a real developer would."
+              answer="If it runs on Linux, it works. The sandbox supports JavaScript, TypeScript, Python, Ruby, Go, Rust, and more. It can install packages, use browsers, and run terminal commands just like a real developer would."
             />
             <FAQItem
               question="Can I customize the widget appearance?"
               answer="The widget auto-detects light and dark mode. It uses a monospace terminal aesthetic that works well with most sites. Custom theming options are coming soon."
-            />
-            <FAQItem
-              question="What's the difference between Free and Pro?"
-              answer="Both plans get the full AI agent pipeline. The Free tier includes 10 feedbacks per 30-day rolling window. Pro increases that to 100 feedbacks, with priority sandbox execution and advanced features."
             />
             <FAQItem
               question="Can I use this for private repositories?"
@@ -1107,7 +1222,7 @@ export default function LandingView() {
               href="/legal"
               className="text-xs text-muted hover:text-accent transition-colors"
             >
-              Legal &amp; contact
+              Legal &amp; Contact
             </Link>
             <p className="text-xs text-muted">
               &copy; {new Date().getFullYear()} feedback2code. Turn user feedback
@@ -1119,3 +1234,8 @@ export default function LandingView() {
     </div>
   );
 }
+
+
+
+
+

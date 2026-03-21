@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Legal & contact",
+  title: "Legal & Contact",
   description: "Legal information and contact details for feedback2code.",
 };
 

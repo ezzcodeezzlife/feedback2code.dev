@@ -15,9 +15,17 @@ const t = {
 
 type Props = {
   code: string;
+  copyable?: boolean;
+  selectable?: boolean;
+  centered?: boolean;
 };
 
-export default function EmbedSnippetCopy({ code }: Props) {
+export default function EmbedSnippetCopy({
+  code,
+  copyable = true,
+  selectable = true,
+  centered = false,
+}: Props) {
   const [copied, setCopied] = useState(false);
 
   function renderHighlightedCode(snippet: string): ReactNode {
@@ -61,29 +69,35 @@ export default function EmbedSnippetCopy({ code }: Props) {
   }
 
   return (
-    <div className="mt-4">
-      <div className="flex items-stretch gap-2">
-        <pre className="flex-1 overflow-x-auto rounded-sm border border-[#3c3c3c] bg-[#1e1e1e] p-4 font-mono text-xs leading-relaxed text-[#d4d4d4]">
-          <code className="whitespace-pre">{renderHighlightedCode(code)}</code>
-        </pre>
-        <Button
-          type="button"
-          onClick={handleCopy}
-          aria-label={copied ? "Copied to clipboard" : "Copy embed snippet"}
-          variant="outline"
-          size="sm"
-          className="shrink-0 h-auto self-stretch"
+    <div className="mt-4 w-full min-w-0">
+      <div className="flex w-full min-w-0 items-stretch gap-2">
+        <pre
+          className={`min-w-0 max-w-full flex-1 overflow-x-auto rounded-sm border border-[#3c3c3c] bg-[#1e1e1e] p-4 font-mono text-xs leading-relaxed text-[#d4d4d4] ${selectable ? "" : "select-none"} ${centered ? "text-center" : ""}`}
         >
-          {copied ? (
-            <>
-              <Check className="h-3 w-3" /> Copied
-            </>
-          ) : (
-            <>
-              <Copy className="h-3 w-3" /> Copy
-            </>
-          )}
-        </Button>
+          <code className={`block whitespace-pre ${centered ? "text-center" : ""}`}>
+            {renderHighlightedCode(code)}
+          </code>
+        </pre>
+        {copyable ? (
+          <Button
+            type="button"
+            onClick={handleCopy}
+            aria-label={copied ? "Copied to clipboard" : "Copy embed snippet"}
+            variant="outline"
+            size="sm"
+            className="shrink-0 h-auto self-stretch"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3 w-3" /> Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-3 w-3" /> Copy
+              </>
+            )}
+          </Button>
+        ) : null}
       </div>
     </div>
   );
