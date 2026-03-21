@@ -19,6 +19,7 @@ import {
   RotateCcw,
   Search,
   Star,
+  Loader2,
 } from "lucide-react";
 
 function formatRelativeTime(iso: string): string {
@@ -283,7 +284,7 @@ export default function DashboardView({
                         <>
                           <div className="flex items-center gap-2">
                             <span className={[
-                              "inline-flex items-center px-2 py-0.5 text-[11px] uppercase tracking-wider border",
+                              "inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] uppercase tracking-wider border",
                               repo.latestFeedback.status === "FAILED"
                                 ? "border-red-900/50 bg-red-950/30 text-red-400"
                                 : repo.latestFeedback.status === "MERGED"
@@ -292,6 +293,12 @@ export default function DashboardView({
                                     ? "border-border-bright text-foreground"
                                     : "border-border text-muted-foreground",
                             ].join(" ")}>
+                              {repo.latestFeedback.status === "CODING" && (
+                                <Loader2
+                                  className="h-3 w-3 shrink-0 animate-spin text-accent"
+                                  aria-hidden
+                                />
+                              )}
                               {feedbackStatusLabel(repo.latestFeedback.status)}
                             </span>
                             <span className="text-xs text-muted">

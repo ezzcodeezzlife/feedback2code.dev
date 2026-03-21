@@ -22,7 +22,7 @@ const LANDING_FAQ = [
   {
     question: "Which LLM and provider does the agent use?",
     answer:
-      "The coding agent runs on MiniMax-M2.5, with inference from MiniMax. Model selection will be configurable on higher tiers later.",
+      "The coding agent runs on MiniMax-M2.5. Model selection will be configurable on higher tiers later.",
   },
   {
     question: "What happens if the agent makes a bad change?",

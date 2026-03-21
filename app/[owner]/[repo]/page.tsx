@@ -24,6 +24,7 @@ import {
   ExternalLink,
   AlertCircle,
   Bot,
+  Loader2,
 } from "lucide-react";
 
 type PageProps = {
@@ -388,13 +389,19 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                         </div>
                         <div className="flex items-center gap-2">
                           <span
-                            className={`text-[11px] uppercase tracking-wider px-2 py-0.5 border ${feedbackStatusTheme(f.status).badge}`}
+                            className={`inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider px-2 py-0.5 border ${feedbackStatusTheme(f.status).badge}`}
                             title={
                               f.e2bSandboxId
                                 ? `E2B sandbox: ${f.e2bSandboxId}`
                                 : undefined
                             }
                           >
+                            {f.status === "CODING" && (
+                              <Loader2
+                                className="h-3 w-3 shrink-0 animate-spin text-accent"
+                                aria-hidden
+                              />
+                            )}
                             {feedbackStatusLabel(f.status)}
                           </span>
                           {f.prUrl && (

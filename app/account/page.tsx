@@ -1,11 +1,7 @@
 import { authOptions } from "@/auth";
 import { BillingActions } from "@/components/account/billing-actions";
 import { PageShell } from "@/components/layout/page-shell";
-import {
-  FEEDBACK_QUOTA_LIMIT_FREE,
-  FEEDBACK_QUOTA_WINDOW_DAYS,
-  feedbackQuotaLimitForPlan,
-} from "@/lib/billing";
+import { FEEDBACK_QUOTA_WINDOW_DAYS, feedbackQuotaLimitForPlan } from "@/lib/billing";
 import { PRO_UPGRADE_EXTRAS } from "@/lib/plan-features";
 import { prisma } from "@/lib/prisma";
 import { syncActiveSubscriptionFromStripeApi } from "@/lib/stripe-subscription-user";
@@ -207,33 +203,27 @@ export default async function AccountPage() {
                 : ""}
             </p>
           ) : (
-            <>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Free tier: {FEEDBACK_QUOTA_LIMIT_FREE} feedbacks per 30 days. Pro includes a higher
-                quota (see Feedback Quota above).
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-xs font-bold uppercase tracking-wider text-accent mb-3 flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                Everything extra with Pro
               </p>
-              <div className="mt-6 pt-6 border-t border-border">
-                <p className="text-xs font-bold uppercase tracking-wider text-accent mb-3 flex items-center gap-2">
-                  <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                  Everything extra with Pro
-                </p>
-                <ul className="space-y-2.5 text-sm text-muted-foreground">
-                  {PRO_UPGRADE_EXTRAS.map((f) => (
-                    <li key={f.text} className="flex items-start gap-2">
-                      <Check className="h-4 w-4 text-accent/80 shrink-0 mt-0.5" />
-                      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span>{f.text}</span>
-                        {f.comingSoon ? (
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border border-border px-1.5 py-0.5 rounded-sm">
-                            Coming soon
-                          </span>
-                        ) : null}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </>
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
+                {PRO_UPGRADE_EXTRAS.map((f) => (
+                  <li key={f.text} className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-accent/80 shrink-0 mt-0.5" />
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span>{f.text}</span>
+                      {f.comingSoon ? (
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border border-border px-1.5 py-0.5 rounded-sm">
+                          Coming soon
+                        </span>
+                      ) : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           <div className="mt-4">
             <BillingActions isPro={isPro} />

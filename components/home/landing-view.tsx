@@ -26,6 +26,7 @@ import {
   Cpu,
   Eye,
   MousePointerClick,
+  Loader2,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -208,9 +209,11 @@ export default function LandingView() {
             </div>
           </StaggerChild>
 
-          <StaggerChild delay={400} className="mt-6">
-            <p className="text-xs text-muted">
-              Free tier · No credit card required · GitHub login
+          <StaggerChild delay={400} className="mt-6 w-full px-1">
+            <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs leading-snug text-muted">
+              <span className="whitespace-nowrap">Free tier ·</span>
+              <span className="whitespace-nowrap">No credit card required ·</span>
+              <span className="whitespace-nowrap">GitHub login</span>
             </p>
           </StaggerChild>
         </div>
@@ -330,14 +333,16 @@ export default function LandingView() {
 
           <div className="mt-14">
             <div className="mx-auto w-full max-w-5xl overflow-hidden border border-border-bright bg-background shadow-2xl shadow-black/50">
-              <div className="flex items-center gap-3 border-b border-border bg-surface px-4 py-3">
-                <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2 border-b border-border bg-surface px-3 py-3 sm:gap-3 sm:px-4">
+                <div className="flex shrink-0 items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full bg-accent/90" />
                   <span className="h-2.5 w-2.5 rounded-full bg-border-bright" />
                   <span className="h-2.5 w-2.5 rounded-full bg-border" />
                 </div>
-                <div className="flex-1 border border-border bg-background px-4 py-2 text-xs uppercase tracking-[0.18em] text-muted">
-                  https://acme.example/dashboard
+                <div className="min-w-0 flex-1 border border-border bg-background px-2.5 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted sm:px-4 sm:text-xs sm:tracking-[0.18em]">
+                  <span className="block truncate">
+                    https://acme.example/dashboard
+                  </span>
                 </div>
               </div>
 
@@ -551,7 +556,7 @@ export default function LandingView() {
                 icon: Terminal,
                 title: "Custom Agent Instructions",
                 description:
-                  "Tell the agent to \"always use TailwindCSS\" or \"follow our API conventions.\" Instructions are included in every prompt.",
+                  "Tell the agent to \"always use TailwindCSS\" or \"follow our API conventions\". Instructions are included in every prompt.",
               },
               {
                 icon: Zap,
@@ -626,8 +631,14 @@ export default function LandingView() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span
-                        className={`text-[11px] uppercase tracking-wider px-2 py-0.5 border ${statusBadgeClass(f.status)}`}
+                        className={`inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider px-2 py-0.5 border ${statusBadgeClass(f.status)}`}
                       >
+                        {f.status === "CODING" && (
+                          <Loader2
+                            className="h-3 w-3 shrink-0 animate-spin text-accent"
+                            aria-hidden
+                          />
+                        )}
                         {statusLabel(f.status)}
                       </span>
                       {f.prUrl && (
@@ -795,7 +806,7 @@ export default function LandingView() {
               {
                 title: "SaaS Products",
                 description:
-                  "Let your users report bugs and request features directly from your app. Each submission turns into a reviewable PR.",
+                  "Let your users report bugs and request features directly from your web app. Each submission turns into a reviewable PR.",
                 icon: Globe,
               },
               {
@@ -1019,7 +1030,6 @@ export default function LandingView() {
               <div className="flex flex-col flex-1 mb-8 min-h-0">
                 <ul className="space-y-3 text-sm text-muted-foreground">
                   {[
-                    "10 feedbacks per 30-day window",
                     "AI agent with sandbox execution",
                     "Automatic Pull Requests",
                     "Email notifications",
@@ -1147,7 +1157,7 @@ export default function LandingView() {
             />
             <FAQItem
               question="Which LLM and provider does the agent use?"
-              answer="The coding agent runs on MiniMax-M2.5, with inference from MiniMax. Model selection will be configurable on higher tiers later."
+              answer="The coding agent runs on MiniMax-M2.5, an open source model. Model selection will be configurable on higher tiers later."
             />
             <FAQItem
               question="What happens if the agent makes a bad change?"
