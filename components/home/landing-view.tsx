@@ -93,7 +93,7 @@ function FAQItem({
   );
 }
 
-const EXAMPLE_EMBED = `<script src="https://feedback2code.dev/widget/a1b2c3d4e5" async></script>`;
+const EXAMPLE_EMBED = `<script src="https://www.feedback2code.dev/widget/a1b2c3d4e5" async></script>`;
 
 const MOCK_FEEDBACKS = [
   {

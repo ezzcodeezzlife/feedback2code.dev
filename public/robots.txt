@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://feedback2code.dev
+Host: https://www.feedback2code.dev
 
 # Sitemaps
-Sitemap: https://feedback2code.dev/sitemap.xml
+Sitemap: https://www.feedback2code.dev/sitemap.xml
