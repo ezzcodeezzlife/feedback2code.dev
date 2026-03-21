@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     const feedbackRow = await prisma.widgetFeedback.findUnique({
       where: { id: feedbackId },
-      select: { repositoryConfigId: true, status: true, prUrl: true, body: true },
+      select: { repositoryConfigId: true, status: true, prUrl: true, body: true, pagePath: true },
     });
 
     const repositoryConfig = feedbackRow
@@ -139,6 +139,7 @@ export async function POST(request: NextRequest) {
         repositoryFullName: `${repositoryConfig.owner}/${repositoryConfig.repo}`,
         prUrl: payloadPrUrl,
         feedbackBody: feedbackRow?.body ?? null,
+        pagePath: feedbackRow?.pagePath ?? null,
       });
     }
 
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const row = await (prisma.widgetFeedback as any).findFirst({
     where: { e2bSandboxId: { in: candidateIds } },
-    select: { id: true, status: true, repositoryConfigId: true, body: true },
+    select: { id: true, status: true, repositoryConfigId: true, body: true, pagePath: true },
   });
 
   if (!row) return NextResponse.json({ ok: true });
@@ -278,6 +279,7 @@ export async function POST(request: NextRequest) {
           repositoryFullName: `${repositoryConfig.owner}/${repositoryConfig.repo}`,
           prUrl,
           feedbackBody: row.body ?? null,
+          pagePath: row.pagePath ?? null,
         });
     }
 

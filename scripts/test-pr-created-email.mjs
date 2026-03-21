@@ -1,7 +1,7 @@
 /**
  * One-off: send the PR-created email template.
  * Run:
- *   npx dotenv -e .env.production -- node scripts/test-pr-created-email.mjs --to=you@example.com --mode=production --name="Fabian" --repo=vercel/next.js --pr=https://github.com/vercel/next.js/pull/1 --feedback="The signup button overlaps the nav on mobile."
+ *   npx dotenv -e .env.production -- node scripts/test-pr-created-email.mjs --to=you@example.com --mode=test --name="Fabian" --pagePath=/pricing --repo=vercel/next.js --pr=https://github.com/vercel/next.js/pull/1
  */
 import { config } from "dotenv";
 import { dirname, resolve } from "path";
@@ -48,6 +48,15 @@ const prUrl = (getArg("pr") ?? "https://github.com/feedback2code/feedback2code/p
 const feedbackBody = (
   getArg("feedback") ?? "The signup button overlaps the nav on mobile and the page scroll locks after the popup opens."
 ).trim();
+const pagePathArg = getArg("pagePath");
+const pagePath =
+  pagePathArg === undefined
+    ? "/docs/getting-started"
+    : pagePathArg.trim().length > 0
+      ? pagePathArg.trim().startsWith("/")
+        ? pagePathArg.trim()
+        : `/${pagePathArg.trim()}`
+      : "";
 const recipientNameRaw = getArg("name");
 const recipientName =
   recipientNameRaw && recipientNameRaw.trim().length > 0 ? recipientNameRaw.trim() : "there";
@@ -66,23 +75,6 @@ const from = `${fromName} <${fromEmail}>`;
 
 const testTo = (process.env.RESEND_TEST_TO ?? "delivered@resend.dev").trim();
 const to = mode === "test" ? [testTo] : [toEmail];
-
-const baseUrl = (
-  process.env.NEXT_PUBLIC_APP_URL ??
-  process.env.NEXTAUTH_URL ??
-  "https://www.feedback2code.dev"
-)
-  .trim()
-  .replace(/\/$/, "");
-
-const [owner = "", repo = ""] = repositoryFullName.split("/");
-const dashboardUrl = `${baseUrl}/`;
-const repositoryDashboardUrl =
-  owner && repo ? `${baseUrl}/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}` : dashboardUrl;
-const githubRepoUrl =
-  owner && repo ? `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}` : "https://github.com";
-const profileUrl = `${baseUrl}/profile`;
-const legalUrl = `${baseUrl}/legal`;
 
 const subject =
   mode === "test"
@@ -112,54 +104,40 @@ const html = `<!doctype html>
                   feedback2code finished turning the latest submission into a GitHub pull request for <strong style="color:#ededed;">${escapeHtml(repositoryFullName)}</strong>.
                 </p>
 
-                <div style="margin:18px 0 8px;">
+                ${
+                  pagePath && !feedbackBody
+                    ? `<p style="margin:0 0 16px;">
+                  <span style="display:inline-block;vertical-align:middle;max-width:100%;font-family:'Fira Code','JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;line-height:1.35;color:#9ca3af;border:1px solid #2a2a2a;padding:3px 6px;word-break:break-all;" title="${escapeHtml(pagePath)}">${escapeHtml(pagePath)}</span>
+                </p>`
+                    : ""
+                }
+
+                ${
+                  feedbackBody
+                    ? `<div style="margin:0 0 18px;padding:16px;border:1px solid #222222;background:#111111;">
+                  ${
+                    pagePath
+                      ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 10px;border-collapse:collapse;">
+                    <tr>
+                      <td align="left" valign="middle" style="padding:0 10px 0 0;">
+                        <span style="display:inline-block;vertical-align:middle;margin:0;color:#a0a0a0;font-size:13px;text-transform:uppercase;letter-spacing:0.16em;line-height:1;">User feedback</span>
+                      </td>
+                      <td align="right" valign="middle" style="padding:0;">
+                        <span style="display:inline-block;vertical-align:middle;text-align:right;max-width:100%;font-family:'Fira Code','JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;line-height:1.2;color:#9ca3af;border:1px solid #2a2a2a;padding:3px 6px;word-break:break-all;box-sizing:border-box;" title="${escapeHtml(pagePath)}">${escapeHtml(pagePath)}</span>
+                      </td>
+                    </tr>
+                  </table>`
+                      : `<p style="margin:0 0 10px;color:#a0a0a0;font-size:13px;text-transform:uppercase;letter-spacing:0.16em;">User feedback</p>`
+                  }
+                  <div style="border:1px solid #222222;background:#0a0a0a;padding:14px;color:#ededed;font-size:14px;line-height:1.7;white-space:pre-wrap;">${escapeHtml(feedbackBody)}</div>
+                </div>`
+                    : ""
+                }
+
+                <div style="margin:0 0 8px;">
                   <a href="${escapeHtml(prUrl)}" style="display:inline-block;background:#ff6b00;color:#000000;text-decoration:none;padding:12px 18px;border:1px solid #ff6b00;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;font-size:12px;">
                     Review pull request
                   </a>
-                </div>
-
-                <div style="margin:18px 0 0;padding:16px;border:1px solid #222222;background:#111111;">
-                  <p style="margin:0 0 8px;color:#a0a0a0;font-size:13px;text-transform:uppercase;letter-spacing:0.16em;">What to do next</p>
-                  <p style="margin:0 0 8px;color:#ededed;font-size:14px;">Open the PR, scan the diff, and merge only if the generated change looks right.</p>
-                  <p style="margin:0;color:#a0a0a0;font-size:13px;">You stay in control. Nothing ships until you approve it on GitHub.</p>
-                </div>
-
-                <div style="margin:18px 0 0;padding:16px;border:1px solid #222222;background:#111111;">
-                  <p style="margin:0 0 10px;color:#a0a0a0;font-size:13px;text-transform:uppercase;letter-spacing:0.16em;">Project snapshot</p>
-                  <div style="border:1px solid #222222;background:#0a0a0a;">
-                    <div style="padding:12px 14px;border-bottom:1px solid #222222;">
-                      <span style="display:inline-block;padding:3px 8px;border:1px solid #ff6b00;background:rgba(255,107,0,0.12);color:#ff6b00;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;">Ready for review</span>
-                      <span style="margin-left:8px;color:#888888;font-size:12px;">Pull request created</span>
-                      <p style="margin:8px 0 0;color:#ededed;font-size:14px;word-break:break-word;">${escapeHtml(prUrl)}</p>
-                    </div>
-                    <div style="padding:12px 14px;">
-                      <p style="margin:0;color:#a0a0a0;font-size:13px;line-height:1.6;">Repository: ${escapeHtml(repositoryFullName)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div style="margin:18px 0 0;padding:16px;border:1px solid #222222;background:#111111;">
-                  <p style="margin:0 0 10px;color:#a0a0a0;font-size:13px;text-transform:uppercase;letter-spacing:0.16em;">Original feedback</p>
-                  <div style="border:1px solid #222222;background:#0a0a0a;padding:14px;color:#ededed;font-size:14px;line-height:1.7;white-space:pre-wrap;">${escapeHtml(feedbackBody)}</div>
-                </div>
-
-                <div style="margin:18px 0 0;padding:16px;border:1px solid #222222;background:#111111;">
-                  <p style="margin:0 0 6px;color:#a0a0a0;font-size:13px;text-transform:uppercase;letter-spacing:0.16em;">Useful links</p>
-                  <p style="margin:0 0 6px;font-size:14px;">
-                    <a href="${escapeHtml(prUrl)}" style="color:#ff6b00;text-decoration:none;">View PR</a>
-                    &nbsp;&bull;&nbsp;
-                    <a href="${escapeHtml(repositoryDashboardUrl)}" style="color:#ff6b00;text-decoration:none;">Project in feedback2code</a>
-                  </p>
-                  <p style="margin:0 0 6px;font-size:14px;">
-                    <a href="${escapeHtml(dashboardUrl)}" style="color:#ff6b00;text-decoration:none;">Dashboard</a>
-                    &nbsp;&bull;&nbsp;
-                    <a href="${escapeHtml(githubRepoUrl)}" style="color:#ff6b00;text-decoration:none;">GitHub repo</a>
-                  </p>
-                  <p style="margin:0;font-size:14px;">
-                    <a href="${escapeHtml(profileUrl)}" style="color:#ff6b00;text-decoration:none;">Profile</a>
-                    &nbsp;&bull;&nbsp;
-                    <a href="${escapeHtml(legalUrl)}" style="color:#ff6b00;text-decoration:none;">Legal & contact</a>
-                  </p>
                 </div>
 
                 <p style="margin:18px 0 0;color:#a0a0a0;font-size:14px;">
@@ -184,22 +162,8 @@ const text = `Hi ${recipientName},
 Your automated feedback PR is ready for review.
 
 Repository: ${repositoryFullName}
-Pull request: ${prUrl}
-
-Original feedback:
-${feedbackBody}
-
-Useful links:
-- Project in feedback2code: ${repositoryDashboardUrl}
-- Dashboard: ${dashboardUrl}
-- GitHub repo: ${githubRepoUrl}
-- Profile: ${profileUrl}
-- Legal & contact: ${legalUrl}
-
-What to do next:
-- Open the PR and review the diff.
-- Merge it on GitHub if the change looks right.
-- Close it if the output is not what you want.
+${pagePath ? `\nFrom ${pagePath}\n` : ""}${feedbackBody ? `\nUser feedback:\n${feedbackBody}\n` : ""}
+Review the pull request: ${prUrl}
 
 Need help? Reply to this email.${testModeNote ? `\n\n${testModeNote}` : ""}`;
 
