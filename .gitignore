@@ -30,11 +30,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files — .env.production is committed (DATABASE_URL for Vercel); keep secrets out of .env / .env.local
+# Only `.env.development` and `.env.production` are used. Ignore ad-hoc copies so they are never committed.
 .env
 .env.local
 .env.development.local
 .env.test.local
+.env.production.local
+stripe_backup_code.txt
 
 # vercel
 .vercel

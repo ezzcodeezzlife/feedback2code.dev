@@ -12,9 +12,13 @@ export type SubscriptionUserWrite = {
   stripeCurrentPeriodEnd: Date | null;
 };
 
-/** Stripe list / thin payloads may omit `current_period_end` — never pass Invalid Date to Prisma. */
+/** Stripe list / thin payloads may omit period end — never pass Invalid Date to Prisma. */
 function subscriptionPeriodEndOrNull(sub: Stripe.Subscription): Date | null {
-  const raw = sub.current_period_end;
+  const firstItem = sub.items?.data?.[0];
+  const raw =
+    typeof firstItem?.current_period_end === "number"
+      ? firstItem.current_period_end
+      : (sub as Stripe.Subscription & { current_period_end?: number }).current_period_end;
   if (typeof raw !== "number" || !Number.isFinite(raw)) return null;
   const d = new Date(raw * 1000);
   return Number.isNaN(d.getTime()) ? null : d;

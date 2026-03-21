@@ -4,34 +4,26 @@ Turn website feedback into production-ready pull requests. Embed a lightweight c
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## Environment (two files)
 
-First, run the development server:
+| File | When it loads |
+|------|----------------|
+| [`.env.development`](./.env.development) | `npm run dev` |
+| [`.env.production`](./.env.production) | `npm run build` and Vercel production builds |
+
+Do not add `.env`, `.env.local`, or other dotenv files: Next would load them and override `.env.development` / `.env.production`.
+
+**Vercel:** Dashboard [Environment Variables](https://vercel.com/docs/projects/environment-variables) override repo env files. To use only `.env.production`, clear duplicate keys from the Vercel project (or leave the dashboard empty).
+
+**Prisma:** `npm run build` runs `prisma migrate deploy` with [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) so `DATABASE_URL` is read from `.env.production`. For local migrations use `npm run migrate:dev`.
+
+## Getting Started
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Run the dev server on port 3000, then open either [http://localhost:3000](http://localhost:3000) or your **TryCloudflare** URL. [`.env.development`](./.env.development) sets `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` to that tunnel so GitHub OAuth matches; if the tunnel hostname changes, update those two values and `allowedDevOrigins` in `next.config.ts`.
 
 ## Widget feedback automation (E2B + OpenCode)
 
@@ -39,7 +31,7 @@ When someone submits feedback through the embed, the app schedules an [E2B](http
 
 GitHub auth stays **inside the sandbox**: the same **GitHub App** credentials (`GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`) are written into the VM only long enough to mint **installation tokens** (see `lib/feedback-agent/e2b/e2b-github.mjs`). The repo remote is scrubbed before OpenCode runs so the agent does not see tokens. PRs are created as your **GitHub App** bot.
 
-Set these **server-only** variables (see `.env.example`):
+Set these **server-only** variables (see `.env.development` / `.env.production`):
 
 - `E2B_API_KEY`
 - `MINIMAX_API_KEY`
@@ -52,7 +44,7 @@ Set these **server-only** variables (see `.env.example`):
 
 ## Deploy on Vercel
 
-See [Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying). Configure env vars and database migrations (`prisma migrate deploy` runs in `npm run build`).
+See [Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying). Production env comes from [`.env.production`](./.env.production) during `next build`. Database migrations run in `npm run build` (`prisma migrate deploy`).
 
 ## Stripe subscriptions (Free + Pro)
 
@@ -95,7 +87,7 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
    - `customer.subscription.deleted`
 
 3. **Signing secret** — Each endpoint has its **own** `whsec_...`. Put the secret for the endpoint you keep into `STRIPE_WEBHOOK_SECRET` (if you delete/recreate the endpoint, the secret changes).
-4. **Customer portal** — For “Manage billing” to work, enable the portal in [Stripe Customer portal settings](https://dashboard.stripe.com/test/settings/billing/portal).
-5. **Tunnel URLs** (e.g. Cloudflare Try) change when the tunnel restarts — update the webhook URL in Stripe when it does.
+4. **Customer portal** — For “Manage billing” to work, enable the portal in test mode [here](https://dashboard.stripe.com/test/settings/billing/portal) and in live mode [here](https://dashboard.stripe.com/settings/billing/portal).
+5. **Production webhook URL** — `https://feedback2code.dev/api/stripe/webhook` (use the live endpoint’s signing secret in `.env.production`).
 
-Copy env var names from [`.env.example`](./.env.example) into `.env.local` (do not commit real keys).
+Use **test** Stripe keys in `.env.development` and **live** keys in `.env.production` (`STRIPE_SECRET_KEY`, `STRIPE_PRO_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`). Until live keys are set in `.env.production`, checkout and webhooks will not work in production.

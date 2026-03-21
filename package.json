@@ -6,10 +6,11 @@
     "postinstall": "prisma generate",
     "predev": "prisma generate",
     "dev": "next dev",
-    "build": "prisma migrate deploy && next build && next-sitemap",
+    "build": "dotenv -e .env.production -- prisma migrate deploy && next build && dotenv -e .env.production -- next-sitemap",
     "start": "next start",
     "lint": "eslint",
-    "billing:setup-stripe": "node scripts/setup-stripe-plans.mjs"
+    "billing:setup-stripe": "dotenv -e .env.development -- node scripts/setup-stripe-plans.mjs",
+    "migrate:dev": "dotenv -e .env.development -- prisma migrate dev"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
@@ -38,6 +39,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.0",
     "next-sitemap": "^4.2.3",

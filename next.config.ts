@@ -3,8 +3,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
-  // Allow the Cloudflare TryCloudflare tunnel domain to access dev resources.
-  // (Without this, Next.js may block hot-reload/HMR fetches and break client-side interactions.)
+  // TryCloudflare tunnel host must be allowed so dev / HMR requests from that origin are accepted.
   allowedDevOrigins: ["reel-modelling-cooperation-appointments.trycloudflare.com"],
   // Keep Prisma out of the bundler so the client matches schema (fields like WidgetFeedback.status).
   // Do not list `e2b` here: externalizing it triggers require() of ESM-only deps (e.g. chalk) and fails in dev.
