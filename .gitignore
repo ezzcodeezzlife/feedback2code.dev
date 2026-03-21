@@ -47,3 +47,5 @@ stripe_backup_code.txt
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel

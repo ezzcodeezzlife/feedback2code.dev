@@ -25,6 +25,18 @@ function revalidateRepo(dashboardPath: string) {
   }
 }
 
+function formatStartError(e: unknown): string {
+  if (!(e instanceof Error)) return String(e);
+  const parts = [e.message];
+  let c: unknown = e.cause;
+  let depth = 0;
+  while (c instanceof Error && depth++ < 5) {
+    parts.push(c.message);
+    c = c.cause;
+  }
+  return parts.filter(Boolean).join(" | ");
+}
+
 async function markFailed(
   feedbackId: string,
   message: string,
@@ -175,8 +187,7 @@ export async function startE2bFeedbackAgentWebhook(input: {
       }),
     });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    await markFailed(input.feedbackId, msg, dash);
+    await markFailed(input.feedbackId, formatStartError(e), dash);
     return;
   } finally {
     // Intentionally do NOT kill the sandbox here; webhook handler needs it to read `PR_URL_FILE`.

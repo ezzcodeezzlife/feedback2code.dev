@@ -1,9 +1,0 @@
-# *
-User-agent: *
-Allow: /
-
-# Host
-Host: https://www.feedback2code.dev
-
-# Sitemaps
-Sitemap: https://www.feedback2code.dev/sitemap.xml

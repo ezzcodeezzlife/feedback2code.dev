@@ -24,6 +24,7 @@ async function main() {
   const createOpts = {
     apiKey,
     timeoutMs: 120_000,
+    allowInternetAccess: false,
     network: { denyOut: [ALL_TRAFFIC], allowOut },
   };
 

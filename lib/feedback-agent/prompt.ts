@@ -33,7 +33,7 @@ ${customInstructionsBlock}
 ## Your task
 1. Understand the feedback and explore the codebase as needed.
 2. Implement changes that address the feedback: code fixes, docs, tests, or configuration as appropriate. Follow existing project conventions.
-3. Use web search when you need current facts, API docs, or best practices.
+3. Do not use web search or fetch arbitrary URLs: outbound network from this sandbox is restricted to GitHub, the model API, npm, and package mirrors only. Rely on the repository and your training knowledge.
 4. Commit your work with clear messages. You are on branch \`${input.branchName}\` - commit locally; the host will push and open a PR.
 
 ## Constraints

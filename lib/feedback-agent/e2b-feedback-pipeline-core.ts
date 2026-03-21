@@ -128,6 +128,8 @@ export function createSandboxOpts(e2bKey: string, timeoutMs: number) {
   return {
     apiKey: e2bKey,
     timeoutMs,
+    /** Must be false when using deny-all + allowOut; leaving default true can conflict with egress rules. */
+    allowInternetAccess: false,
     network: {
       denyOut: [ALL_TRAFFIC],
       allowOut: egressAllowOut,
