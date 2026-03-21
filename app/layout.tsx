@@ -4,21 +4,20 @@ import "./globals.css";
 import CookieConsentGate from "@/components/cookie-consent-gate";
 import Navbar from "@/components/navbar";
 import AuthSessionProvider from "@/components/session-provider";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  getSiteOrigin,
+} from "@/lib/site-config";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
-const siteUrl = (
-  process.env.NEXT_PUBLIC_APP_URL ??
-  process.env.APP_URL ??
-  process.env.NEXTAUTH_URL ??
-  "http://localhost:3000"
-).replace(/\/$/, "");
-
-const title = "feedback2code";
-const description = "Turn user feedback into code changes — automatically";
+const siteUrl = getSiteOrigin();
+const title = SITE_NAME;
+const description = SITE_DESCRIPTION;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
