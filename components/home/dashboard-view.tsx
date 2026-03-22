@@ -104,16 +104,11 @@ export default function DashboardView({
     <PageShell>
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-accent mb-4"
-        >
-          [ Dashboard ]
-        </Link>
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold tracking-tight">
-            Your Projects
-          </h1>
+        <div className="flex items-center gap-3">
+          <p className="text-xs uppercase tracking-widest text-accent">[ Dashboard ]</p>
+        </div>
+        <div className="mt-1 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">Your Projects</h1>
           <div className="flex items-center gap-2">
             <Link
               href="/"

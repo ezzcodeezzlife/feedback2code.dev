@@ -243,10 +243,7 @@ export default function LandingView() {
       </section>
 
       {/* ─── HOW IT WORKS ─────────────────────────────────────── */}
-      <section
-        id="how-it-works"
-        className="border-b border-border py-20 sm:py-28"
-      >
+      <section id="how-it-works" className="border-b border-border py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
           <SectionLabel>How it works</SectionLabel>
           <SectionHeading>
@@ -320,7 +317,7 @@ export default function LandingView() {
       </section>
 
       {/* ─── WIDGET PREVIEW ───────────────────────────────────── */}
-      <section className="border-b border-border bg-surface/50 py-20 sm:py-28">
+      <section id="widget" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
           <SectionLabel>The widget</SectionLabel>
           <SectionHeading>
@@ -525,7 +522,7 @@ export default function LandingView() {
       </section>
 
       {/* ─── FEATURES GRID ────────────────────────────────────── */}
-      <section className="border-b border-border bg-surface/50 py-20 sm:py-28">
+      <section id="features" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
           <SectionLabel>Features</SectionLabel>
           <SectionHeading>
@@ -589,7 +586,7 @@ export default function LandingView() {
       </section>
 
       {/* ─── DASHBOARD PREVIEW ────────────────────────────────── */}
-      <section className="border-b border-border bg-surface/50 py-20 sm:py-28">
+      <section id="use-cases" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
           <SectionLabel>Dashboard</SectionLabel>
           <SectionHeading>
@@ -1006,7 +1003,7 @@ export default function LandingView() {
       </section>
 
       {/* ─── PRICING ──────────────────────────────────────────── */}
-      <section className="border-b border-border bg-surface/50 py-20 sm:py-28">
+      <section id="pricing" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
           <SectionLabel>Pricing</SectionLabel>
           <SectionHeading>Start free. Scale when ready.</SectionHeading>
@@ -1145,7 +1142,7 @@ export default function LandingView() {
       </section>
 
       {/* ─── FAQ ──────────────────────────────────────────────── */}
-      <section className="border-b border-border py-20 sm:py-28">
+      <section id="faq" className="border-b border-border py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
           <SectionLabel>FAQ</SectionLabel>
           <SectionHeading>Questions? Answers.</SectionHeading>
@@ -1237,6 +1234,3 @@ export default function LandingView() {
     </div>
   );
 }
-
-
-

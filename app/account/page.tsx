@@ -1,5 +1,6 @@
 import { authOptions } from "@/auth";
 import { BillingActions } from "@/components/account/billing-actions";
+import { SignOutButton } from "@/components/account/sign-out-button";
 import { PageShell } from "@/components/layout/page-shell";
 import { FEEDBACK_QUOTA_WINDOW_DAYS, feedbackQuotaLimitForPlan } from "@/lib/billing";
 import { PRO_UPGRADE_EXTRAS } from "@/lib/plan-features";
@@ -125,9 +126,12 @@ export default async function AccountPage() {
       {/* Stacked panels like repo settings (shared borders, no gap) */}
       <div className="space-y-0">
         <section className="border border-border bg-surface p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <User className="h-4 w-4 text-accent" />
-            <h2 className="text-sm font-bold uppercase tracking-wider">Profile</h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-accent" />
+              <h2 className="text-sm font-bold uppercase tracking-wider">Profile</h2>
+            </div>
+            <SignOutButton />
           </div>
           <p className="text-xs text-muted mb-4">
             Signed-in identity and GitHub App install status.

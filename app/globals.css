@@ -14,6 +14,7 @@
   --color-muted-foreground: #a0a0a0;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --navbar-height: 65px;
 }
 
 * {
@@ -30,6 +31,11 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-mono), "Fira Code", "JetBrains Mono", ui-monospace,
     SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--navbar-height);
 }
 
 @keyframes fade-in {
