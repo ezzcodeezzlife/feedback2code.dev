@@ -162,7 +162,11 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
       .map((value) => String(value).trim().toLowerCase())
       .filter(Boolean);
 
-    const receivePrCreatedEmail = formData.get("receivePrCreatedEmail") === "on";
+    // Unchecked checkboxes omit the field; the email block is hidden until domains exist,
+    // so the first "Save Domains" submit must not turn PR email off.
+    const prEmailFlags = formData.getAll("receivePrCreatedEmail");
+    const receivePrCreatedEmailFromForm =
+      prEmailFlags.length === 0 ? null : prEmailFlags.includes("on");
 
     const customInstructionsRaw = formData.get("customInstructions");
     const customInstructions =
@@ -186,12 +190,14 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
         fullName,
         widgetId: createWidgetId(),
         authorizedDomains,
-        receivePrCreatedEmail,
+        receivePrCreatedEmail: receivePrCreatedEmailFromForm ?? true,
         customInstructions: customInstructionsFinal,
       },
       update: {
         authorizedDomains,
-        receivePrCreatedEmail,
+        ...(receivePrCreatedEmailFromForm !== null
+          ? { receivePrCreatedEmail: receivePrCreatedEmailFromForm }
+          : {}),
         customInstructions: customInstructionsFinal,
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

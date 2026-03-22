@@ -37,6 +37,16 @@ export function EmailNotificationToggle({ defaultChecked }: Props) {
         defaultChecked={defaultChecked}
         className="hidden"
       />
+      {/* When unchecked, the checkbox is omitted from the body; this hidden field sends "off"
+          so saves from other sections (e.g. domains) don't rely on a missing key meaning false. */}
+      <input
+        type="hidden"
+        name="receivePrCreatedEmail"
+        value="off"
+        className="hidden"
+        aria-hidden
+        tabIndex={-1}
+      />
 
       <button
         type="button"

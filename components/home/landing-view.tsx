@@ -847,7 +847,7 @@ export default function LandingView() {
         <div className="mx-auto w-full max-w-6xl px-6">
           <SectionLabel>Under the hood</SectionLabel>
           <SectionHeading>
-            A full coding pipeline, not just a chatbot
+            Every submission triggers a real dev pipeline
           </SectionHeading>
           <p className="mt-4 text-center text-sm text-muted-foreground max-w-xl mx-auto">
             Each feedback submission triggers a complete development pipeline
