@@ -130,8 +130,6 @@ export async function startE2bFeedbackAgentWebhook(input: {
     pageUrl: input.pageUrl,
     owner: input.owner,
     repo: input.repo,
-    fullName: input.fullName,
-    feedbackId: input.feedbackId,
   });
 
   const publicBase = publicAppBaseUrl();

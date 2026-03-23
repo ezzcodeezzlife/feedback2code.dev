@@ -188,8 +188,6 @@ export async function runE2bFeedbackAgentBlockingIntegrationTest(input: {
     pageUrl: input.pageUrl ?? null,
     owner: input.owner,
     repo: input.repo,
-    fullName: input.fullName,
-    feedbackId: input.feedbackId,
   });
 
   const prompt = buildOpencodeFeedbackPrompt({

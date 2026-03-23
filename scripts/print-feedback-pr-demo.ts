@@ -31,8 +31,6 @@ Otherwise the accelerometer demo feels great — nice work.`,
   pageUrl: "https://accelormeter-music.vercel.app/",
   owner: "ezzcodeezzlife",
   repo: "accelormeter-music",
-  fullName: "ezzcodeezzlife/accelormeter-music",
-  feedbackId: "cldemo01showcase000000000001",
 });
 
 const outDir = process.argv[2]?.trim();

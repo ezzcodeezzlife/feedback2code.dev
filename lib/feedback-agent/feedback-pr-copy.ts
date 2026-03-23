@@ -1,5 +1,5 @@
 import { dashboardRepoPath } from "@/lib/app-paths";
-import { absoluteUrl, SITE_NAME } from "@/lib/site-config";
+import { absoluteUrl } from "@/lib/site-config";
 
 const PR_TITLE_MAX = 72;
 
@@ -37,15 +37,11 @@ export function buildFeedbackPrBody(input: {
   pageUrl: string | null;
   owner: string;
   repo: string;
-  fullName: string;
-  feedbackId: string;
 }): string {
-  const homeUrl = absoluteUrl("/");
-  const githubRepoUrl = `https://github.com/${input.owner}/${input.repo}`;
   const dashboardUrl = absoluteUrl(dashboardRepoPath(input.owner, input.repo));
   const safePage = safeHttpsUrl(input.pageUrl);
 
-  let pageUrlRow = "| **Submitted URL** | — |";
+  let pageUrlRow = "| Submitted URL | — |";
   if (safePage) {
     let label = safePage;
     try {
@@ -54,7 +50,7 @@ export function buildFeedbackPrBody(input: {
     } catch {
       /* keep full href */
     }
-    pageUrlRow = `| **Submitted URL** | [${label}](${safePage}) |`;
+    pageUrlRow = `| Submitted URL | [${label}](${safePage}) |`;
   }
 
   const pathDisplay =
@@ -62,32 +58,18 @@ export function buildFeedbackPrBody(input: {
       ? `\`${input.pagePath.replace(/`/g, "'")}\``
       : "—";
 
-  const feedbackQuoted = input.feedbackBody
-    .split("\n")
-    .map((line) => `> ${line || " "}`)
-    .join("\n");
-
   return [
-    `### Pull request from [${SITE_NAME}](${homeUrl})`,
-    "",
-    `This PR was opened automatically by the **${SITE_NAME}** agent after someone submitted feedback through your embedded site widget.`,
-    "",
-    "#### Links",
-    "",
-    "| | |",
-    "|:---|:---|",
-    `| **Repository** | [\`${input.fullName}\`](${githubRepoUrl}) |`,
-    `| **Dashboard** | [View feedback & status](${dashboardUrl}) |`,
-    `| **Page path** | ${pathDisplay} |`,
-    pageUrlRow,
-    "",
-    "#### Original feedback",
-    "",
-    feedbackQuoted,
+    input.feedbackBody.trim(),
     "",
     "---",
     "",
-    `<sub>Feedback ID \`${input.feedbackId}\` · [${SITE_NAME}](${homeUrl})</sub>`,
+    "#### Links",
+    "",
+    "| Resource | Link |",
+    "|:---------|:-----|",
+    `| Dashboard | [View feedback & status](${dashboardUrl}) |`,
+    `| Page path | ${pathDisplay} |`,
+    pageUrlRow,
     "",
   ].join("\n");
 }
