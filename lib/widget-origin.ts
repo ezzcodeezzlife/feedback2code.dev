@@ -1,3 +1,42 @@
+export const BASE_HOSTING_DOMAINS = [
+  "vercel.app",
+  "app.vercel.app",
+  "netlify.app",
+  "github.io",
+  "pages.dev",
+  "web.app",
+  "firebaseapp.com",
+  "herokuapp.com",
+];
+
+export function cleanDomain(value: string): string {
+  let d = value.trim().toLowerCase();
+  // Remove protocol
+  d = d.replace(/^(https?:\/\/)/, "");
+  // Remove www.
+  d = d.replace(/^www\./, "");
+  // Remove trailing slashes and paths
+  d = d.split("/")[0];
+  // Remove trailing dots
+  d = d.replace(/\.+$/, "");
+  return d;
+}
+
+export function getDomainWarning(domain: string): string | null {
+  const d = cleanDomain(domain);
+  if (!d) return null;
+
+  if (d === "localhost" || d === "127.0.0.1") {
+    return "This is for local development only. Make sure to add your production domain for the widget to work on your live site.";
+  }
+
+  if (BASE_HOSTING_DOMAINS.includes(d)) {
+    return `Adding a base hosting domain is unsafe because any project on this service could potentially send feedback to your widget. Use your specific subdomain instead (e.g., your-project.${d}).`;
+  }
+
+  return null;
+}
+
 /**
  * Hostname only, lowercase, no port (for comparing to authorizedDomains).
  */
