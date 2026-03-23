@@ -68,8 +68,8 @@ export default function AuthorizedDomainsFields({ initialDomains }: Props) {
                   }
                 />
                 {warning && (
-                  <div className="flex items-start gap-1.5 rounded border border-amber-500/20 bg-amber-500/5 p-2 text-[11px] text-amber-500">
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <div className="flex h-9 items-center gap-1.5 rounded-none border border-amber-500/20 bg-amber-500/5 px-3 text-[11px] text-amber-500">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                     <p className="leading-normal">{warning}</p>
                   </div>
                 )}
