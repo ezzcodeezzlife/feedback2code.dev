@@ -50,41 +50,13 @@ export default async function RepositoryFeedbacksPage({ params }: PageProps) {
     where: { email: session.user.email },
     select: {
       id: true,
-      githubAppInstalled: true,
-      githubInstallationId: true,
     },
   });
   if (!user) {
     redirect("/");
   }
 
-  const hasInstallation = Boolean(
-    user.githubAppInstalled && user.githubInstallationId,
-  );
-  if (!hasInstallation || !user.githubInstallationId) {
-    redirect(DASHBOARD_HOME);
-  }
-
-  let installedRepos: Awaited<
-    ReturnType<typeof getInstallationRepositories>
-  > = [];
-  try {
-    installedRepos = await getInstallationRepositories(
-      user.githubInstallationId,
-    );
-  } catch {
-    notFound();
-  }
-
-  const routeKey = `${owner}/${repo}`.toLowerCase();
-  const matched = installedRepos.find(
-    (r) => r.full_name.toLowerCase() === routeKey,
-  );
-  if (!matched) {
-    notFound();
-  }
-
-  const fullName = matched.full_name;
+  const fullName = `${owner}/${repo}`;
   const [canonicalOwner, canonicalRepo] = fullName.split("/");
   const displayOwner = canonicalOwner ?? owner;
   const displayRepo = canonicalRepo ?? repo;

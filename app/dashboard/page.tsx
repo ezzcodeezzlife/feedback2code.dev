@@ -26,8 +26,6 @@ export default async function DashboardPage() {
     where: { email: session.user.email },
     select: {
       id: true,
-      githubAppInstalled: true,
-      githubInstallationId: true,
     },
   });
 
@@ -35,29 +33,12 @@ export default async function DashboardPage() {
     redirect("/");
   }
 
-  const hasGithubInstallation = Boolean(
-    user.githubAppInstalled && user.githubInstallationId,
-  );
-
-  let repos: InstalledRepo[] = [];
+  const hasGithubInstallation = true;
   let repositoriesError: string | undefined;
-  if (hasGithubInstallation && user.githubInstallationId) {
-    try {
-      repos = await getInstallationRepositories(user.githubInstallationId);
-    } catch (error) {
-      repositoriesError =
-        error instanceof Error ? error.message : "Failed to load repositories.";
-    }
-  }
 
-  const fullNames = repos.map((r) => r.full_name);
-
-  const repoConfigStats =
-    fullNames.length > 0
-      ? await prisma.repositoryConfig.findMany({
+  const repoConfigStats = await prisma.repositoryConfig.findMany({
           where: {
             userId: user.id,
-            fullName: { in: fullNames },
           },
           select: {
             id: true,
@@ -77,8 +58,7 @@ export default async function DashboardPage() {
               },
             },
           },
-        })
-      : [];
+        });
 
   const configIds = repoConfigStats.map((c) => c.id);
   const statusRows =
@@ -110,6 +90,14 @@ export default async function DashboardPage() {
   const repoConfigStatsByFullName = new Map(
     repoConfigStats.map((cfg) => [cfg.fullName, cfg]),
   );
+
+  const repos = repoConfigStats.map((cfg, i) => ({
+    id: i,
+    name: cfg.fullName.split('/')[1] || cfg.fullName,
+    full_name: cfg.fullName,
+    html_url: `https://github.com/${cfg.fullName}`,
+    private: false,
+  }));
 
   const enrichedRepos = repos.map((repo) => {
     const cfg = repoConfigStatsByFullName.get(repo.full_name);
@@ -159,10 +147,7 @@ export default async function DashboardPage() {
     };
   });
 
-  const manageAccessUrl =
-    user.githubInstallationId != null
-      ? `https://github.com/settings/installations/${user.githubInstallationId}`
-      : null;
+  const manageAccessUrl = null;
 
   return (
     <DashboardView

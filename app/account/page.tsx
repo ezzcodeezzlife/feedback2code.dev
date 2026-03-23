@@ -16,7 +16,6 @@ type BillingUser = {
   id: string;
   name: string | null;
   email: string | null;
-  githubAppInstalled: boolean;
   planTier: "FREE" | "PRO";
   stripeCustomerId: string | null;
   stripeSubscriptionStatus: string | null;
@@ -36,7 +35,6 @@ export default async function AccountPage() {
       id: true,
       name: true,
       email: true,
-      githubAppInstalled: true,
       planTier: true,
       stripeCustomerId: true,
       stripeSubscriptionStatus: true,
@@ -58,7 +56,6 @@ export default async function AccountPage() {
           id: true,
           name: true,
           email: true,
-          githubAppInstalled: true,
           planTier: true,
           stripeCustomerId: true,
           stripeSubscriptionStatus: true,
@@ -146,12 +143,7 @@ export default async function AccountPage() {
               <dt className="text-xs uppercase tracking-wider text-muted">Email</dt>
               <dd className="mt-1 text-sm text-foreground">{user.email}</dd>
             </div>
-            <div className="sm:col-span-2">
-              <dt className="text-xs uppercase tracking-wider text-muted">GitHub App</dt>
-              <dd className="mt-1 text-sm text-muted-foreground">
-                {user.githubAppInstalled ? "Installed" : "Not installed"}
-              </dd>
-            </div>
+
           </dl>
         </section>
 
