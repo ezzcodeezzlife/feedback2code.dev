@@ -7,7 +7,6 @@ export const PRO_TIER_FEATURES: readonly ProFeatureItem[] = [
   { text: "Priority sandbox execution" },
   { text: "Custom agent instructions" },
   { text: "Page path context tracking" },
-  { text: "Advanced dashboard analytics" },
   { text: "Choose AI Agent model", comingSoon: true },
 ];
 

@@ -399,22 +399,20 @@ export default function LandingView() {
                         setWidgetPreviewTab("submit");
                         setWidgetPreviewSent(false);
                       }}
-                      className={`flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer ${
-                        widgetPreviewTab === "submit"
-                          ? "border-b-2 border-accent text-accent"
-                          : "text-muted hover:text-foreground"
-                      }`}
+                      className={`flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer ${widgetPreviewTab === "submit"
+                        ? "border-b-2 border-accent text-accent"
+                        : "text-muted hover:text-foreground"
+                        }`}
                     >
                       Submit
                     </button>
                     <button
                       type="button"
                       onClick={() => setWidgetPreviewTab("history")}
-                      className={`flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer ${
-                        widgetPreviewTab === "history"
-                          ? "border-b-2 border-accent text-accent"
-                          : "text-muted hover:text-foreground"
-                      }`}
+                      className={`flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer ${widgetPreviewTab === "history"
+                        ? "border-b-2 border-accent text-accent"
+                        : "text-muted hover:text-foreground"
+                        }`}
                     >
                       History (3)
                     </button>
@@ -919,23 +917,21 @@ export default function LandingView() {
                   className="flex gap-3 py-2 items-start"
                 >
                   <span
-                    className={`shrink-0 w-4 text-center font-bold ${
-                      line.prefix === "✓"
-                        ? "text-green-400"
-                        : line.accent
-                          ? "text-accent"
-                          : "text-muted"
-                    }`}
+                    className={`shrink-0 w-4 text-center font-bold ${line.prefix === "✓"
+                      ? "text-green-400"
+                      : line.accent
+                        ? "text-accent"
+                        : "text-muted"
+                      }`}
                   >
                     {line.prefix}
                   </span>
                   <div className="min-w-0">
                     <span
-                      className={`text-sm font-bold ${
-                        line.prefix === "✓"
-                          ? "text-green-400"
-                          : "text-foreground"
-                      }`}
+                      className={`text-sm font-bold ${line.prefix === "✓"
+                        ? "text-green-400"
+                        : "text-foreground"
+                        }`}
                     >
                       {line.cmd}
                     </span>
@@ -1022,7 +1018,7 @@ export default function LandingView() {
                 <span className="text-sm text-muted">/ month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
-                Perfect for trying out feedback2code on personal projects.
+                Perfect for trying out feedback2code.dev on projects.
               </p>
               <div className="flex flex-col flex-1 mb-8 min-h-0">
                 <ul className="space-y-3 text-sm text-muted-foreground">
@@ -1060,7 +1056,7 @@ export default function LandingView() {
                 <span className="text-sm text-muted">/ month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
-                For teams and production apps with active user bases.
+                Accelerate development for active projects that need consistent, automated code improvements.
               </p>
               <ul className="space-y-3 text-sm text-muted-foreground mb-8 flex-1">
                 {PRO_TIER_FEATURES.map((f) => (
@@ -1103,13 +1099,11 @@ export default function LandingView() {
                   [
                     { text: "Unlimited feedbacks" },
                     { text: "Everything in Pro" },
-                    { text: "Priority sandbox execution" },
-                    { text: "Custom agent instructions & advanced analytics" },
-                    { text: "Data Processing Agreement (DPA)" },
-                    { text: "GDPR-aligned handling & subprocessor transparency" },
-                    {
-                      text: "Security questionnaires, reviews & custom enterprise terms",
-                    },
+                    { text: "SSO / SAML Authentication" },
+                    { text: "Dedicated Success Manager & Priority Support" },
+                    { text: "Custom SLAs and Onboarding Support" },
+                    { text: "Detailed Audit Logs & Role-based Access" },
+                    { text: "Self-hosted inference & Private model deployments" },
                     { text: "Choose AI Agent model", comingSoon: true },
                   ] as const
                 ).map((f) => (
