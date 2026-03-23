@@ -388,7 +388,7 @@ function RepoCard({ repo }: { repo: RepoEntry }) {
               aria-hidden
             />
             <p className="relative z-1 m-0 w-full max-w-[min(100%,26rem)] px-2 text-center text-sm leading-snug text-muted-foreground pointer-events-auto max-lg:text-balance lg:max-w-none lg:px-0 lg:whitespace-nowrap">
-              Add authorized domain and add the widget to
+              Add authorized domain, then add the widget to
               your website.{" "}
               <Link
                 href={configureUrl}
