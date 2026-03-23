@@ -106,6 +106,7 @@ model WidgetFeedback {
   repositoryConfig RepositoryConfig @relation(fields: [repositoryConfigId], references: [id], onDelete: Cascade)
   feedbackLimitEvents UserFeedbackLimitEvent[]
 
+  @@index([repositoryConfigId, status])
   @@index([repositoryConfigId, createdAt])
 }
 

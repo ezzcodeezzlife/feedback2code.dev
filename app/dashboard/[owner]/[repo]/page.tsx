@@ -46,13 +46,8 @@ export default async function RepositoryFeedbacksPage({ params }: PageProps) {
     redirect("/");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    select: {
-      id: true,
-    },
-  });
-  if (!user) {
+  const userId = (session.user as { id?: string }).id;
+  if (!userId) {
     redirect("/");
   }
 
@@ -64,7 +59,7 @@ export default async function RepositoryFeedbacksPage({ params }: PageProps) {
   const config = await prisma.repositoryConfig.findUnique({
     where: {
       userId_fullName: {
-        userId: user.id,
+        userId,
         fullName,
       },
     },

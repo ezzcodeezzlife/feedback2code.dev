@@ -22,14 +22,8 @@ export default async function DashboardPage() {
     redirect("/");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    select: {
-      id: true,
-    },
-  });
-
-  if (!user) {
+  const userId = (session.user as { id?: string }).id;
+  if (!userId) {
     redirect("/");
   }
 
@@ -38,7 +32,7 @@ export default async function DashboardPage() {
 
   const repoConfigStats = await prisma.repositoryConfig.findMany({
           where: {
-            userId: user.id,
+            userId,
           },
           select: {
             id: true,
