@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { WidgetFeedbackStatus } from "@prisma/client";
 import { authOptions } from "@/auth";
 import DashboardView from "@/components/home/dashboard-view";
 import type { InstalledRepo } from "@/lib/github-app";
@@ -59,20 +60,52 @@ export default async function DashboardPage() {
             fullName: { in: fullNames },
           },
           select: {
+            id: true,
             fullName: true,
+            authorizedDomains: true,
             _count: { select: { widgetFeedbacks: true } },
             widgetFeedbacks: {
-              take: 1,
+              take: 12,
               orderBy: { createdAt: "desc" },
               select: {
                 status: true,
                 createdAt: true,
                 body: true,
+                pagePath: true,
+                pageUrl: true,
+                prUrl: true,
               },
             },
           },
         })
       : [];
+
+  const configIds = repoConfigStats.map((c) => c.id);
+  const statusRows =
+    configIds.length > 0
+      ? await prisma.widgetFeedback.groupBy({
+          by: ["repositoryConfigId", "status"],
+          where: { repositoryConfigId: { in: configIds } },
+          _count: { _all: true },
+        })
+      : [];
+
+  const statusByConfigId = new Map<
+    string,
+    Partial<Record<WidgetFeedbackStatus, number>>
+  >();
+  for (const row of statusRows) {
+    const cur = statusByConfigId.get(row.repositoryConfigId) ?? {};
+    cur[row.status] = row._count._all;
+    statusByConfigId.set(row.repositoryConfigId, cur);
+  }
+
+  const emptyStatus = (): Record<WidgetFeedbackStatus, number> => ({
+    CODING: 0,
+    WAITING_FOR_REVIEW: 0,
+    MERGED: 0,
+    FAILED: 0,
+  });
 
   const repoConfigStatsByFullName = new Map(
     repoConfigStats.map((cfg) => [cfg.fullName, cfg]),
@@ -80,18 +113,49 @@ export default async function DashboardPage() {
 
   const enrichedRepos = repos.map((repo) => {
     const cfg = repoConfigStatsByFullName.get(repo.full_name);
-    const latest = cfg?.widgetFeedbacks?.[0];
+    const feedbackRows = cfg?.widgetFeedbacks ?? [];
+    const latest = feedbackRows[0];
+    const recentSubmissions = feedbackRows.slice(1).map((f) => ({
+      status: f.status,
+      createdAtIso: f.createdAt.toISOString(),
+      body: f.body,
+    }));
+    const domains = cfg?.authorizedDomains;
+    const hasAuthorizedDomains =
+      Array.isArray(domains) &&
+      (domains as unknown[]).some((d) => typeof d === "string" && d.length > 0);
+    const domainCount =
+      Array.isArray(domains) && (domains as unknown[]).every((d) => typeof d === "string")
+        ? (domains as string[]).filter((d) => d.trim().length > 0).length
+        : 0;
+
+    const partial = cfg?.id ? statusByConfigId.get(cfg.id) : undefined;
+    const byStatus = emptyStatus();
+    if (partial) {
+      (Object.entries(partial) as [WidgetFeedbackStatus, number][]).forEach(
+        ([s, n]) => {
+          if (typeof n === "number") byStatus[s] = n;
+        },
+      );
+    }
 
     return {
       ...repo,
       feedbackCount: cfg?._count?.widgetFeedbacks ?? 0,
+      hasAuthorizedDomains,
+      domainCount,
+      feedbackByStatus: byStatus,
       latestFeedback: latest
         ? {
             status: latest.status,
             createdAtIso: latest.createdAt.toISOString(),
             body: latest.body,
+            pagePath: latest.pagePath,
+            pageUrl: latest.pageUrl,
+            prUrl: latest.prUrl,
           }
         : null,
+      recentSubmissions,
     };
   });
 
