@@ -14,7 +14,7 @@ export default function NavbarAuthActions({ isAuthed }: Props) {
   ) : (
     <Button
       type="button"
-      onClick={() => signIn("github", { callbackUrl: "/" })}
+      onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
       size="default"
       className="cursor-pointer border-white bg-white text-black hover:border-zinc-200 hover:bg-zinc-100 hover:text-black focus-visible:ring-white/50"
     >

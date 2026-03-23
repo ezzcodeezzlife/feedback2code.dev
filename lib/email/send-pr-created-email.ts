@@ -1,9 +1,10 @@
+import { dashboardRepoPath } from "@/lib/app-paths";
 import { Resend } from "resend";
 
 type SendPrCreatedEmailInput = {
   intendedToEmails: string[];
   repositoryFullName: string;
-  /** Prefer DB route segments for the project dashboard URL (`/[owner]/[repo]`). */
+  /** Prefer DB route segments for the project settings URL (`/dashboard/[owner]/[repo]`). */
   owner?: string | null;
   repo?: string | null;
   prUrl: string;
@@ -76,10 +77,10 @@ function projectSettingsUrlFromFullName(repositoryFullName: string): string | nu
   const repo = t.slice(i + 1);
   if (!owner || !repo || repo.includes("/")) return null;
   const base = resolveBaseUrl();
-  return `${base}/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+  return `${base}${dashboardRepoPath(owner, repo)}`;
 }
 
-/** Project dashboard (settings + PR email toggle): `https://…/owner/repo`. */
+/** Project settings (embed + feedback + PR email toggle): `https://…/dashboard/owner/repo`. */
 function projectDashboardAbsoluteUrl(input: {
   repositoryFullName: string;
   owner?: string | null;
@@ -89,7 +90,7 @@ function projectDashboardAbsoluteUrl(input: {
   const o = input.owner?.trim();
   const r = input.repo?.trim();
   if (o && r && !r.includes("/")) {
-    return `${base}/${encodeURIComponent(o)}/${encodeURIComponent(r)}`;
+    return `${base}${dashboardRepoPath(o, r)}`;
   }
   return projectSettingsUrlFromFullName(input.repositoryFullName);
 }

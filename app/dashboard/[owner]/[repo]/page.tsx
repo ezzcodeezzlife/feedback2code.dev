@@ -2,6 +2,7 @@ import { authOptions } from "@/auth";
 import { PageShell } from "@/components/layout/page-shell";
 import AuthorizedDomainsFields from "@/components/repo/authorized-domains-fields";
 import EmbedSnippetCopy from "@/components/repo/embed-snippet-copy";
+import { DASHBOARD_HOME, dashboardRepoPath } from "@/lib/app-paths";
 import { createWidgetId } from "@/lib/widget-embed";
 import { feedbackStatusLabel } from "@/lib/widget-feedback-status";
 import { isLocalDevPageUrl } from "@/lib/widget-origin";
@@ -210,7 +211,7 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
         : "settings";
     const toastNonce = Date.now().toString();
     redirect(
-      `/${owner}/${repo}?saved=${encodeURIComponent(saved)}&toast=${toastNonce}`,
+      `${dashboardRepoPath(owner, repo)}?saved=${encodeURIComponent(saved)}&toast=${toastNonce}`,
     );
   }
 
@@ -231,12 +232,14 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
       ? `<script src="${baseUrl}/widget/${existing.widgetId}" async></script>`
       : null;
 
+  const repoSettingsPath = dashboardRepoPath(owner, repo);
+
   return (
     <PageShell>
       {/* Breadcrumb + header */}
       <div className="mb-8">
         <Link
-          href="/"
+          href={DASHBOARD_HOME}
           className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors mb-4"
         >
           <ArrowLeft className="h-3 w-3" />
@@ -335,7 +338,7 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                   )}
                 </div>
                 <Link
-                  href={`/${owner}/${repo}`}
+                  href={repoSettingsPath}
                   className={buttonVariants({ variant: "outline", size: "sm" })}
                 >
                   Refresh
@@ -498,7 +501,7 @@ export default async function RepositorySettingsPage({ params }: PageProps) {
                 defaultValue={existing?.customInstructions ?? ""}
                 placeholder='e.g., "Always use TailwindCSS for styling." — Leave empty for default behavior.'
               />
-  
+
 
               <div className="mt-4">
                 <Button

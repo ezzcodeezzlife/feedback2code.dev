@@ -2,6 +2,7 @@ import { authOptions } from "@/auth";
 import { BillingActions } from "@/components/account/billing-actions";
 import { SignOutButton } from "@/components/account/sign-out-button";
 import { PageShell } from "@/components/layout/page-shell";
+import { DASHBOARD_HOME } from "@/lib/app-paths";
 import { FEEDBACK_QUOTA_WINDOW_DAYS, feedbackQuotaLimitForPlan } from "@/lib/billing";
 import { PRO_UPGRADE_EXTRAS } from "@/lib/plan-features";
 import { prisma } from "@/lib/prisma";
@@ -108,10 +109,10 @@ export default async function AccountPage() {
 
   return (
     <PageShell>
-      {/* Match /[owner]/[repo] configure header */}
+      {/* Match dashboard repo settings header */}
       <div className="mb-8">
         <Link
-          href="/"
+          href={DASHBOARD_HOME}
           className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors mb-4"
         >
           <ArrowLeft className="h-3 w-3" />

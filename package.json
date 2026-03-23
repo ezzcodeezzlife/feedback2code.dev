@@ -17,7 +17,8 @@
     "test:e2b-feedback-sandbox": "dotenv -e .env.development -- npx tsx scripts/test-e2b-feedback-sandbox.ts",
     "test:e2b-production-like": "dotenv -e .env.development -- npx tsx scripts/test-e2b-production-like.ts",
     "purge:prod-widget-feedback": "dotenv -e .env.production -- npx tsx scripts/purge-user-widget-feedback.ts",
-    "dev:downgrade-free": "dotenv -e .env.development -- npx tsx scripts/dev-downgrade-user-to-free.ts"
+    "dev:downgrade-free": "dotenv -e .env.development -- npx tsx scripts/dev-downgrade-user-to-free.ts",
+    "dev:reset-dashboard": "dotenv -e .env.development -- node scripts/dev-reset-dashboard-local.mjs"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",

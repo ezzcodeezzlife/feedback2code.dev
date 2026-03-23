@@ -3,6 +3,7 @@ import { authOptions } from "@/auth";
 import NavbarAuthActions from "./navbar-auth-actions";
 import NavbarLandingLinks from "./navbar-landing-links";
 import Link from "next/link";
+import { DASHBOARD_HOME } from "@/lib/app-paths";
 import { MessageSquareCode } from "lucide-react";
 
 export default async function Navbar() {
@@ -17,7 +18,10 @@ export default async function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="group flex shrink-0 items-center gap-1">
+        <Link
+          href={user ? DASHBOARD_HOME : "/"}
+          className="group flex shrink-0 items-center gap-1"
+        >
           <span className="flex h-9 w-9 items-center justify-center text-accent text-xs font-bold">
             <MessageSquareCode className="h-5 w-5" aria-hidden="true" />
           </span>

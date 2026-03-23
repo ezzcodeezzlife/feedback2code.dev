@@ -3,6 +3,7 @@ import {
   FEEDBACK_QUOTA_WINDOW_DAYS,
   feedbackQuotaLimitForPlan,
 } from "@/lib/billing";
+import { dashboardRepoPath } from "@/lib/app-paths";
 import { parseWidgetIdFromBody } from "@/lib/widget-embed";
 import { prisma } from "@/lib/prisma";
 import type { WidgetFeedbackStatus } from "@/lib/widget-feedback-status";
@@ -201,7 +202,7 @@ export async function POST(request: NextRequest) {
     throw new Error("Unexpected: feedback creation returned no result.");
   }
 
-  const dashboardPath = `/${auth.ctx.owner}/${auth.ctx.repo}`;
+  const dashboardPath = dashboardRepoPath(auth.ctx.owner, auth.ctx.repo);
   // Await only **bootstrap** (see `startE2bFeedbackAgentWebhook`): not OpenCode/PR time.
   // We must await (not `void`) so Next’s after-queue + `waitUntil` keep the invocation alive
   // until the sandbox exists and the pipeline is started in the background.

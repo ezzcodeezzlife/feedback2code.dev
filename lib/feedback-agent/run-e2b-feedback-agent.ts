@@ -1,3 +1,4 @@
+import { DASHBOARD_HOME } from "@/lib/app-paths";
 import {
   branchNameForFeedback,
   createSandboxOpts,
@@ -19,7 +20,7 @@ export { runE2bFeedbackAgentBlockingIntegrationTest } from "@/lib/feedback-agent
 function revalidateRepo(dashboardPath: string) {
   try {
     revalidatePath(dashboardPath);
-    revalidatePath("/");
+    revalidatePath(DASHBOARD_HOME);
   } catch {
     /* revalidate may be unavailable outside request scope */
   }

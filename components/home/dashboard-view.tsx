@@ -1,12 +1,12 @@
 "use client";
 
 import { PageShell } from "@/components/layout/page-shell";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import Input from "@/components/ui/input";
 import Select from "@/components/ui/select";
 import { buttonVariants } from "@/components/ui/button";
+import { dashboardRepoPath } from "@/lib/app-paths";
 import type { InstalledRepo } from "@/lib/github-app";
 import { feedbackStatusLabel, type WidgetFeedbackStatus } from "@/lib/widget-feedback-status";
 import {
@@ -15,8 +15,8 @@ import {
   ExternalLink,
   GitBranch,
   GitFork,
+  Github,
   MessageSquare,
-  RotateCcw,
   Search,
   Star,
   Loader2,
@@ -57,6 +57,8 @@ function feedbackBodySnippet(body: string): string {
   return `${normalized.slice(0, 157)}…`;
 }
 
+const INSTALL_APP_HREF = "/api/github/install";
+
 type DashboardViewProps = {
   repositories: Array<
     InstalledRepo & {
@@ -68,12 +70,14 @@ type DashboardViewProps = {
       } | null;
     }
   >;
-  manageAccessUrl: string;
+  hasGithubInstallation: boolean;
+  manageAccessUrl: string | null;
   repositoriesError?: string;
 };
 
 export default function DashboardView({
   repositories,
+  hasGithubInstallation,
   manageAccessUrl,
   repositoriesError,
 }: DashboardViewProps) {
@@ -110,27 +114,29 @@ export default function DashboardView({
         <div className="mt-1 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <h1 className="text-2xl font-bold tracking-tight">Your Projects</h1>
           <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className={`${buttonVariants({
-                variant: "outline",
-                size: "sm",
-              })} leading-none min-h-8 max-h-8`}
-              aria-label="Refresh repositories"
-            >
-              <RotateCcw className="h-3.5 w-3.5 shrink-0" />
-            </Link>
-            <a
-              href={manageAccessUrl}
-              target="_blank"
-              rel="noreferrer"
-              className={`${buttonVariants({
-                variant: "default",
-                size: "sm",
-              })} leading-none min-h-8 max-h-8`}
-            >
-              + Manage Access
-            </a>
+            {hasGithubInstallation && manageAccessUrl ? (
+              <a
+                href={manageAccessUrl}
+                target="_blank"
+                rel="noreferrer"
+                className={`${buttonVariants({
+                  variant: "default",
+                  size: "sm",
+                })} leading-none min-h-8 max-h-8`}
+              >
+                + Manage Access
+              </a>
+            ) : (
+              <a
+                href={INSTALL_APP_HREF}
+                className={`${buttonVariants({
+                  variant: "default",
+                  size: "sm",
+                })} leading-none min-h-8 max-h-8 border-white bg-white text-black hover:border-zinc-200 hover:bg-zinc-100 hover:text-black focus-visible:ring-white/50`}
+              >
+                + ADD PROJECT
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -166,11 +172,85 @@ export default function DashboardView({
         <div className="border border-red-900/50 bg-red-950/30 p-6 text-sm text-red-400">
           {repositoriesError}
         </div>
+      ) : !hasGithubInstallation ? (
+        <div className="relative overflow-hidden border border-border bg-surface">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.35]"
+            style={{
+              background:
+                "radial-gradient(ellipse 80% 60% at 50% -20%, rgba(255,107,0,0.2), transparent), radial-gradient(ellipse 60% 40% at 100% 100%, rgba(255,107,0,0.08), transparent)",
+            }}
+            aria-hidden
+          />
+          <div className="relative px-6 py-14 sm:px-10 sm:py-16 text-center max-w-lg mx-auto">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-border-bright bg-background/90 shadow-sm">
+              <Github className="h-7 w-7 text-accent" aria-hidden />
+            </div>
+            <h2 className="text-lg font-bold tracking-tight text-foreground">
+              Connect your GitHub repositories
+            </h2>
+            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+              Install the feedback2code.dev GitHub App, then choose which repos can be
+              accessed. You stay in control — no changes are made without your approval.
+            </p>
+            <a
+              href={INSTALL_APP_HREF}
+              className={`${buttonVariants({
+                variant: "default",
+                size: "default",
+              })} mt-8 border-white bg-white text-black hover:border-zinc-200 hover:bg-zinc-100 hover:text-black focus-visible:ring-white/50`}
+            >
+              + ADD PROJECT
+            </a>
+            <p className="mt-4 text-xs text-muted-foreground">
+              You’ll be sent to GitHub to review permissions, then returned here.
+            </p>
+          </div>
+        </div>
       ) : repositories.length === 0 ? (
-        <div className="border border-dashed border-border-bright p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            No repositories found for this installation yet.
-          </p>
+        <div className="relative overflow-hidden border border-border bg-surface">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.25]"
+            style={{
+              background:
+                "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255,107,0,0.15), transparent)",
+            }}
+            aria-hidden
+          />
+          <div className="relative px-6 py-12 sm:px-10 sm:py-14 text-center max-w-lg mx-auto">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-border-bright bg-background/90">
+              <GitBranch className="h-7 w-7 text-accent" aria-hidden />
+            </div>
+            <h2 className="text-lg font-bold tracking-tight text-foreground">
+              No repositories yet
+            </h2>
+            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+              Your app is connected, but no repos are selected. On GitHub, choose
+              which repositories to grant — or add more from your account settings.
+            </p>
+            {manageAccessUrl ? (
+              <a
+                href={manageAccessUrl}
+                target="_blank"
+                rel="noreferrer"
+                className={`${buttonVariants({
+                  variant: "default",
+                  size: "default",
+                })} mt-8`}
+              >
+                + Manage Access
+              </a>
+            ) : null}
+            <p className="mt-5 text-xs text-muted-foreground">
+              Need another installation?{" "}
+              <a
+                href={INSTALL_APP_HREF}
+                className="text-accent underline underline-offset-2 hover:text-accent/90"
+              >
+                Add project via GitHub
+              </a>
+            </p>
+          </div>
         </div>
       ) : filteredAndSortedRepos.length === 0 ? (
         <div className="border border-dashed border-border-bright p-6 text-center">
@@ -182,7 +262,7 @@ export default function DashboardView({
         <div className="space-y-4">
           {filteredAndSortedRepos.map((repo) => {
             const [owner, repoName] = repo.full_name.split("/");
-            const widgetUrl = `/${encodeURIComponent(owner ?? "")}/${encodeURIComponent(repoName ?? "")}`;
+            const widgetUrl = dashboardRepoPath(owner ?? "", repoName ?? "");
 
             return (
               <div

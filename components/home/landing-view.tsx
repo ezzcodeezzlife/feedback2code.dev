@@ -192,7 +192,7 @@ export default function LandingView() {
           <StaggerChild delay={300}>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Button
-                onClick={() => signIn("github", { callbackUrl: "/" })}
+                onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
                 size="lg"
                 className="cursor-pointer text-sm px-8"
               >
@@ -1040,7 +1040,7 @@ export default function LandingView() {
                 </ul>
               </div>
               <Button
-                onClick={() => signIn("github", { callbackUrl: "/" })}
+                onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
                 variant="outline"
                 className="w-full cursor-pointer"
               >
@@ -1078,7 +1078,7 @@ export default function LandingView() {
                 ))}
               </ul>
               <Button
-                onClick={() => signIn("github", { callbackUrl: "/" })}
+                onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
                 className="w-full cursor-pointer"
               >
                 <Github className="h-4 w-4" />
@@ -1194,7 +1194,7 @@ export default function LandingView() {
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Button
-              onClick={() => signIn("github", { callbackUrl: "/" })}
+              onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
               size="lg"
               className="cursor-pointer text-sm px-8"
             >

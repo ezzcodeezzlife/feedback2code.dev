@@ -1,3 +1,4 @@
+import { DASHBOARD_HOME, dashboardRepoPath } from "@/lib/app-paths";
 import { prisma } from "@/lib/prisma";
 import { PR_URL_FILE } from "@/lib/feedback-agent/run-e2b-feedback-agent";
 import { revalidatePath } from "next/cache";
@@ -12,7 +13,7 @@ export const maxDuration = 60;
 const PR_URL_RE = /^https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/[0-9]+$/;
 
 function dashboardPathForFeedback(repositoryConfigOwner: string, repositoryConfigRepo: string) {
-  return `/${repositoryConfigOwner}/${repositoryConfigRepo}`;
+  return dashboardRepoPath(repositoryConfigOwner, repositoryConfigRepo);
 }
 
 function hmacSha256Hex(secret: string, rawBody: string): string {
@@ -145,7 +146,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    revalidatePath("/");
+    if (repositoryConfig) {
+      revalidatePath(
+        dashboardPathForFeedback(repositoryConfig.owner, repositoryConfig.repo),
+      );
+    }
+    revalidatePath(DASHBOARD_HOME);
 
     // Best-effort kill.
     if (connectSandboxId) {
@@ -288,7 +294,7 @@ export async function POST(request: NextRequest) {
     }
 
     revalidatePath(dashboardPath);
-    revalidatePath("/");
+    revalidatePath(DASHBOARD_HOME);
 
     // Stop the sandbox so it doesn't linger after we extracted the PR URL.
     try {
@@ -315,7 +321,7 @@ export async function POST(request: NextRequest) {
       },
     });
     revalidatePath(dashboardPath);
-    revalidatePath("/");
+    revalidatePath(DASHBOARD_HOME);
   }
 
   return NextResponse.json({ ok: true });

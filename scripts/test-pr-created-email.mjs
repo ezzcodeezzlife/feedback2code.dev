@@ -113,7 +113,7 @@ function projectSettingsUrl(fullName) {
   const owner = t.slice(0, i);
   const repo = t.slice(i + 1);
   if (!owner || !repo || repo.includes("/")) return null;
-  return `${resolveBaseUrl()}/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+  return `${resolveBaseUrl()}/dashboard/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
 }
 
 const settingsUrl = projectSettingsUrl(repositoryFullName);
