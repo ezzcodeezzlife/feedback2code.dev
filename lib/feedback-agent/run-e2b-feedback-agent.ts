@@ -7,6 +7,10 @@ import {
   feedbackSandboxTemplate,
   writeFeedbackSandboxFiles,
 } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
+import {
+  buildFeedbackPrBody,
+  buildFeedbackPrTitle,
+} from "@/lib/feedback-agent/feedback-pr-copy";
 import { buildOpencodeFeedbackPrompt } from "@/lib/feedback-agent/prompt";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -81,6 +85,7 @@ export async function startE2bFeedbackAgentWebhook(input: {
   fullName: string;
   feedbackBody: string;
   pagePath: string | null;
+  pageUrl: string | null;
   dashboardPath: string;
   githubInstallationId: string | null;
 }): Promise<void> {
@@ -118,12 +123,16 @@ export async function startE2bFeedbackAgentWebhook(input: {
   }
 
   const branch = branchNameForFeedback(input.feedbackId);
-  const prTitle = `Feedback: ${input.feedbackBody.slice(0, 72)}${input.feedbackBody.length > 72 ? "…" : ""}`;
-  const pathLine =
-    input.pagePath && input.pagePath.length > 0
-      ? `Page path: \`${input.pagePath}\`\n\n`
-      : "";
-  const prBody = `Automated PR from site widget feedback.\n\n${pathLine}---\n\n${input.feedbackBody}`;
+  const prTitle = buildFeedbackPrTitle(input.feedbackBody);
+  const prBody = buildFeedbackPrBody({
+    feedbackBody: input.feedbackBody,
+    pagePath: input.pagePath,
+    pageUrl: input.pageUrl,
+    owner: input.owner,
+    repo: input.repo,
+    fullName: input.fullName,
+    feedbackId: input.feedbackId,
+  });
 
   const publicBase = publicAppBaseUrl();
   const webhookUrl = publicBase ? `${publicBase}/api/e2b/webhook` : "";

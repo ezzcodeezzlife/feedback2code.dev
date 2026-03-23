@@ -1,4 +1,8 @@
 import { buildFeedbackAgentEgressAllowOut } from "@/lib/feedback-agent/e2b-sandbox-network";
+import {
+  buildFeedbackPrBody,
+  buildFeedbackPrTitle,
+} from "@/lib/feedback-agent/feedback-pr-copy";
 import { buildOpencodeFeedbackPrompt } from "@/lib/feedback-agent/prompt";
 import { ALL_TRAFFIC, Sandbox } from "e2b";
 import type { CommandResult } from "e2b";
@@ -149,6 +153,7 @@ export async function runE2bFeedbackAgentBlockingIntegrationTest(input: {
   fullName: string;
   feedbackBody: string;
   pagePath: string | null;
+  pageUrl?: string | null;
   githubInstallationId: string;
   customInstructions?: string | null;
   timeoutMs?: number;
@@ -176,12 +181,16 @@ export async function runE2bFeedbackAgentBlockingIntegrationTest(input: {
   const webhookUrl = publicBase ? `${publicBase}/api/e2b/webhook` : "";
 
   const branch = branchNameForFeedback(input.feedbackId);
-  const prTitle = `Feedback: ${input.feedbackBody.slice(0, 72)}${input.feedbackBody.length > 72 ? "…" : ""}`;
-  const pathLine =
-    input.pagePath && input.pagePath.length > 0
-      ? `Page path: \`${input.pagePath}\`\n\n`
-      : "";
-  const prBody = `Automated PR from site widget feedback.\n\n${pathLine}---\n\n${input.feedbackBody}`;
+  const prTitle = buildFeedbackPrTitle(input.feedbackBody);
+  const prBody = buildFeedbackPrBody({
+    feedbackBody: input.feedbackBody,
+    pagePath: input.pagePath,
+    pageUrl: input.pageUrl ?? null,
+    owner: input.owner,
+    repo: input.repo,
+    fullName: input.fullName,
+    feedbackId: input.feedbackId,
+  });
 
   const prompt = buildOpencodeFeedbackPrompt({
     owner: input.owner,

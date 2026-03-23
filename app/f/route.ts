@@ -216,6 +216,7 @@ export async function POST(request: NextRequest) {
         fullName: auth.ctx.fullName,
         feedbackBody: text,
         pagePath: storedPagePath,
+        pageUrl: storedPageUrl,
         dashboardPath,
         githubInstallationId: auth.ctx.githubInstallationId,
       });
