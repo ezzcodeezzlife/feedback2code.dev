@@ -14,14 +14,7 @@ import Textarea from "@/components/ui/textarea";
 import { SaveToast } from "@/components/repo/save-toast";
 import { SonnerToaster } from "@/components/ui/sonner-toaster";
 import { EmailNotificationToggle } from "@/components/repo/email-notification-toggle";
-import {
-  ArrowLeft,
-  Globe,
-  Mail,
-  Code,
-  AlertCircle,
-  Bot,
-} from "lucide-react";
+import { ArrowLeft, Globe, Mail, Code, Bot } from "lucide-react";
 
 type PageProps = {
   params: Promise<{
@@ -257,11 +250,18 @@ export default async function RepositoryConfigurePage({ params }: PageProps) {
           )}
         </section>
 
-        {hasAuthorizedDomains ? (
-          <>
-            {/* Section: Email Notifications */}
-            <section className="border border-border border-t-0 bg-surface p-6">
-              <div className="flex items-center gap-2 mb-4">
+        {!hasAuthorizedDomains ? (
+          <p className="sr-only">
+            Email notifications and custom agent instructions are unavailable
+            until you add at least one authorized domain above.
+          </p>
+        ) : null}
+
+        {/* Section: Email Notifications */}
+        <section className="border border-border border-t-0 bg-surface p-0">
+          {hasAuthorizedDomains ? (
+            <div className="p-6">
+              <div className="mb-4 flex items-center gap-2">
                 <Mail className="h-4 w-4 text-accent" />
                 <h2 className="text-sm font-bold uppercase tracking-wider">
                   Email Notifications
@@ -289,11 +289,56 @@ export default async function RepositoryConfigurePage({ params }: PageProps) {
                 aria-hidden="true"
                 tabIndex={-1}
               />
-            </section>
+            </div>
+          ) : (
+            <div className="relative">
+              <div
+                className="pointer-events-none select-none p-6 blur-[1.5px] opacity-50 saturate-[0.85]"
+                inert
+                aria-hidden
+              >
+                <div className="mb-4 flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-accent" />
+                  <h2 className="text-sm font-bold uppercase tracking-wider">
+                    Email Notifications
+                  </h2>
+                </div>
 
-            {/* Section: Agent Instructions */}
-            <section className="border border-border border-t-0 bg-surface p-6">
-              <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-3">
+                  <EmailNotificationToggle
+                    defaultChecked={existing?.receivePrCreatedEmail ?? true}
+                  />
+                  <div>
+                    <p className="text-xs text-muted">
+                      Email me when feedback creates a PR
+                      {user.email ? ` (${user.email})` : ""}.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  id="saveEmailSubmit"
+                  type="submit"
+                  name="saveSection"
+                  value="email"
+                  className="hidden"
+                  aria-hidden="true"
+                  tabIndex={-1}
+                />
+              </div>
+              <div
+                className="pointer-events-none absolute inset-0 z-10 bg-background/35"
+                aria-hidden
+              />
+            </div>
+          )}
+        </section>
+
+        {/* Section: Agent Instructions */}
+        <section className="border border-border border-t-0 bg-surface p-0">
+          {hasAuthorizedDomains ? (
+            <div className="p-6">
+              <div className="mb-4 flex items-center gap-2">
                 <Bot className="h-4 w-4 text-accent" />
                 <h2 className="text-sm font-bold uppercase tracking-wider">
                   Custom Agent Instructions
@@ -303,7 +348,7 @@ export default async function RepositoryConfigurePage({ params }: PageProps) {
               <label htmlFor="customInstructions" className="sr-only">
                 Agent instructions (optional)
               </label>
-              <p className="text-xs text-muted my-4">
+              <p className="my-4 text-xs text-muted">
                 Included in the agent prompt for every feedback submission.
               </p>
               <Textarea
@@ -325,19 +370,54 @@ export default async function RepositoryConfigurePage({ params }: PageProps) {
                   Save Instructions
                 </Button>
               </div>
-            </section>
-          </>
-        ) : (
-          <section className="border border-border border-t-0 bg-surface p-6">
-            <div className="flex items-start gap-3 rounded border border-accent/30 bg-accent/5 p-3">
-              <AlertCircle className="h-4 w-4 text-accent mt-0.5 shrink-0" />
-              <p className="text-sm text-accent-foreground">
-                Add at least one authorized domain to unlock feedback, email
-                notifications, and agent instructions.
-              </p>
             </div>
-          </section>
-        )}
+          ) : (
+            <div className="relative">
+              <div
+                className="pointer-events-none select-none p-6 blur-[1.5px] opacity-50 saturate-[0.85]"
+                inert
+                aria-hidden
+              >
+                <div className="mb-4 flex items-center gap-2">
+                  <Bot className="h-4 w-4 text-accent" />
+                  <h2 className="text-sm font-bold uppercase tracking-wider">
+                    Custom Agent Instructions
+                  </h2>
+                </div>
+
+                <label htmlFor="customInstructions" className="sr-only">
+                  Agent instructions (optional)
+                </label>
+                <p className="my-4 text-xs text-muted">
+                  Included in the agent prompt for every feedback submission.
+                </p>
+                <Textarea
+                  id="customInstructions"
+                  name="customInstructions"
+                  rows={4}
+                  defaultValue={existing?.customInstructions ?? ""}
+                  placeholder='e.g., "Always use TailwindCSS for styling." — Leave empty for default behavior.'
+                />
+
+                <div className="mt-4">
+                  <Button
+                    type="submit"
+                    size="default"
+                    name="saveSection"
+                    value="instructions"
+                    className="bg-white text-black hover:bg-white border border-white"
+                  >
+                    Save Instructions
+                  </Button>
+                </div>
+              </div>
+              <div
+                className="pointer-events-none absolute inset-0 z-10 bg-background/35"
+                aria-hidden
+              />
+            </div>
+          )}
+        </section>
       </form>
 
       <SonnerToaster />

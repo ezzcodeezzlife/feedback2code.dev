@@ -6,7 +6,6 @@ import {
   DASHBOARD_HOME,
   dashboardRepoConfigurePath,
 } from "@/lib/app-paths";
-import { getInstallationRepositories } from "@/lib/github-app";
 import { prisma } from "@/lib/prisma";
 import { SITE_NAME, SITE_PAGE_TITLE } from "@/lib/site-config";
 import { getServerSession } from "next-auth";
@@ -63,8 +62,18 @@ export default async function RepositoryFeedbacksPage({ params }: PageProps) {
         fullName,
       },
     },
-    select: { id: true },
+    select: { id: true, authorizedDomains: true },
   });
+
+  const authorizedDomainList =
+    config &&
+    Array.isArray(config.authorizedDomains) &&
+    (config.authorizedDomains as unknown[]).every(
+      (entry: unknown) => typeof entry === "string",
+    )
+      ? (config.authorizedDomains as string[]).filter(Boolean)
+      : [];
+  const hasAuthorizedDomains = authorizedDomainList.length > 0;
 
   const rows =
     config != null
@@ -126,7 +135,7 @@ export default async function RepositoryFeedbacksPage({ params }: PageProps) {
               </span>
             </span>
           </h1>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex w-full shrink-0 justify-end items-center gap-2 sm:w-auto sm:justify-start">
             <Link
               href={configurePath}
               className={buttonVariants({ variant: "outline", size: "sm" })}
@@ -138,7 +147,12 @@ export default async function RepositoryFeedbacksPage({ params }: PageProps) {
         </div>
       </div>
 
-      <RepoFeedbacksPanel feedbacks={feedbacks} />
+      <RepoFeedbacksPanel
+        feedbacks={feedbacks}
+        emptyStateConfigureHref={
+          hasAuthorizedDomains ? undefined : configurePath
+        }
+      />
     </PageShell>
   );
 }

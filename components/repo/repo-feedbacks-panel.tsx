@@ -1,4 +1,5 @@
 import { Clock3, ExternalLink, Loader2, MessageSquare } from "lucide-react";
+import Link from "next/link";
 import type { WidgetFeedbackStatus } from "@/lib/widget-feedback-status";
 import { isLocalDevPageUrl } from "@/lib/widget-origin";
 
@@ -70,8 +71,11 @@ function pageUrlLabel(url: string): string {
 
 export default function RepoFeedbacksPanel({
   feedbacks,
+  emptyStateConfigureHref,
 }: {
   feedbacks: RepoFeedbackListItem[];
+  /** When set (no authorized domains), empty state adds a line linking here. */
+  emptyStateConfigureHref?: string;
 }) {
   const count = feedbacks.length;
 
@@ -92,6 +96,19 @@ export default function RepoFeedbacksPanel({
           <p className="text-sm text-muted-foreground leading-relaxed">
             No feedback yet. After you embed the widget and visitors submit notes,
             they&apos;ll show up here with live status.
+            {emptyStateConfigureHref ? (
+              <>
+                {" "}
+                Add at least one authorized domain in{" "}
+                <Link
+                  href={emptyStateConfigureHref}
+                  className="font-medium text-accent underline underline-offset-2 decoration-accent/40 hover:text-accent/90 hover:decoration-accent"
+                >
+                  Configure
+                </Link>{" "}
+                so the widget can accept feedback from your site.
+              </>
+            ) : null}
           </p>
         </div>
       ) : (

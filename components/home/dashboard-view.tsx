@@ -365,7 +365,11 @@ function RepoCard({ repo }: { repo: RepoEntry }) {
       </div>
 
       <div
-        className={hasAuthorizedDomains ? undefined : "relative overflow-hidden"}
+        className={
+          hasAuthorizedDomains
+            ? undefined
+            : "relative min-h-30 overflow-hidden sm:min-h-32 lg:min-h-0"
+        }
       >
         <div
           className={
@@ -378,16 +382,17 @@ function RepoCard({ repo }: { repo: RepoEntry }) {
           <RepoFeedbackMiddle repo={repo} />
         </div>
         {!hasAuthorizedDomains ? (
-          <div className="absolute inset-0 z-10 flex items-center justify-center px-6 py-5">
+          <div className="absolute inset-0 z-10 flex items-center justify-center px-6 py-6 sm:py-8 lg:px-4 lg:py-2">
             <div
               className="pointer-events-none absolute inset-0 bg-background/35"
               aria-hidden
             />
-            <p className="relative z-1 mx-auto max-w-[min(100%,26rem)] text-center text-sm leading-snug text-muted-foreground text-balance line-clamp-2">
-              Add an authorized domain so the widget can accept feedback from your site.{" "}
+            <p className="relative z-1 m-0 w-full max-w-[min(100%,26rem)] px-2 text-center text-sm leading-snug text-muted-foreground pointer-events-auto max-lg:text-balance lg:max-w-none lg:px-0 lg:whitespace-nowrap">
+              Add an authorized domain so the widget can accept feedback from
+              your site.{" "}
               <Link
                 href={configureUrl}
-                className="font-semibold text-accent underline underline-offset-4 decoration-accent/50 hover:text-accent/90 hover:decoration-accent"
+                className="font-semibold text-accent underline underline-offset-4 decoration-accent/50 hover:text-accent/90 hover:decoration-accent max-lg:whitespace-nowrap"
               >
                 Configure
               </Link>
@@ -448,6 +453,9 @@ export default function DashboardView({
       return [...filtered].sort((a, b) => a.full_name.localeCompare(b.full_name));
     }
     return [...filtered].sort((a, b) => {
+      const authDiff =
+        Number(b.hasAuthorizedDomains) - Number(a.hasAuthorizedDomains);
+      if (authDiff !== 0) return authDiff;
       const timeA = a.pushed_at ? new Date(a.pushed_at).getTime() : 0;
       const timeB = b.pushed_at ? new Date(b.pushed_at).getTime() : 0;
       return timeB - timeA;
@@ -462,7 +470,7 @@ export default function DashboardView({
         </div>
         <div className="mt-1 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <h1 className="text-2xl font-bold tracking-tight">Your Projects</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full justify-end items-center gap-2 sm:w-auto sm:justify-start">
             {hasGithubInstallation && manageAccessUrl ? (
               <a
                 href={manageAccessUrl}

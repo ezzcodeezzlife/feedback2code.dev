@@ -52,26 +52,44 @@ export default function AuthorizedDomainsFields({ initialDomains }: Props) {
         {domains.map((domain, index) => {
           const warning = getDomainWarning(domain);
           return (
-            <div key={`domain-container-${index}`} className="flex items-start gap-2">
-              <div className="flex-1 space-y-1.5">
-                <Input
-                  type="text"
-                  name="authorizedDomains"
-                  value={domain}
-                  onChange={(event) => updateDomain(index, event.target.value)}
-                  onBlur={(event) =>
-                    updateDomain(index, event.target.value, true)
-                  }
-                  placeholder="example.com"
-                  className={
-                    warning ? "border-amber-500/50 focus:border-amber-500" : ""
-                  }
-                />
-                {warning && (
-                  <div className="flex h-9 items-center gap-1.5 rounded-none border border-amber-500/20 bg-amber-500/5 px-3 text-[11px] text-amber-500">
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                    <p className="leading-normal">{warning}</p>
+            <div
+              key={`domain-container-${index}`}
+              className="flex min-w-0 items-start gap-2"
+            >
+              <div className="min-w-0 flex-1">
+                {warning ? (
+                  <div className="overflow-hidden rounded-none border border-amber-500/50 bg-surface transition-[border-color,box-shadow] focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500/30">
+                    <Input
+                      type="text"
+                      name="authorizedDomains"
+                      value={domain}
+                      onChange={(event) =>
+                        updateDomain(index, event.target.value)
+                      }
+                      onBlur={(event) =>
+                        updateDomain(index, event.target.value, true)
+                      }
+                      placeholder="example.com"
+                      className="h-9 rounded-none border-0 border-b border-amber-500/30 bg-transparent focus-visible:border-b-amber-500/40 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                    <div className="flex items-start gap-1.5 bg-amber-500/5 px-3 py-2 text-[11px] leading-snug text-amber-500">
+                      <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      <p className="min-w-0 flex-1 wrap-break-word">{warning}</p>
+                    </div>
                   </div>
+                ) : (
+                  <Input
+                    type="text"
+                    name="authorizedDomains"
+                    value={domain}
+                    onChange={(event) =>
+                      updateDomain(index, event.target.value)
+                    }
+                    onBlur={(event) =>
+                      updateDomain(index, event.target.value, true)
+                    }
+                    placeholder="example.com"
+                  />
                 )}
               </div>
               <Button
