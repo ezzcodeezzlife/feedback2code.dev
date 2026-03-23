@@ -18,7 +18,11 @@ import { Sandbox } from "e2b";
 
 const SANDBOX_TIMEOUT_MS = 3_600_000; // 1h (E2B hobby max)
 
-export { PR_URL_FILE, branchNameForFeedback } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
+export {
+  PR_URL_FILE,
+  AGENT_LLM_USAGE_FILE,
+  branchNameForFeedback,
+} from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
 export { runE2bFeedbackAgentBlockingIntegrationTest } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
 
 function revalidateRepo(dashboardPath: string) {

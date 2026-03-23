@@ -22,6 +22,7 @@ export function feedbackSandboxTemplate(): string | undefined {
 }
 
 export const PR_URL_FILE = "/home/user/f2c-pr-url.txt";
+export const AGENT_LLM_USAGE_FILE = "/home/user/f2c-agent-llm-usage.json";
 
 export function branchNameForFeedback(feedbackId: string): string {
   const safe = feedbackId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 24);
@@ -50,11 +51,20 @@ export function feedbackPipelineWrapperCmd(): string {
       chmod +x /home/user/bootstrap-clone.sh /home/user/finalize-feedback.sh
       bash /home/user/bootstrap-clone.sh
       export PATH=\"/usr/local/bin:/usr/bin:$PATH\"
+      export F2C_REPO_PATH=\"${REPO_PATH}\"
       cd \"${REPO_PATH}\"
       if command -v opencode >/dev/null 2>&1; then OCMD=\"opencode\"; else OCMD=\"npx --yes opencode-ai\"; fi
+      set +e
       \"$OCMD\" run \"$(cat /home/user/feedback-prompt.txt)\" --model \"minimax/MiniMax-M2.5\"
+      OC_EXIT=$?
+      set -e
+      node /home/user/collect-opencode-usage.mjs || true
+      if [ \"$OC_EXIT\" -ne 0 ]; then
+        node /home/user/f2c-notify-webhook.mjs failed \"$OC_EXIT\" || true
+        exit \"$OC_EXIT\"
+      fi
       bash /home/user/finalize-feedback.sh
-      rm -f /home/user/.f2c-gh-app-key.pem /home/user/e2b-github.mjs /home/user/bootstrap-clone.sh /home/user/finalize-feedback.sh || true
+      rm -f /home/user/.f2c-gh-app-key.pem /home/user/e2b-github.mjs /home/user/bootstrap-clone.sh /home/user/finalize-feedback.sh /home/user/collect-opencode-usage.mjs /home/user/f2c-notify-webhook.mjs /home/user/f2c-agent-llm-usage.json || true
     '`;
 }
 
@@ -98,6 +108,8 @@ export async function writeFeedbackSandboxFiles(
   await sandbox.files.write("/home/user/e2b-github.mjs", lf(readE2bAsset("e2b-github.mjs")));
   await sandbox.files.write("/home/user/bootstrap-clone.sh", lf(readE2bAsset("bootstrap-clone.sh")));
   await sandbox.files.write("/home/user/finalize-feedback.sh", lf(readE2bAsset("finalize-feedback.sh")));
+  await sandbox.files.write("/home/user/collect-opencode-usage.mjs", lf(readE2bAsset("collect-opencode-usage.mjs")));
+  await sandbox.files.write("/home/user/f2c-notify-webhook.mjs", lf(readE2bAsset("f2c-notify-webhook.mjs")));
   await sandbox.files.write("/home/user/.f2c-gh-app-key.pem", pkPem);
 
   const opencodeConfig = {

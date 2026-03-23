@@ -102,6 +102,14 @@ model WidgetFeedback {
   prUrl              String?
   agentError         String?              @db.Text
   agentFinishedAt    DateTime?
+  /// Sum of OpenCode-reported USD cost across assistant turns (from session export).
+  agentLlmCostUsd    Decimal?             @db.Decimal(14, 6)
+  agentLlmInputTokens  Int?
+  agentLlmOutputTokens Int?
+  /// Sum of per-turn `tokens.total` from OpenCode export (includes cache accounting per provider).
+  agentLlmTotalTokens  Int?
+  /// Compact extras: sessionId, providerId, modelId, assistantTurns, cache*, reasoningTokens, opencodeVersion, collectedAt.
+  agentLlmMeta       Json?
 
   repositoryConfig RepositoryConfig @relation(fields: [repositoryConfigId], references: [id], onDelete: Cascade)
   feedbackLimitEvents UserFeedbackLimitEvent[]

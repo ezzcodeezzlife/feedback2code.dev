@@ -1,6 +1,7 @@
 import { DASHBOARD_HOME, dashboardRepoPath } from "@/lib/app-paths";
+import { prismaDataFromAgentLlmUsagePayload } from "@/lib/feedback-agent/agent-llm-usage";
 import { prisma } from "@/lib/prisma";
-import { PR_URL_FILE } from "@/lib/feedback-agent/run-e2b-feedback-agent";
+import { AGENT_LLM_USAGE_FILE, PR_URL_FILE } from "@/lib/feedback-agent/run-e2b-feedback-agent";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { Sandbox } from "e2b";
@@ -109,6 +110,8 @@ export async function POST(request: NextRequest) {
         })
       : null;
 
+    const usagePatch = prismaDataFromAgentLlmUsagePayload(p.agentLlmUsage);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await (prisma.widgetFeedback as any).updateMany({
       where: { id: feedbackId },
@@ -116,6 +119,7 @@ export async function POST(request: NextRequest) {
         status: "WAITING_FOR_REVIEW",
         prUrl: payloadPrUrl,
         agentFinishedAt: new Date(),
+        ...usagePatch,
       },
     });
 
@@ -164,6 +168,73 @@ export async function POST(request: NextRequest) {
         });
       } catch (e) {
         console.warn("[e2b webhook] failed to kill sandbox after custom callback:", e);
+      }
+    }
+
+    return NextResponse.json({ ok: true });
+  }
+
+  if (type === "f2c.feedback.agent_failed") {
+    if (!feedbackId) {
+      return NextResponse.json({ ok: true });
+    }
+
+    const webhookSecret = process.env.E2B_WEBHOOK_SECRET;
+    const authorization = request.headers.get("authorization");
+    const expectedBearer = webhookSecret ? `Bearer ${webhookSecret}` : "";
+    if (!webhookSecret || authorization !== expectedBearer) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    const exitCode =
+      typeof p.exitCode === "string"
+        ? p.exitCode
+        : typeof p.exitCode === "number"
+          ? String(p.exitCode)
+          : "?";
+
+    const feedbackRow = await prisma.widgetFeedback.findUnique({
+      where: { id: feedbackId },
+      select: { repositoryConfigId: true, status: true },
+    });
+
+    const repositoryConfig = feedbackRow
+      ? await prisma.repositoryConfig.findUnique({
+          where: { id: feedbackRow.repositoryConfigId },
+          select: { owner: true, repo: true },
+        })
+      : null;
+
+    const usagePatch = prismaDataFromAgentLlmUsagePayload(p.agentLlmUsage);
+    const errMsg = `OpenCode exited with code ${exitCode}`;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (prisma.widgetFeedback as any).updateMany({
+      where: { id: feedbackId, status: "CODING" },
+      data: {
+        status: "FAILED",
+        agentError: errMsg.slice(0, 8000),
+        agentFinishedAt: new Date(),
+        ...usagePatch,
+      },
+    });
+
+    if (repositoryConfig) {
+      revalidatePath(
+        dashboardPathForFeedback(repositoryConfig.owner, repositoryConfig.repo),
+      );
+    }
+    revalidatePath(DASHBOARD_HOME);
+
+    if (connectSandboxId) {
+      try {
+        const sandboxToKill = await Sandbox.connect(connectSandboxId);
+        await sandboxToKill.kill();
+        console.log("[e2b webhook] sandbox killed after agent_failed callback", {
+          feedbackId,
+        });
+      } catch (e) {
+        console.warn("[e2b webhook] failed to kill sandbox after agent_failed:", e);
       }
     }
 
@@ -232,7 +303,10 @@ export async function POST(request: NextRequest) {
     repositoryConfig.repo,
   );
 
-  async function attemptReadPrUrl(): Promise<string | null> {
+  async function attemptReadPrUrlAndUsage(): Promise<{
+    prUrl: string | null;
+    usageRaw: unknown;
+  }> {
     const sandbox = await Sandbox.connect(connectSandboxId!);
     try {
       // `sandbox.lifecycle.updated` can arrive before the PR URL file exists.
@@ -241,7 +315,17 @@ export async function POST(request: NextRequest) {
         try {
           const text = await sandbox.files.read(PR_URL_FILE);
           const prUrl = typeof text === "string" ? text.trim() : String(text).trim();
-          if (prUrl.length > 0) return prUrl;
+          if (prUrl.length > 0) {
+            let usageRaw: unknown;
+            try {
+              const u = await sandbox.files.read(AGENT_LLM_USAGE_FILE);
+              const s = typeof u === "string" ? u : String(u);
+              usageRaw = JSON.parse(s);
+            } catch {
+              usageRaw = undefined;
+            }
+            return { prUrl, usageRaw };
+          }
         } catch {
           /* file not ready yet */
         }
@@ -250,7 +334,7 @@ export async function POST(request: NextRequest) {
         await new Promise((r) => setTimeout(r, 750));
       }
 
-      return null;
+      return { prUrl: null, usageRaw: undefined };
     } finally {
       try {
         // Some SDK versions expose `disconnect`, others rely on GC.
@@ -263,7 +347,28 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const prUrl = await attemptReadPrUrl();
+  async function attemptReadUsageOnly(): Promise<unknown> {
+    try {
+      const sandbox = await Sandbox.connect(connectSandboxId!);
+      try {
+        const u = await sandbox.files.read(AGENT_LLM_USAGE_FILE);
+        const s = typeof u === "string" ? u : String(u);
+        return JSON.parse(s);
+      } finally {
+        try {
+          // @ts-expect-error - SDK method may not exist.
+          await sandbox.disconnect?.();
+        } catch {
+          /* ignore */
+        }
+      }
+    } catch {
+      return undefined;
+    }
+  }
+
+  const { prUrl, usageRaw } = await attemptReadPrUrlAndUsage();
+  const usagePatch = prismaDataFromAgentLlmUsagePayload(usageRaw);
 
   if (prUrl && PR_URL_RE.test(prUrl)) {
     console.log("[e2b webhook] PR URL found", { feedbackId: row.id });
@@ -271,7 +376,12 @@ export async function POST(request: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (prisma.widgetFeedback as any).updateMany({
       where: { id: row.id, status: "CODING" },
-      data: { status: "WAITING_FOR_REVIEW", prUrl, agentFinishedAt: new Date() },
+      data: {
+        status: "WAITING_FOR_REVIEW",
+        prUrl,
+        agentFinishedAt: new Date(),
+        ...usagePatch,
+      },
     });
 
     if (updated?.count > 0 && repositoryConfig.receivePrCreatedEmail) {
@@ -311,6 +421,7 @@ export async function POST(request: NextRequest) {
 
   if (type === "sandbox.lifecycle.killed") {
     console.log("[e2b webhook] sandbox killed without PR URL", { feedbackId: row.id });
+    const usageOnFail = prismaDataFromAgentLlmUsagePayload(await attemptReadUsageOnly());
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (prisma.widgetFeedback as any).updateMany({
       where: { id: row.id, status: "CODING" },
@@ -318,6 +429,7 @@ export async function POST(request: NextRequest) {
         status: "FAILED",
         agentError: "Sandbox finished but PR URL file was not found or invalid.",
         agentFinishedAt: new Date(),
+        ...usageOnFail,
       },
     });
     revalidatePath(dashboardPath);

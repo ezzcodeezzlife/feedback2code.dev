@@ -58,13 +58,8 @@ printf '%s' "$PR_URL" > /home/user/f2c-pr-url.txt
 printf '%s' "$PR_URL"
 
 # Push result to our app immediately (avoids relying on E2B lifecycle timing).
-# These env vars are optional; the callback is best-effort.
+# Includes OpenCode usage JSON when present (see collect-opencode-usage.mjs).
 if [ -n "${F2C_WEBHOOK_URL:-}" ] && [ -n "${F2C_WEBHOOK_SECRET:-}" ] && [ -n "${F2C_FEEDBACK_ID:-}" ]; then
-  # If the app URL is behind Cloudflare/Tunnel, it may require full https URL.
-  curl -fsS \
-    -X POST "$F2C_WEBHOOK_URL" \
-    -H "Authorization: Bearer ${F2C_WEBHOOK_SECRET}" \
-    -H "Content-Type: application/json" \
-    -d "{\"type\":\"f2c.feedback.completed\",\"feedbackId\":\"${F2C_FEEDBACK_ID}\",\"sandboxId\":\"${F2C_SANDBOX_ID:-}\",\"prUrl\":\"${PR_URL}\"}" \
+  node /home/user/f2c-notify-webhook.mjs completed "$PR_URL" \
     >/dev/null 2>&1 || { echo "[f2c] webhook callback failed" >&2; true; }
 fi
