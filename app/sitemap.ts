@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const DEFAULT_SITE_URL = "https://feedback2code.dev";
+const DEFAULT_SITE_URL = "https://www.feedback2code.dev";
 
 function getSiteUrl(): string {
   const raw =
@@ -12,8 +12,8 @@ function getSiteUrl(): string {
   try {
     const url = new URL(raw);
 
-    if (url.hostname === "www.feedback2code.dev") {
-      url.hostname = "feedback2code.dev";
+    if (url.hostname === "feedback2code.dev") {
+      url.hostname = "www.feedback2code.dev";
     }
 
     url.pathname = "";

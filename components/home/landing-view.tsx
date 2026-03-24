@@ -584,7 +584,7 @@ export default function LandingView() {
       </section>
 
       {/* ─── DASHBOARD PREVIEW ────────────────────────────────── */}
-      <section id="use-cases" className="border-b border-border bg-surface/50 py-20 sm:py-28">
+      <section id="dashboard-preview" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
           <SectionLabel>Dashboard</SectionLabel>
           <SectionHeading>
@@ -791,7 +791,7 @@ export default function LandingView() {
       */}
 
       {/* ─── USE CASES ────────────────────────────────────────── */}
-      <section className="border-b border-border bg-surface/50 py-20 sm:py-28">
+      <section id="use-cases" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
           <SectionLabel>Use cases</SectionLabel>
           <SectionHeading>Built for teams who ship fast</SectionHeading>
