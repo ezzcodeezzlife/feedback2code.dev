@@ -1,13 +1,17 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
-import { DASHBOARD_HOME, dashboardRepoPath } from "@/lib/app-paths";
+import {
+  DASHBOARD_HOME,
+  dashboardRepoConfigurePath,
+  dashboardRepoPath,
+} from "@/lib/app-paths";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 /**
  * GitHub App webhooks.
- * Handles PR lifecycle events so dashboard status updates without waiting for
- * background agents to re-run.
+ * - pull_request: sync feedback PR status and revalidate dashboard views.
+ * - installation deleted: clear stored installation so the dashboard prompts to install again.
  */
 export async function POST(request: NextRequest) {
   const secret = process.env.GITHUB_APP_WEBHOOK_SECRET;
@@ -85,6 +89,51 @@ export async function POST(request: NextRequest) {
       repoPaths.add(
         dashboardRepoPath(row.repositoryConfig.owner, row.repositoryConfig.repo),
       );
+    }
+    for (const path of repoPaths) {
+      revalidatePath(path);
+    }
+    revalidatePath(DASHBOARD_HOME);
+  } else if (event === "installation") {
+    let payload: unknown;
+    try {
+      payload = JSON.parse(raw);
+    } catch {
+      return NextResponse.json({ ok: true });
+    }
+
+    const p = payload as {
+      action?: string;
+      installation?: { id?: number };
+    };
+
+    if (p.action !== "deleted" || p.installation?.id == null) {
+      return NextResponse.json({ ok: true });
+    }
+
+    const installationId = String(p.installation.id);
+
+    const affectedUsers = await prisma.user.findMany({
+      where: { githubInstallationId: installationId },
+      select: {
+        repositoryConfigs: { select: { owner: true, repo: true } },
+      },
+    });
+
+    await prisma.user.updateMany({
+      where: { githubInstallationId: installationId },
+      data: {
+        githubAppInstalled: false,
+        githubInstallationId: null,
+      },
+    });
+
+    const repoPaths = new Set<string>();
+    for (const row of affectedUsers) {
+      for (const config of row.repositoryConfigs) {
+        repoPaths.add(dashboardRepoPath(config.owner, config.repo));
+        repoPaths.add(dashboardRepoConfigurePath(config.owner, config.repo));
+      }
     }
     for (const path of repoPaths) {
       revalidatePath(path);
