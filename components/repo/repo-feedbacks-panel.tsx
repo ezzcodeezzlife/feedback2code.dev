@@ -80,7 +80,7 @@ export default function RepoFeedbacksPanel({
   const count = feedbacks.length;
 
   return (
-    <div className="border border-border bg-background">
+    <div className="border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-6 py-4">
         <MessageSquare className="h-4 w-4 text-accent" />
         <span className="text-sm font-bold uppercase tracking-wider">

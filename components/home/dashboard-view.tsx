@@ -63,7 +63,7 @@ function StatusBadge({
     <span
       className={[
         compact
-          ? "inline-flex items-center gap-0.5 border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide leading-tight w-fit shrink-0"
+          ? "inline-flex items-center gap-1 border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide leading-tight w-fit shrink-0"
           : "inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] uppercase tracking-wider border w-fit shrink-0",
         status === "FAILED"
           ? "border-red-900/50 bg-red-950/30 text-red-400"
