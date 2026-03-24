@@ -5,7 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 const MINIMAX_UPSTREAM_ORIGIN = "https://api.minimax.io";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 600;
+/** Vercel hobby max is 300s; raise on Pro if you need longer LLM streams. */
+export const maxDuration = 300;
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
