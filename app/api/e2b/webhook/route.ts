@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Sandbox } from "e2b";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { sendPrCreatedEmail } from "@/lib/email/send-pr-created-email";
+import { revokeMinimaxProxyTokensForFeedback } from "@/lib/feedback-agent/minimax-proxy-token";
 
 // Allow enough time for polling the PR URL file.
 export const maxDuration = 60;
@@ -171,6 +172,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    await revokeMinimaxProxyTokensForFeedback(feedbackId);
+
     return NextResponse.json({ ok: true });
   }
 
@@ -237,6 +240,8 @@ export async function POST(request: NextRequest) {
         console.warn("[e2b webhook] failed to kill sandbox after agent_failed:", e);
       }
     }
+
+    await revokeMinimaxProxyTokensForFeedback(feedbackId);
 
     return NextResponse.json({ ok: true });
   }
@@ -416,6 +421,7 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       console.warn("[e2b webhook] failed to kill sandbox after success:", e);
     }
+    await revokeMinimaxProxyTokensForFeedback(row.id);
     return NextResponse.json({ ok: true });
   }
 
@@ -434,6 +440,7 @@ export async function POST(request: NextRequest) {
     });
     revalidatePath(dashboardPath);
     revalidatePath(DASHBOARD_HOME);
+    await revokeMinimaxProxyTokensForFeedback(row.id);
   }
 
   return NextResponse.json({ ok: true });

@@ -118,6 +118,22 @@ model WidgetFeedback {
   @@index([repositoryConfigId, createdAt])
 }
 
+/// Short-lived opaque token for the E2B sandbox to call our MiniMax HTTP proxy (real key stays server-side).
+/// `widgetFeedbackId` matches WidgetFeedback.id in production; may be any unique string in CLI tests.
+model AgentMinimaxProxyToken {
+  id               String    @id @default(cuid())
+  /// SHA-256 hex of the secret shown once to the sandbox (never store the raw secret).
+  tokenHash        String    @unique
+  widgetFeedbackId String
+  e2bSandboxId     String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([widgetFeedbackId])
+  @@index([expiresAt])
+}
+
 /**
  * Tracks feedback submissions per user so we can enforce rolling quotas (free vs pro limits
  * in app code) via an indexed (userId, createdAt) range query.

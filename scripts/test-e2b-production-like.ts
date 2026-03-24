@@ -9,7 +9,8 @@
  *
  * Run: npm run test:e2b-production-like
  *
- * Warning: can open a real PR on the configured repo; use a disposable fork/repo.
+ * The sandbox calls your app at NEXT_PUBLIC_APP_URL for the MiniMax HTTP proxy; that URL must be
+ * reachable from E2B (e.g. tunnel or deploy). Warning: can open a real PR; use a disposable fork/repo.
  */
 import { runE2bFeedbackAgentBlockingIntegrationTest } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
 

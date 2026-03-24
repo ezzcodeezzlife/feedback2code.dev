@@ -12,6 +12,10 @@ import {
   buildFeedbackPrTitle,
 } from "@/lib/feedback-agent/feedback-pr-copy";
 import { buildOpencodeFeedbackPrompt } from "@/lib/feedback-agent/prompt";
+import {
+  mintMinimaxProxyTokenForFeedback,
+  revokeMinimaxProxyTokensForFeedback,
+} from "@/lib/feedback-agent/minimax-proxy-token";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Sandbox } from "e2b";
@@ -137,7 +141,15 @@ export async function startE2bFeedbackAgentWebhook(input: {
   });
 
   const publicBase = publicAppBaseUrl();
-  const webhookUrl = publicBase ? `${publicBase}/api/e2b/webhook` : "";
+  if (!publicBase) {
+    await markFailed(
+      input.feedbackId,
+      "Set NEXT_PUBLIC_APP_URL (or APP_URL) so the sandbox can reach the MiniMax HTTP proxy.",
+      dash,
+    );
+    return;
+  }
+  const webhookUrl = `${publicBase}/api/e2b/webhook`;
   const sandboxOpts = createSandboxOpts(e2bKey, SANDBOX_TIMEOUT_MS);
 
   let sandbox: Awaited<ReturnType<typeof Sandbox.create>> | null = null;
@@ -175,8 +187,16 @@ export async function startE2bFeedbackAgentWebhook(input: {
       pagePath: input.pagePath,
     });
 
+    const { plainToken } = await mintMinimaxProxyTokenForFeedback({
+      widgetFeedbackId: input.feedbackId,
+      e2bSandboxId: sandbox.sandboxId,
+    });
+
     await writeFeedbackSandboxFiles(sandbox, {
-      minimaxKey,
+      minimaxProxy: {
+        baseURL: `${publicBase}/api/agent/minimax-proxy/anthropic/v1`,
+        apiKey: plainToken,
+      },
       appPk,
       branch,
       prTitle,
@@ -199,6 +219,7 @@ export async function startE2bFeedbackAgentWebhook(input: {
       }),
     });
   } catch (e) {
+    await revokeMinimaxProxyTokensForFeedback(input.feedbackId);
     await markFailed(input.feedbackId, formatStartError(e), dash);
     return;
   } finally {

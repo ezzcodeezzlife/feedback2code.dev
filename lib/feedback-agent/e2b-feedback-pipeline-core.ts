@@ -4,6 +4,10 @@ import {
   buildFeedbackPrTitle,
 } from "@/lib/feedback-agent/feedback-pr-copy";
 import { buildOpencodeFeedbackPrompt } from "@/lib/feedback-agent/prompt";
+import {
+  mintMinimaxProxyTokenForFeedback,
+  revokeMinimaxProxyTokensForFeedback,
+} from "@/lib/feedback-agent/minimax-proxy-token";
 import { ALL_TRAFFIC, Sandbox } from "e2b";
 import type { CommandResult } from "e2b";
 import { readFileSync } from "node:fs";
@@ -95,7 +99,8 @@ export function feedbackPipelineEnvs(input: {
 export async function writeFeedbackSandboxFiles(
   sandbox: Awaited<ReturnType<typeof Sandbox.create>>,
   params: {
-    minimaxKey: string;
+    /** OpenCode provider baseURL + apiKey; apiKey is an opaque proxy token, not the real MiniMax secret. */
+    minimaxProxy: { baseURL: string; apiKey: string };
     appPk: string;
     branch: string;
     prTitle: string;
@@ -117,8 +122,8 @@ export async function writeFeedbackSandboxFiles(
     provider: {
       minimax: {
         options: {
-          baseURL: "https://api.minimax.io/anthropic/v1",
-          apiKey: params.minimaxKey,
+          baseURL: params.minimaxProxy.baseURL.replace(/\/$/, ""),
+          apiKey: params.minimaxProxy.apiKey,
         },
         models: {
           "MiniMax-M2.5": { name: "MiniMax-M2.5" },
@@ -182,7 +187,7 @@ export async function runE2bFeedbackAgentBlockingIntegrationTest(input: {
   const appPk = process.env.GITHUB_APP_PRIVATE_KEY;
 
   if (!e2bKey || !minimaxKey) {
-    throw new Error("Set E2B_API_KEY and MINIMAX_API_KEY");
+    throw new Error("Set E2B_API_KEY and MINIMAX_API_KEY (server-side proxy only; not passed into the sandbox)");
   }
   if (!appId || !appPk?.trim()) {
     throw new Error("Set GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY");
@@ -190,7 +195,12 @@ export async function runE2bFeedbackAgentBlockingIntegrationTest(input: {
 
   const timeoutMs = input.timeoutMs ?? 900_000; // 15m default for integration test
   const publicBase = publicAppBaseUrl();
-  const webhookUrl = publicBase ? `${publicBase}/api/e2b/webhook` : "";
+  if (!publicBase) {
+    throw new Error(
+      "Set NEXT_PUBLIC_APP_URL (or APP_URL) so the sandbox can reach /api/agent/minimax-proxy",
+    );
+  }
+  const webhookUrl = `${publicBase}/api/e2b/webhook`;
 
   const branch = branchNameForFeedback(input.feedbackId);
   const prTitle = buildFeedbackPrTitle(input.feedbackBody);
@@ -219,8 +229,16 @@ export async function runE2bFeedbackAgentBlockingIntegrationTest(input: {
     : await Sandbox.create(sandboxOpts);
 
   try {
+    const { plainToken } = await mintMinimaxProxyTokenForFeedback({
+      widgetFeedbackId: input.feedbackId,
+      e2bSandboxId: sandbox.sandboxId,
+    });
+
     await writeFeedbackSandboxFiles(sandbox, {
-      minimaxKey,
+      minimaxProxy: {
+        baseURL: `${publicBase}/api/agent/minimax-proxy/anthropic/v1`,
+        apiKey: plainToken,
+      },
       appPk,
       branch,
       prTitle,
@@ -262,6 +280,7 @@ export async function runE2bFeedbackAgentBlockingIntegrationTest(input: {
       stderr: result.stderr,
     };
   } finally {
+    await revokeMinimaxProxyTokensForFeedback(input.feedbackId);
     await Sandbox.kill(sandbox.sandboxId, { apiKey: e2bKey });
   }
 }
