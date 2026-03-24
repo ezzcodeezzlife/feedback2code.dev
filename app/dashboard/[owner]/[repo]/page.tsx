@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { authOptions } from "@/auth";
+import RouteAutoRefresh from "@/components/live/route-auto-refresh";
 import { PageShell } from "@/components/layout/page-shell";
 import RepoFeedbacksPanel from "@/components/repo/repo-feedbacks-panel";
 import {
@@ -107,6 +108,7 @@ export default async function RepositoryFeedbacksPage({ params }: PageProps) {
 
   return (
     <PageShell>
+      <RouteAutoRefresh />
       <div className="mb-8">
         <Link
           href={DASHBOARD_HOME}

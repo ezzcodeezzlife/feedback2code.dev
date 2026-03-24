@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { WidgetFeedbackStatus } from "@prisma/client";
 import { authOptions } from "@/auth";
+import RouteAutoRefresh from "@/components/live/route-auto-refresh";
 import DashboardView from "@/components/home/dashboard-view";
 import type { InstalledRepo } from "@/lib/github-app";
 import { getInstallationRepositories } from "@/lib/github-app";
@@ -168,11 +169,14 @@ export default async function DashboardPage() {
       : null;
 
   return (
-    <DashboardView
-      repositories={enrichedRepos}
-      hasGithubInstallation={hasGithubInstallation}
-      manageAccessUrl={manageAccessUrl}
-      repositoriesError={repositoriesError}
-    />
+    <>
+      <RouteAutoRefresh />
+      <DashboardView
+        repositories={enrichedRepos}
+        hasGithubInstallation={hasGithubInstallation}
+        manageAccessUrl={manageAccessUrl}
+        repositoriesError={repositoriesError}
+      />
+    </>
   );
 }
