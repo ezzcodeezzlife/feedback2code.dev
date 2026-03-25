@@ -58,6 +58,12 @@ export function feedbackPipelineWrapperCmd(): string {
       export F2C_REPO_PATH=\"${REPO_PATH}\"
       cd \"${REPO_PATH}\"
       if command -v opencode >/dev/null 2>&1; then OCMD=\"opencode\"; else OCMD=\"npx --yes opencode-ai\"; fi
+
+      # Hard boundary: OpenCode must run with **no GitHub credentials available**.
+      # Delete key + helper script and scrub GitHub env vars before the agent executes.
+      rm -f /home/user/.f2c-gh-app-key.pem /home/user/e2b-github.mjs || true
+      unset GITHUB_APP_ID GITHUB_INSTALLATION_ID GITHUB_APP_PRIVATE_KEY GITHUB_APP_PRIVATE_KEY_FILE || true
+
       set +e
       \"$OCMD\" run \"$(cat /home/user/feedback-prompt.txt)\" --model \"minimax/MiniMax-M2.5\"
       OC_EXIT=$?
@@ -67,8 +73,9 @@ export function feedbackPipelineWrapperCmd(): string {
         node /home/user/f2c-notify-webhook.mjs failed \"$OC_EXIT\" || true
         exit \"$OC_EXIT\"
       fi
-      bash /home/user/finalize-feedback.sh
-      rm -f /home/user/.f2c-gh-app-key.pem /home/user/e2b-github.mjs /home/user/bootstrap-clone.sh /home/user/finalize-feedback.sh /home/user/collect-opencode-usage.mjs /home/user/f2c-notify-webhook.mjs /home/user/f2c-agent-llm-usage.json || true
+
+      # OpenCode finished successfully; ask the host to re-inject creds and run finalize.
+      node /home/user/f2c-notify-webhook.mjs needs_finalize || true
     '`;
 }
 
@@ -263,6 +270,31 @@ export async function runE2bFeedbackAgentBlockingIntegrationTest(input: {
 
     let prUrl: string | null = null;
     if (result.exitCode === 0) {
+      // Wrapper stops after OpenCode and requests finalize in production (webhook).
+      // For integration tests, run finalize synchronously here.
+      await sandbox.files.write("/home/user/e2b-github.mjs", lf(readE2bAsset("e2b-github.mjs")));
+      await sandbox.files.write("/home/user/.f2c-gh-app-key.pem", appPk.includes("\\n") ? appPk.replace(/\\n/g, "\n") : appPk);
+      await sandbox.commands.run(
+        `bash -lc 'set -euo pipefail
+          chmod +x /home/user/finalize-feedback.sh
+          bash /home/user/finalize-feedback.sh
+        '`,
+        {
+          background: false,
+          timeoutMs,
+          envs: feedbackPipelineEnvs({
+            feedbackId: input.feedbackId,
+            sandboxId: sandbox.sandboxId,
+            owner: input.owner,
+            repo: input.repo,
+            branch,
+            githubInstallationId: input.githubInstallationId,
+            appId,
+            webhookUrl,
+          }),
+        },
+      );
+
       try {
         const raw = await sandbox.files.read(PR_URL_FILE);
         const t = raw.trim();

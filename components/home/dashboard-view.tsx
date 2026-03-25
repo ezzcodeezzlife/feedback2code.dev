@@ -547,7 +547,7 @@ export default function DashboardView({
               + ADD PROJECT
             </a>
             <p className="mt-4 text-xs text-muted-foreground">
-              You'll be sent to GitHub to review permissions, then returned here.
+              You&apos;ll be sent to GitHub to review permissions, then returned here.
             </p>
           </div>
         </div>

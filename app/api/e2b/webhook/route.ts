@@ -8,6 +8,9 @@ import { Sandbox } from "e2b";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { sendPrCreatedEmail } from "@/lib/email/send-pr-created-email";
 import { revokeMinimaxProxyTokensForFeedback } from "@/lib/feedback-agent/minimax-proxy-token";
+import { branchNameForFeedback } from "@/lib/feedback-agent/run-e2b-feedback-agent";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 // Allow enough time for polling the PR URL file.
 export const maxDuration = 60;
@@ -172,6 +175,110 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    await revokeMinimaxProxyTokensForFeedback(feedbackId);
+
+    return NextResponse.json({ ok: true });
+  }
+
+  if (type === "f2c.feedback.needs_finalize") {
+    if (!feedbackId || !connectSandboxId) {
+      return NextResponse.json({ ok: true });
+    }
+
+    // Authenticate with bearer secret.
+    const webhookSecret = process.env.E2B_WEBHOOK_SECRET;
+    const authorization = request.headers.get("authorization");
+    const expectedBearer = webhookSecret ? `Bearer ${webhookSecret}` : "";
+    if (!webhookSecret || authorization !== expectedBearer) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    const appId = process.env.GITHUB_APP_ID;
+    const appPkRaw = process.env.GITHUB_APP_PRIVATE_KEY;
+    if (!appId || !appPkRaw?.trim()) {
+      console.warn("[e2b webhook] needs_finalize but missing GitHub App env");
+      return NextResponse.json({ ok: true });
+    }
+
+    const feedbackRow = await prisma.widgetFeedback.findUnique({
+      where: { id: feedbackId },
+      select: {
+        status: true,
+        repositoryConfigId: true,
+      },
+    });
+    if (!feedbackRow || feedbackRow.status !== "CODING") {
+      return NextResponse.json({ ok: true });
+    }
+
+    const repositoryConfig = await prisma.repositoryConfig.findUnique({
+      where: { id: feedbackRow.repositoryConfigId },
+      select: {
+        owner: true,
+        repo: true,
+        user: { select: { githubInstallationId: true } },
+      },
+    });
+    if (!repositoryConfig?.owner || !repositoryConfig.repo) {
+      return NextResponse.json({ ok: true });
+    }
+
+    const installationId = repositoryConfig.user?.githubInstallationId ?? null;
+    if (!installationId) {
+      console.warn("[e2b webhook] needs_finalize but missing githubInstallationId", {
+        feedbackId,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    const appPkPem = appPkRaw.includes("\\n") ? appPkRaw.replace(/\\n/g, "\n") : appPkRaw;
+    const e2bAssetDir = join(process.cwd(), "lib/feedback-agent/e2b");
+    const e2bGithubJs = readFileSync(join(e2bAssetDir, "e2b-github.mjs"), "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+
+    try {
+      const sandbox = await Sandbox.connect(connectSandboxId);
+
+      // Re-inject only what's required for finalize, after OpenCode has finished.
+      await sandbox.files.write("/home/user/e2b-github.mjs", e2bGithubJs);
+      await sandbox.files.write("/home/user/.f2c-gh-app-key.pem", appPkPem);
+
+      const branch = branchNameForFeedback(feedbackId);
+      const publicBase =
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
+        process.env.APP_URL?.replace(/\/$/, "") ??
+        "";
+      const webhookUrl = publicBase ? `${publicBase}/api/e2b/webhook` : "";
+
+      await sandbox.commands.run(
+        `bash -lc 'set -euo pipefail
+          chmod +x /home/user/finalize-feedback.sh
+          bash /home/user/finalize-feedback.sh
+        '`,
+        {
+          background: true,
+          timeoutMs: 3_600_000,
+          envs: {
+            F2C_WEBHOOK_URL: webhookUrl,
+            F2C_WEBHOOK_SECRET: process.env.E2B_WEBHOOK_SECRET ?? "",
+            F2C_FEEDBACK_ID: feedbackId,
+            F2C_SANDBOX_ID: connectSandboxId,
+            F2C_OWNER: repositoryConfig.owner,
+            F2C_REPO: repositoryConfig.repo,
+            F2C_BRANCH: branch,
+            GITHUB_APP_PRIVATE_KEY_FILE: "/home/user/.f2c-gh-app-key.pem",
+            GITHUB_APP_ID: appId,
+            GITHUB_INSTALLATION_ID: installationId,
+          },
+        },
+      );
+    } catch (e) {
+      console.warn("[e2b webhook] finalize start failed:", e);
+    }
+
+    // OpenCode is already done at this point; proxy token can be revoked now.
     await revokeMinimaxProxyTokensForFeedback(feedbackId);
 
     return NextResponse.json({ ok: true });

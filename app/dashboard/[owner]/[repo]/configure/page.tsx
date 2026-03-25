@@ -137,9 +137,8 @@ export default async function RepositoryConfigurePage({ params }: PageProps) {
       typeof saveSection === "string" && saveSection.length > 0
         ? saveSection
         : "settings";
-    const toastNonce = Date.now().toString();
     redirect(
-      `${dashboardRepoConfigurePath(owner, repo)}?saved=${encodeURIComponent(saved)}&toast=${toastNonce}`,
+      `${dashboardRepoConfigurePath(owner, repo)}?saved=${encodeURIComponent(saved)}`,
     );
   }
 
