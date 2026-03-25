@@ -48,14 +48,22 @@ export async function revokeMinimaxProxyTokensForFeedback(
 
 export async function validateMinimaxProxyToken(
   plainToken: string,
-): Promise<{ ok: true; widgetFeedbackId: string } | { ok: false }> {
+): Promise<
+  | { ok: true; widgetFeedbackId: string; e2bSandboxId: string | null }
+  | { ok: false }
+> {
   const tokenHash = hashMinimaxProxyTokenSecret(plainToken);
   const row = await prisma.agentMinimaxProxyToken.findUnique({
     where: { tokenHash },
-    select: { widgetFeedbackId: true, expiresAt: true, revokedAt: true },
+    select: {
+      widgetFeedbackId: true,
+      e2bSandboxId: true,
+      expiresAt: true,
+      revokedAt: true,
+    },
   });
   if (!row) return { ok: false };
   if (row.revokedAt) return { ok: false };
   if (row.expiresAt.getTime() <= Date.now()) return { ok: false };
-  return { ok: true, widgetFeedbackId: row.widgetFeedbackId };
+  return { ok: true, widgetFeedbackId: row.widgetFeedbackId, e2bSandboxId: row.e2bSandboxId };
 }

@@ -59,7 +59,7 @@ printf '%s' "$PR_URL"
 
 # Push result to our app immediately (avoids relying on E2B lifecycle timing).
 # Includes OpenCode usage JSON when present (see collect-opencode-usage.mjs).
-if [ -n "${F2C_WEBHOOK_URL:-}" ] && [ -n "${F2C_WEBHOOK_SECRET:-}" ] && [ -n "${F2C_FEEDBACK_ID:-}" ]; then
+if [ -n "${F2C_WEBHOOK_URL:-}" ] && [ -n "${F2C_FEEDBACK_ID:-}" ]; then
   node /home/user/f2c-notify-webhook.mjs completed "$PR_URL" \
     >/dev/null 2>&1 || { echo "[f2c] webhook callback failed" >&2; true; }
 fi
@@ -68,6 +68,7 @@ fi
 rm -f \
   /home/user/.f2c-gh-app-key.pem \
   /home/user/e2b-github.mjs \
+  /home/user/f2c-webhook-token.txt \
   /home/user/bootstrap-clone.sh \
   /home/user/finalize-feedback.sh \
   /home/user/collect-opencode-usage.mjs \

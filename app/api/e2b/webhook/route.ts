@@ -7,7 +7,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { Sandbox } from "e2b";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { sendPrCreatedEmail } from "@/lib/email/send-pr-created-email";
-import { revokeMinimaxProxyTokensForFeedback } from "@/lib/feedback-agent/minimax-proxy-token";
+import {
+  revokeMinimaxProxyTokensForFeedback,
+  validateMinimaxProxyToken,
+} from "@/lib/feedback-agent/minimax-proxy-token";
 import { branchNameForFeedback } from "@/lib/feedback-agent/run-e2b-feedback-agent";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -84,11 +87,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // Authenticate with bearer secret.
-    const webhookSecret = process.env.E2B_WEBHOOK_SECRET;
+    // Authenticate callback using the per-feedback proxy token (sandbox only).
     const authorization = request.headers.get("authorization");
-    const expectedBearer = webhookSecret ? `Bearer ${webhookSecret}` : "";
-    if (!webhookSecret || authorization !== expectedBearer) {
+    const token =
+      authorization?.startsWith("Bearer ") ? authorization.slice(7).trim() : null;
+    if (!token) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    const authz = await validateMinimaxProxyToken(token);
+    if (!authz.ok) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+    if (authz.widgetFeedbackId !== feedbackId) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+    if (
+      connectSandboxId &&
+      authz.e2bSandboxId &&
+      authz.e2bSandboxId !== connectSandboxId
+    ) {
       return NextResponse.json({ ok: false }, { status: 401 });
     }
 
@@ -185,11 +203,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // Authenticate with bearer secret.
-    const webhookSecret = process.env.E2B_WEBHOOK_SECRET;
+    // Authenticate callback using the per-feedback proxy token (sandbox only).
     const authorization = request.headers.get("authorization");
-    const expectedBearer = webhookSecret ? `Bearer ${webhookSecret}` : "";
-    if (!webhookSecret || authorization !== expectedBearer) {
+    const token =
+      authorization?.startsWith("Bearer ") ? authorization.slice(7).trim() : null;
+    if (!token) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    const authz = await validateMinimaxProxyToken(token);
+    if (!authz.ok) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+    if (authz.widgetFeedbackId !== feedbackId) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+    if (
+      connectSandboxId &&
+      authz.e2bSandboxId &&
+      authz.e2bSandboxId !== connectSandboxId
+    ) {
       return NextResponse.json({ ok: false }, { status: 401 });
     }
 
@@ -262,7 +295,6 @@ export async function POST(request: NextRequest) {
           timeoutMs: 3_600_000,
           envs: {
             F2C_WEBHOOK_URL: webhookUrl,
-            F2C_WEBHOOK_SECRET: process.env.E2B_WEBHOOK_SECRET ?? "",
             F2C_FEEDBACK_ID: feedbackId,
             F2C_SANDBOX_ID: connectSandboxId,
             F2C_OWNER: repositoryConfig.owner,
@@ -278,8 +310,8 @@ export async function POST(request: NextRequest) {
       console.warn("[e2b webhook] finalize start failed:", e);
     }
 
-    // OpenCode is already done at this point; proxy token can be revoked now.
-    await revokeMinimaxProxyTokensForFeedback(feedbackId);
+    // Do not revoke the callback token here; `finalize-feedback.sh` will
+    // send the `completed` callback shortly afterwards.
 
     return NextResponse.json({ ok: true });
   }
@@ -289,10 +321,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    const webhookSecret = process.env.E2B_WEBHOOK_SECRET;
     const authorization = request.headers.get("authorization");
-    const expectedBearer = webhookSecret ? `Bearer ${webhookSecret}` : "";
-    if (!webhookSecret || authorization !== expectedBearer) {
+    const token =
+      authorization?.startsWith("Bearer ") ? authorization.slice(7).trim() : null;
+    if (!token) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    const authz = await validateMinimaxProxyToken(token);
+    if (!authz.ok) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+    if (authz.widgetFeedbackId !== feedbackId) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+    if (
+      connectSandboxId &&
+      authz.e2bSandboxId &&
+      authz.e2bSandboxId !== connectSandboxId
+    ) {
       return NextResponse.json({ ok: false }, { status: 401 });
     }
 

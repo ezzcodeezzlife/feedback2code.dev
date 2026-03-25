@@ -215,6 +215,7 @@ export async function startE2bFeedbackAgentWebhook(input: {
         branch,
         githubInstallationId: input.githubInstallationId,
         appId,
+        webhookAuthToken: plainToken,
         webhookUrl,
       }),
     });

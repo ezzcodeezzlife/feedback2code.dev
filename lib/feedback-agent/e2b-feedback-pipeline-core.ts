@@ -53,6 +53,13 @@ function publicAppBaseUrl(): string {
 export function feedbackPipelineWrapperCmd(): string {
   return `bash -lc 'set -euo pipefail
       chmod +x /home/user/bootstrap-clone.sh /home/user/finalize-feedback.sh
+      # Persist callback auth token for later finalize, but do not expose it
+      # to the OpenCode process (scrub env vars before running opencode).
+      if [ -n "$F2C_WEBHOOK_TOKEN" ]; then
+        printf '%s' "$F2C_WEBHOOK_TOKEN" > /home/user/f2c-webhook-token.txt
+        chmod 600 /home/user/f2c-webhook-token.txt || true
+      fi
+      unset F2C_WEBHOOK_TOKEN F2C_WEBHOOK_SECRET || true
       bash /home/user/bootstrap-clone.sh
       export PATH=\"/usr/local/bin:/usr/bin:$PATH\"
       export F2C_REPO_PATH=\"${REPO_PATH}\"
@@ -87,11 +94,12 @@ export function feedbackPipelineEnvs(input: {
   branch: string;
   githubInstallationId: string;
   appId: string;
+  webhookAuthToken: string;
   webhookUrl: string;
 }): Record<string, string> {
   return {
     F2C_WEBHOOK_URL: input.webhookUrl,
-    F2C_WEBHOOK_SECRET: process.env.E2B_WEBHOOK_SECRET ?? "",
+    F2C_WEBHOOK_TOKEN: input.webhookAuthToken,
     F2C_FEEDBACK_ID: input.feedbackId,
     F2C_SANDBOX_ID: input.sandboxId,
     GITHUB_APP_PRIVATE_KEY_FILE: "/home/user/.f2c-gh-app-key.pem",
@@ -264,6 +272,7 @@ export async function runE2bFeedbackAgentBlockingIntegrationTest(input: {
         branch,
         githubInstallationId: input.githubInstallationId,
         appId,
+        webhookAuthToken: plainToken,
         webhookUrl,
       }),
     })) as CommandResult;
@@ -282,16 +291,22 @@ export async function runE2bFeedbackAgentBlockingIntegrationTest(input: {
         {
           background: false,
           timeoutMs,
-          envs: feedbackPipelineEnvs({
-            feedbackId: input.feedbackId,
-            sandboxId: sandbox.sandboxId,
-            owner: input.owner,
-            repo: input.repo,
-            branch,
-            githubInstallationId: input.githubInstallationId,
-            appId,
-            webhookUrl,
-          }),
+          envs: (() => {
+            const envs = feedbackPipelineEnvs({
+              feedbackId: input.feedbackId,
+              sandboxId: sandbox.sandboxId,
+              owner: input.owner,
+              repo: input.repo,
+              branch,
+              githubInstallationId: input.githubInstallationId,
+              appId,
+              webhookAuthToken: plainToken,
+              webhookUrl,
+            });
+            // Finalize runs after OpenCode; prefer token file access over env var exposure.
+            delete (envs as Record<string, unknown>).F2C_WEBHOOK_TOKEN;
+            return envs;
+          })(),
         },
       );
 
