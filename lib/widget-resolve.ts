@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { WIDGET_ID_RE } from "@/lib/widget-embed";
 import {
+  hostnameFromParentOriginString,
+  hostnameFromUrl,
   isHostnameAuthorized,
   originHostFromRequest,
 } from "@/lib/widget-origin";
@@ -33,9 +35,37 @@ export type AuthorizedWidgetContext = {
   githubInstallationId: string | null;
 };
 
+function requestUrlHostname(request: NextRequest): string {
+  try {
+    return new URL(request.url).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+/** True when the call is same-origin to this app (e.g. widget iframe on /embed/frame). */
+function isWidgetFrameRequest(
+  request: NextRequest,
+  originHost: string | null,
+): boolean {
+  const urlHost = requestUrlHostname(request);
+  if (originHost && originHost === urlHost) return true;
+  const ref = request.headers.get("Referer");
+  if (!ref) return false;
+  const refHost = hostnameFromUrl(ref);
+  if (!refHost || refHost !== urlHost) return false;
+  return ref.includes("/embed/frame");
+}
+
+export type AuthorizeWidgetOptions = {
+  /** Parent page origin from postMessage (`https://customer.com`); required for iframe embeds. */
+  parentOrigin?: string | null;
+};
+
 export async function authorizeWidgetRequest(
   request: NextRequest,
   widgetId: string,
+  options: AuthorizeWidgetOptions = {},
 ): Promise<
   | { ok: true; ctx: AuthorizedWidgetContext }
   | { ok: false; response: NextResponse }
@@ -99,31 +129,61 @@ export async function authorizeWidgetRequest(
   const referer = request.headers.get("Referer");
   const requestHost = originHostFromRequest(originHeader, referer);
 
-  if (!requestHost) {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        {
-          ok: false,
-          message:
-            "Could not determine request origin. Ensure the page sends an Origin or Referer header.",
-        },
-        { status: 403, headers },
-      ),
-    };
-  }
+  if (isWidgetFrameRequest(request, requestHost)) {
+    const parentRaw = options.parentOrigin?.trim() ?? "";
+    const parentHost = hostnameFromParentOriginString(parentRaw);
+    if (!parentHost) {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          {
+            ok: false,
+            message:
+              "Missing parent page context. Reload the page and open the feedback widget again.",
+          },
+          { status: 403, headers },
+        ),
+      };
+    }
+    if (!isHostnameAuthorized(parentHost, domains)) {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          {
+            ok: false,
+            message: `Embedding site "${parentHost}" is not in this widget's authorized domains.`,
+          },
+          { status: 403, headers },
+        ),
+      };
+    }
+  } else {
+    if (!requestHost) {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          {
+            ok: false,
+            message:
+              "Could not determine request origin. Ensure the page sends an Origin or Referer header.",
+          },
+          { status: 403, headers },
+        ),
+      };
+    }
 
-  if (!isHostnameAuthorized(requestHost, domains)) {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        {
-          ok: false,
-          message: `Origin "${requestHost}" is not in this widget's authorized domains.`,
-        },
-        { status: 403, headers },
-      ),
-    };
+    if (!isHostnameAuthorized(requestHost, domains)) {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          {
+            ok: false,
+            message: `Origin "${requestHost}" is not in this widget's authorized domains.`,
+          },
+          { status: 403, headers },
+        ),
+      };
+    }
   }
 
   return {

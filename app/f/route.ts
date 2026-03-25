@@ -7,6 +7,7 @@ import { dashboardRepoPath } from "@/lib/app-paths";
 import { parseWidgetIdFromBody } from "@/lib/widget-embed";
 import { prisma } from "@/lib/prisma";
 import type { WidgetFeedbackStatus } from "@/lib/widget-feedback-status";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 import { isLocalDevPageUrl } from "@/lib/widget-origin";
 import { authorizeWidgetRequest, widgetCorsHeaders } from "@/lib/widget-resolve";
 import { after } from "next/server";
@@ -55,7 +56,8 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const widgetId = request.nextUrl.searchParams.get("w") ?? "";
-  const auth = await authorizeWidgetRequest(request, widgetId);
+  const parentOrigin = request.nextUrl.searchParams.get("parentOrigin")?.trim() ?? null;
+  const auth = await authorizeWidgetRequest(request, widgetId, { parentOrigin });
   if (!auth.ok) return auth.response;
 
   const rows = await prisma.widgetFeedback.findMany({
@@ -93,11 +95,33 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const oEarly = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+  const parentOriginEarly =
+    typeof oEarly.parentOrigin === "string" ? oEarly.parentOrigin.trim() : null;
+
   const widgetId = parseWidgetIdFromBody(body);
-  const auth = await authorizeWidgetRequest(request, widgetId);
+  const auth = await authorizeWidgetRequest(request, widgetId, {
+    parentOrigin: parentOriginEarly,
+  });
   if (!auth.ok) return auth.response;
 
-  const o = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+  const o = oEarly;
+
+  if (process.env.TURNSTILE_SECRET_KEY?.trim()) {
+    const tsToken =
+      typeof o.turnstileToken === "string" ? o.turnstileToken.trim() : "";
+    const tsResult = await verifyTurnstileToken(tsToken);
+    if (!tsResult.ok) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[turnstile siteverify]", tsResult.error);
+      }
+      return NextResponse.json(
+        { ok: false, message: "Verification failed. Refresh the page and try again." },
+        { status: 403, headers: auth.ctx.headers },
+      );
+    }
+  }
+
   const rawText = typeof o.text === "string" ? o.text : "";
   const text = rawText.trim();
   const pageUrl =

@@ -78,6 +78,22 @@ export function originHostFromRequest(
 /**
  * Exact hostname match, or subdomain of an authorized entry (e.g. app.example.com vs example.com).
  */
+/** Parse `parentOrigin` from the embed iframe (http(s) origin or full URL); returns hostname or null. */
+export function hostnameFromParentOriginString(
+  value: string | null | undefined,
+): string | null {
+  if (value == null || typeof value !== "string") return null;
+  const t = value.trim();
+  if (!t.length || t.length > 2048) return null;
+  try {
+    const u = new URL(t);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    return u.hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
 export function isHostnameAuthorized(
   requestHost: string,
   authorizedDomains: string[],

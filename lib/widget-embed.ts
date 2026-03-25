@@ -7,14 +7,22 @@ export function createWidgetId(): string {
   return randomBytes(5).toString("hex");
 }
 
-export function buildEmbedScript(apiOrigin: string, widgetId: string): string {
+function buildFrameWidgetInlineScript(
+  apiOrigin: string,
+  widgetId: string,
+  turnstileSiteKey: string | null,
+): string {
   const safeOrigin = JSON.stringify(apiOrigin);
   const safeWidgetId = JSON.stringify(widgetId);
+  const safeTurnstileKey = JSON.stringify(turnstileSiteKey ?? "");
 
-  return `/*f2c*/(function(){
-var cur=document.currentScript;if(!cur)return;
+  return `!(function(){
 var apiOrigin=${safeOrigin};
 var widgetId=${safeWidgetId};
+var turnstileSiteKey=${safeTurnstileKey};
+var started=false;
+function boot(parentOrigin,parentHref,parentPath){
+if(started)return;started=true;
 var isDark=typeof window!=="undefined"&&!!window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches;
 var C=isDark
 ?{bg:"#0a0a0a",fg:"#ededed",muted:"#888888",mutedFg:"#a0a0a0",border:"#222222",borderBright:"#333333",accent:"#ff6b00",accentHover:"#ff8533",accentMuted:"rgba(255,107,0,.12)",errBg:"rgba(127,29,29,.3)",errFg:"#fca5a5",btnBg:"#ff6b00",btnFg:"#000000",shadow:"rgba(0,0,0,.8)"}
@@ -29,7 +37,7 @@ var root=document.createElement("div");
 root.setAttribute("data-f2c-widget",widgetId);
 root.style.cssText="position:fixed;bottom:24px;right:24px;z-index:2147483647;font-family:"+FONT+";font-size:16px;text-align:left;opacity:0;transition:opacity .2s ease;";
 function appendRoot(){(document.body||document.documentElement).appendChild(root);}
-fetch(apiOrigin+"/f?w="+encodeURIComponent(widgetId),{method:"GET",credentials:"omit"})
+fetch(apiOrigin+"/f?w="+encodeURIComponent(widgetId)+"&parentOrigin="+encodeURIComponent(parentOrigin),{method:"GET",credentials:"omit"})
 .then(function(r){return r.json();})
 .then(function(d){if(!d||!d.ok){mountErr(d&&d.message?String(d.message):"Could not load.");return;}mount(d.items||[]);})
 .catch(function(e){mountErr(e.message||"Network error");});
@@ -113,7 +121,7 @@ statusMsg.style.cssText="font-size:14px;color:"+C.muted+";flex:1;min-height:20px
 var charCount=document.createElement("span");
 charCount.style.cssText="font-size:14px;color:"+C.muted+";letter-spacing:.03em;white-space:nowrap;";
 charCount.textContent="0 / 2000";
-ta.addEventListener("input",function(){var l=ta.value.length;charCount.textContent=l+" / 2000";charCount.style.color=l>1800?"#fca5a5":C.muted;if(l>0&&statusMsg.style.color==="#fca5a5"){statusMsg.textContent="";statusMsg.style.color=C.muted;}});
+ta.addEventListener("input",function(){var l=ta.value.length;charCount.textContent=l+" / 2000";charCount.style.color=l>1800?"#fca5a5":C.muted;if(l>0&&statusMsg.style.color==="#fca5a5"){statusMsg.textContent="";statusMsg.style.color=C.muted;}updateSubBtn();});
 var subBtn=document.createElement("button");
 subBtn.type="button";
 subBtn.style.cssText="padding:12px 28px;border:1px solid "+C.accent+";background:"+C.btnBg+";color:"+C.btnFg+";cursor:pointer;font-size:15px;font-weight:700;font-family:"+FONT+";text-transform:uppercase;letter-spacing:.06em;transition:background .15s;outline:none;white-space:nowrap;flex-shrink:0;";
@@ -140,7 +148,7 @@ backBtn.style.cssText="margin-top:6px;border:1px solid "+C.border+";background:t
 backBtn.textContent="\u2190 send more";
 backBtn.onmouseenter=function(){backBtn.style.color=C.fg;backBtn.style.borderColor=C.borderBright;};
 backBtn.onmouseleave=function(){backBtn.style.color=C.muted;backBtn.style.borderColor=C.border;};
-backBtn.onclick=function(){successView.style.display="none";submitView.style.display="flex";activeTab="submit";setTabStyles();ta.focus();};
+backBtn.onclick=function(){successView.style.display="none";submitView.style.display="flex";activeTab="submit";setTabStyles();ta.focus();updateSubBtn();};
 successView.appendChild(sIcon);successView.appendChild(sTitle);successView.appendChild(sSub);successView.appendChild(backBtn);
 /* ── History view ────────────────────────────────────────── */
 var histView=document.createElement("div");
@@ -176,13 +184,42 @@ histView.appendChild(row);
 }
 renderHistory();
 panel.appendChild(submitView);panel.appendChild(successView);panel.appendChild(histView);
+var turnstileHolder=null;
+var turnstileWidgetId=null;
+var cachedTurnstileToken=null;
+var submitVerifyTimer=null;
+var pendingAutoSend=false;
+function clearSubmitVerifyTimer(){if(submitVerifyTimer){clearTimeout(submitVerifyTimer);submitVerifyTimer=null;}}
+function cleanupTurnstilePanel(){
+clearSubmitVerifyTimer();
+cachedTurnstileToken=null;
+pendingAutoSend=false;
+var ts0=window.turnstile;
+if(turnstileWidgetId!==null&&ts0&&typeof ts0.remove==="function"){
+try{ts0.remove(turnstileWidgetId);}catch(e){}
+}
+turnstileWidgetId=null;
+if(turnstileHolder){removeTurnstileHolder(turnstileHolder);turnstileHolder=null;}
+}
+function updateSubBtn(){
+var hasText=ta.value.trim().length>0;
+if(!turnstileSiteKey){
+subBtn.disabled=false;
+subBtn.style.opacity="";
+subBtn.style.cursor="";
+return;
+}
+subBtn.disabled=!hasText;
+subBtn.style.opacity=subBtn.disabled?".5":"";
+subBtn.style.cursor=subBtn.disabled?"not-allowed":"";
+}
 /* ── Tab switching ───────────────────────────────────────── */
 function switchTab(id){
 activeTab=id;setTabStyles();
 submitView.style.display=id==="submit"?"flex":"none";
 successView.style.display="none";
 histView.style.display=id==="history"?"block":"none";
-if(id==="submit")ta.focus();
+if(id==="submit"){ta.focus();updateSubBtn();}
 }
 setTabStyles();switchTab("submit");
 /* ── Open / close ────────────────────────────────────────── */
@@ -195,49 +232,309 @@ panel.style.opacity="0";panel.style.transform="translateY(12px)";panel.style.tra
 raf(function(){raf(function(){panel.style.transition="opacity .2s ease,transform .2s ease";panel.style.opacity="1";panel.style.transform="translateY(0)";});});
 fab.style.display="none";
 if(activeTab==="submit")ta.focus();
+if(turnstileSiteKey){beginBackgroundTurnstile();}
+updateSubBtn();
 }else{
 panel.style.transition="opacity .15s ease,transform .15s ease";
 panel.style.opacity="0";panel.style.transform="translateY(10px)";
 fab.style.display="none";
 closeTimer=setTimeout(function(){
+cleanupTurnstilePanel();
 panel.style.display="none";
 panel.style.transition="none";
 panel.style.transform="";
 closeTimer=null;
 fabShowTimer=setTimeout(function(){fab.style.display="inline-flex";fabShowTimer=null;},40);
+updateSubBtn();
 },170);
 }
 }
 closeBtn.onclick=function(){toggle(false);};
 fab.onclick=function(){toggle(true);};
 /* ── Submit handler ──────────────────────────────────────── */
-subBtn.onclick=function(){
+function loadTurnstileScript(cb){
+if(typeof window==="undefined"){cb();return;}
+function hasTurnstileApi(){return typeof window!=="undefined"&&window.turnstile&&typeof window.turnstile.render==="function";}
+if(hasTurnstileApi()){cb();return;}
+var g=window;
+var q=g.__f2cTurnstileQ;
+if(Array.isArray(q)){q.push(cb);return;}
+g.__f2cTurnstileQ=[cb];
+function flush(err){
+var wait=g.__f2cTurnstileQ;
+g.__f2cTurnstileQ=null;
+if(!Array.isArray(wait))return;
+for(var i=0;i<wait.length;i++){if(err)wait[i]("load");else wait[i]();}
+}
+var scr=document.createElement("script");
+scr.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+scr.async=false;
+scr.onload=function(){
+var attempts=0;
+(function poll(){
+if(hasTurnstileApi()){flush(null);return;}
+if(++attempts>200){flush("load");return;}
+setTimeout(poll,25);
+})();
+};
+scr.onerror=function(){flush("load");};
+(document.head||document.documentElement).appendChild(scr);
+}
+function removeTurnstileHolder(h){
+try{if(h&&h.parentNode)h.parentNode.removeChild(h);}catch(e){}
+}
+function resetSubAfterSend(){updateSubBtn();}
+function sendFeedback(tsToken){
+pendingAutoSend=false;
 var t=ta.value.trim();
-if(!t){statusMsg.textContent="Please write something first.";statusMsg.style.color="#fca5a5";ta.focus();return;}
+if(!t){resetSubAfterSend();return;}
+subBtn.disabled=true;
+subBtn.style.opacity=".5";
+subBtn.style.cursor="not-allowed";
 statusMsg.textContent="Sending\u2026";statusMsg.style.color=C.muted;
-subBtn.disabled=true;subBtn.style.opacity=".5";subBtn.style.cursor="not-allowed";
-fetch(apiOrigin+"/f",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({w:widgetId,text:t,pageUrl:typeof location!=="undefined"?location.href:"",pagePath:typeof location!=="undefined"&&location.pathname?location.pathname:""})})
+var payload={w:widgetId,text:t,pageUrl:parentHref||"",pagePath:parentPath||"",parentOrigin:parentOrigin};
+if(tsToken)payload.turnstileToken=tsToken;
+fetch(apiOrigin+"/f",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
 .then(function(r){return r.json();})
 .then(function(res){
-subBtn.disabled=false;subBtn.style.opacity="";subBtn.style.cursor="";
-if(!res||!res.ok){statusMsg.textContent=res&&res.message?String(res.message):"Could not send.";statusMsg.style.color="#fca5a5";return;}
+resetSubAfterSend();
+if(!res||!res.ok){
+statusMsg.textContent=res&&res.message?String(res.message):"Could not send.";
+statusMsg.style.color="#fca5a5";
+if(turnstileSiteKey){
+cachedTurnstileToken=null;
+beginBackgroundTurnstile();
+}
+return;
+}
 if(res.item)items.unshift(res.item);
 tHistory.textContent="History ("+items.length+")";
 renderHistory();ta.value="";charCount.textContent="0 / 2000";statusMsg.textContent="";
 submitView.style.display="none";successView.style.display="flex";activeTab="success";setTabStyles();
+if(turnstileSiteKey){
+cachedTurnstileToken=null;
+var tsR=window.turnstile;
+if(turnstileWidgetId!==null&&tsR&&typeof tsR.remove==="function"){
+try{tsR.remove(turnstileWidgetId);}catch(e){}
+}
+turnstileWidgetId=null;
+if(turnstileHolder){removeTurnstileHolder(turnstileHolder);turnstileHolder=null;}
+clearSubmitVerifyTimer();
+beginBackgroundTurnstile();
+}
 })
 .catch(function(e){
-subBtn.disabled=false;subBtn.style.opacity="";subBtn.style.cursor="";
-statusMsg.textContent=e.message||"Network error.";statusMsg.style.color="#fca5a5";
+resetSubAfterSend();
+statusMsg.textContent=e.message||"Network error.";
+statusMsg.style.color="#fca5a5";
+if(turnstileSiteKey){
+cachedTurnstileToken=null;
+beginBackgroundTurnstile();
+}
 });
+}
+function beginBackgroundTurnstile(){
+if(!turnstileSiteKey)return;
+clearSubmitVerifyTimer();
+cachedTurnstileToken=null;
+updateSubBtn();
+var tsPre=window.turnstile;
+if(turnstileWidgetId!==null&&tsPre&&typeof tsPre.remove==="function"){
+try{tsPre.remove(turnstileWidgetId);}catch(e){}
+}
+turnstileWidgetId=null;
+if(turnstileHolder){removeTurnstileHolder(turnstileHolder);turnstileHolder=null;}
+statusMsg.textContent="";
+statusMsg.style.color=C.muted;
+loadTurnstileScript(function(err){
+if(err){
+pendingAutoSend=false;
+statusMsg.textContent="Could not load verification. Disable blockers and try again.";
+statusMsg.style.color="#fca5a5";
+updateSubBtn();
+return;
+}
+var ts=window.turnstile;
+if(!ts||typeof ts.render!=="function"){
+pendingAutoSend=false;
+statusMsg.textContent="Could not load verification. Disable blockers and try again.";
+statusMsg.style.color="#fca5a5";
+updateSubBtn();
+return;
+}
+turnstileHolder=document.createElement("div");
+turnstileHolder.setAttribute("data-f2c-turnstile","1");
+turnstileHolder.style.cssText="position:fixed;left:-9999px;top:0;width:300px;height:70px;overflow:hidden;margin:0;padding:0;border:0;opacity:0.02;";
+submitView.appendChild(turnstileHolder);
+submitVerifyTimer=setTimeout(function(){
+submitVerifyTimer=null;
+var tsT=window.turnstile;
+if(turnstileWidgetId!==null&&tsT&&typeof tsT.remove==="function"){
+try{tsT.remove(turnstileWidgetId);}catch(e){}
+}
+turnstileWidgetId=null;
+if(turnstileHolder){removeTurnstileHolder(turnstileHolder);turnstileHolder=null;}
+cachedTurnstileToken=null;
+pendingAutoSend=false;
+statusMsg.textContent="Verification timed out. Check your network, VPN, or ad blocker, then try again.";
+statusMsg.style.color="#fca5a5";
+updateSubBtn();
+},45000);
+var doRender=function(){
+try{
+var newId=ts.render(turnstileHolder,{
+sitekey:turnstileSiteKey,
+size:"invisible",
+callback:function(token){
+clearSubmitVerifyTimer();
+cachedTurnstileToken=token;
+statusMsg.textContent="";
+statusMsg.style.color=C.muted;
+if(pendingAutoSend){
+pendingAutoSend=false;
+if(ta.value.trim().length>0){sendFeedback(token);}
+else{updateSubBtn();}
+}else{updateSubBtn();}
+},
+"error-callback":function(){
+clearSubmitVerifyTimer();
+cachedTurnstileToken=null;
+pendingAutoSend=false;
+var tsE=window.turnstile;
+if(turnstileWidgetId!==null&&tsE&&typeof tsE.remove==="function"){
+try{tsE.remove(turnstileWidgetId);}catch(e){}
+}
+turnstileWidgetId=null;
+if(turnstileHolder){removeTurnstileHolder(turnstileHolder);turnstileHolder=null;}
+statusMsg.textContent="Verification failed. Close and reopen the widget to try again.";
+statusMsg.style.color="#fca5a5";
+updateSubBtn();
+},
+"expired-callback":function(){
+clearSubmitVerifyTimer();
+cachedTurnstileToken=null;
+statusMsg.textContent="Refreshing verification\u2026";
+statusMsg.style.color=C.muted;
+var tsX=window.turnstile;
+if(turnstileWidgetId!==null&&tsX&&typeof tsX.remove==="function"){
+try{tsX.remove(turnstileWidgetId);}catch(e){}
+}
+turnstileWidgetId=null;
+if(turnstileHolder){removeTurnstileHolder(turnstileHolder);turnstileHolder=null;}
+updateSubBtn();
+beginBackgroundTurnstile();
+},
+"unsupported-callback":function(){
+clearSubmitVerifyTimer();
+cachedTurnstileToken=null;
+pendingAutoSend=false;
+var tsU=window.turnstile;
+if(turnstileWidgetId!==null&&tsU&&typeof tsU.remove==="function"){
+try{tsU.remove(turnstileWidgetId);}catch(e){}
+}
+turnstileWidgetId=null;
+if(turnstileHolder){removeTurnstileHolder(turnstileHolder);turnstileHolder=null;}
+statusMsg.textContent="Verification is not available here (browser or privacy settings). Try another browser or relax blocking for this site.";
+statusMsg.style.color="#fca5a5";
+updateSubBtn();
+}
+});
+if(newId!=null&&newId!=="")turnstileWidgetId=newId;
+}catch(e){
+clearSubmitVerifyTimer();
+cachedTurnstileToken=null;
+pendingAutoSend=false;
+if(turnstileHolder){removeTurnstileHolder(turnstileHolder);turnstileHolder=null;}
+turnstileWidgetId=null;
+statusMsg.textContent="Verification error. Try again.";
+statusMsg.style.color="#fca5a5";
+updateSubBtn();
+}
+};
+if(typeof queueMicrotask==="function"){queueMicrotask(doRender);}
+else{setTimeout(doRender,0);}
+});
+}
+subBtn.onclick=function(){
+var t=ta.value.trim();
+if(!t){statusMsg.textContent="Please write something first.";statusMsg.style.color="#fca5a5";ta.focus();return;}
+if(!turnstileSiteKey){
+sendFeedback(null);
+return;
+}
+if(!cachedTurnstileToken){
+pendingAutoSend=true;
+subBtn.disabled=true;
+subBtn.style.opacity=".5";
+subBtn.style.cursor="not-allowed";
+statusMsg.textContent="";
+statusMsg.style.color=C.muted;
+return;
+}
+sendFeedback(cachedTurnstileToken);
 };
 /* ── Mount ───────────────────────────────────────────────── */
 var wrap=document.createElement("div");
 wrap.style.cssText="display:flex;flex-direction:column;align-items:flex-end;gap:16px;";
 wrap.appendChild(panel);wrap.appendChild(fab);
 root.appendChild(wrap);root.style.opacity="1";appendRoot();
+updateSubBtn();
 }
+}
+function onParentMessage(ev){
+if(!ev.data||ev.data.f2c!=="parent")return;
+if(typeof ev.data.href!=="string")return;
+window.removeEventListener("message",onParentMessage);
+boot(ev.origin,ev.data.href,typeof ev.data.pathname==="string"?ev.data.pathname:"/");
+}
+window.addEventListener("message",onParentMessage);
+if(window.parent!==window){window.parent.postMessage({f2c:"f2c-frame-ready"},"*");}
+else{boot(location.origin,location.href,location.pathname||"/");}
 })();`;
+}
+
+export function buildFrameInnerHtml(
+  apiOrigin: string,
+  widgetId: string,
+  turnstileSiteKey: string | null,
+): string {
+  const inline = buildFrameWidgetInlineScript(apiOrigin, widgetId, turnstileSiteKey);
+  const escaped = inline.replace(/<\/script>/gi, "<\\/script>");
+  return (
+    `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Feedback</title></head><body><script>` +
+    escaped +
+    "</scr" +
+    "ipt></body></html>"
+  );
+}
+
+export function buildParentEmbedScript(apiOrigin: string, widgetId: string): string {
+  const safeOrigin = JSON.stringify(apiOrigin);
+  const safeWidgetId = JSON.stringify(widgetId);
+  return `/*f2c*/(function(){
+var cur=document.currentScript;if(!cur)return;
+var apiOrigin=${safeOrigin};
+var widgetId=${safeWidgetId};
+var iframe=document.createElement("iframe");
+iframe.title="Feedback";
+iframe.setAttribute("data-f2c-frame","1");
+iframe.src=apiOrigin+"/embed/frame?w="+encodeURIComponent(widgetId);
+iframe.style.cssText="position:fixed;bottom:0;right:0;width:min(720px,100vw);height:min(900px,100vh);max-width:100%;max-height:100%;border:0;background:transparent;z-index:2147483647;pointer-events:auto;";
+function sameOrigin(a,b){try{return new URL(a).origin===new URL(b).origin;}catch(e){return false;}}
+function mountIframe(){var p=document.body||document.documentElement;if(iframe.parentNode!==p)p.appendChild(iframe);}
+mountIframe();
+window.addEventListener("message",function(ev){
+if(!ev.data||ev.data.f2c!=="f2c-frame-ready")return;
+if(ev.source!==iframe.contentWindow)return;
+if(!sameOrigin(ev.origin,apiOrigin))return;
+mountIframe();
+iframe.contentWindow.postMessage({f2c:"parent",href:location.href,pathname:location.pathname||"/"},apiOrigin);
+});
+})();`;
+}
+
+export function buildEmbedScript(apiOrigin: string, widgetId: string): string {
+  return buildParentEmbedScript(apiOrigin, widgetId);
 }
 
 export function parseWidgetIdFromBody(body: unknown): string {
