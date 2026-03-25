@@ -35,7 +35,8 @@ function sLabel(s){switch(s){case"CODING":return"coding";case"WAITING_FOR_REVIEW
 function sColor(s){switch(s){case"MERGED":return{bg:C.accentMuted,fg:C.accent,bd:"rgba(255,107,0,.4)"};case"FAILED":return{bg:"rgba(127,29,29,.3)",fg:"#fca5a5",bd:"rgba(127,29,29,.5)"};case"WAITING_FOR_REVIEW":return{bg:"transparent",fg:C.fg,bd:C.borderBright};default:return{bg:"transparent",fg:C.muted,bd:C.border};}}
 var root=document.createElement("div");
 root.setAttribute("data-f2c-widget",widgetId);
-root.style.cssText="position:fixed;bottom:24px;right:24px;z-index:2147483647;font-family:"+FONT+";font-size:16px;text-align:left;opacity:0;transition:opacity .2s ease;";
+var edge="max(24px,env(safe-area-inset-bottom,0px),env(safe-area-inset-right,0px))";
+root.style.cssText="position:fixed;bottom:"+edge+";right:"+edge+";z-index:2147483647;font-family:"+FONT+";font-size:16px;text-align:left;opacity:0;transition:opacity .2s ease;";
 function appendRoot(){(document.body||document.documentElement).appendChild(root);}
 // Local-only submission history (per-widget, per-parent origin) stored in the iframe's localStorage.
 function historyStorageKey(){return"f2c_local_history:"+widgetId+"|"+String(parentOrigin||"");}
@@ -529,7 +530,7 @@ export function buildFrameInnerHtml(
   const inline = buildFrameWidgetInlineScript(apiOrigin, widgetId, turnstileSiteKey);
   const escaped = inline.replace(/<\/script>/gi, "<\\/script>");
   return (
-    `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Feedback</title></head><body><script>` +
+    `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Feedback</title></head><body><script>` +
     escaped +
     "</scr" +
     "ipt></body></html>"
@@ -541,13 +542,20 @@ export function buildParentEmbedScript(apiOrigin: string, widgetId: string): str
   const safeWidgetId = JSON.stringify(widgetId);
   return `/*f2c*/(function(){
 var cur=document.currentScript;if(!cur)return;
+if(!document.querySelector('meta[name="viewport"]')){
+var mv=document.createElement("meta");
+mv.name="viewport";
+mv.content="width=device-width,initial-scale=1";
+var hd=document.head||document.getElementsByTagName("head")[0];
+if(hd)hd.insertBefore(mv,hd.firstChild);
+}
 var apiOrigin=${safeOrigin};
 var widgetId=${safeWidgetId};
 var iframe=document.createElement("iframe");
 iframe.title="Feedback";
 iframe.setAttribute("data-f2c-frame","1");
 iframe.src=apiOrigin+"/embed/frame?w="+encodeURIComponent(widgetId);
-iframe.style.cssText="position:fixed;bottom:0;right:0;width:min(720px,100vw);height:min(900px,100vh);max-width:100%;max-height:100%;border:0;background:transparent;z-index:2147483647;pointer-events:auto;";
+iframe.style.cssText="position:fixed;bottom:0;right:0;width:min(720px,100vw);height:min(900px,100vh);height:min(900px,100dvh);max-width:100%;max-height:100%;border:0;background:transparent;z-index:2147483647;pointer-events:auto;";
 function sameOrigin(a,b){try{return new URL(a).origin===new URL(b).origin;}catch(e){return false;}}
 function mountIframe(){var p=document.body||document.documentElement;if(iframe.parentNode!==p)p.appendChild(iframe);}
 mountIframe();
