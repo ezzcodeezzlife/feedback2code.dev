@@ -37,10 +37,38 @@ var root=document.createElement("div");
 root.setAttribute("data-f2c-widget",widgetId);
 root.style.cssText="position:fixed;bottom:24px;right:24px;z-index:2147483647;font-family:"+FONT+";font-size:16px;text-align:left;opacity:0;transition:opacity .2s ease;";
 function appendRoot(){(document.body||document.documentElement).appendChild(root);}
-fetch(apiOrigin+"/f?w="+encodeURIComponent(widgetId)+"&parentOrigin="+encodeURIComponent(parentOrigin),{method:"GET",credentials:"omit"})
-.then(function(r){return r.json();})
-.then(function(d){if(!d||!d.ok){mountErr(d&&d.message?String(d.message):"Could not load.");return;}mount(d.items||[]);})
-.catch(function(e){mountErr(e.message||"Network error");});
+// Local-only submission history (per-widget, per-parent origin) stored in the iframe's localStorage.
+function historyStorageKey(){return"f2c_local_history:"+widgetId+"|"+String(parentOrigin||"");}
+function safeLocalGet(key){try{if(typeof window==="undefined"||!window.localStorage)return null;return window.localStorage.getItem(key);}catch(e){return null;}}
+function safeLocalSet(key,value){try{if(typeof window==="undefined"||!window.localStorage)return;window.localStorage.setItem(key,value);}catch(e){}}
+function loadLocalHistory(){
+var raw=safeLocalGet(historyStorageKey());
+if(!raw)return[];
+var arr=null;
+try{arr=JSON.parse(raw);}catch(e){return[];}
+if(!Array.isArray(arr))return[];
+var out=[];
+for(var i=0;i<arr.length;i++){
+var it=arr[i];
+if(!it||typeof it!=="object")continue;
+var status=it.status;
+if(!status)continue;
+var body=typeof it.body==="string"?it.body:String(it.body||"");
+var createdAt=it.createdAt;
+if(!createdAt)continue;
+out.push({id:typeof it.id==="string"?it.id:String(it.id||""),body:body,createdAt:createdAt,status:status});
+if(out.length>=200)break;
+}
+return out;
+}
+function saveLocalHistory(list){
+if(!Array.isArray(list))return;
+var next=list.slice(0,200).map(function(it){
+return{id:it&&typeof it.id==="string"?it.id:String(it.id||""),body:it&&typeof it.body==="string"?it.body:String(it.body||""),createdAt:it&&it.createdAt?it.createdAt:"",status:it&&it.status?it.status:""};
+}).filter(function(it){return it.body&&it.createdAt&&it.status;});
+safeLocalSet(historyStorageKey(),JSON.stringify(next));
+}
+mount(loadLocalHistory());
 function mountErr(msg){
 var e=document.createElement("div");
 e.style.cssText="padding:20px 24px;background:"+C.errBg+";color:"+C.errFg+";font-size:15px;max-width:340px;border:1px solid rgba(127,29,29,.5);font-family:"+FONT+";letter-spacing:.03em;";
@@ -95,7 +123,7 @@ btn.onclick=function(){switchTab(id);};
 return btn;
 }
 var tSubmit=makeTab("submit","Submit");
-var tHistory=makeTab("history","History ("+items.length+")");
+var tHistory=makeTab("history","Local History ("+items.length+")");
 tabBar.appendChild(tSubmit);tabBar.appendChild(tHistory);
 panel.appendChild(tabBar);
 function setTabStyles(){
@@ -158,7 +186,7 @@ histView.innerHTML="";
 if(items.length===0){
 var emp=document.createElement("div");
 emp.style.cssText="padding:48px 28px 40px;text-align:center;";
-emp.innerHTML='<div style="color:'+C.muted+';font-size:16px;letter-spacing:.04em;">[ no submissions yet ]</div><div style="color:'+C.muted+';font-size:15px;margin-top:10px;line-height:1.5;">Be the first to leave feedback.</div>';
+emp.innerHTML='<div style="color:'+C.muted+';font-size:16px;letter-spacing:.04em;">[ no local submissions yet ]</div><div style="color:'+C.muted+';font-size:15px;margin-top:10px;line-height:1.5;">Be the first to leave feedback.</div>';
 histView.appendChild(emp);return;
 }
 for(var i=0;i<items.length;i++){
@@ -307,8 +335,8 @@ beginBackgroundTurnstile();
 }
 return;
 }
-if(res.item)items.unshift(res.item);
-tHistory.textContent="History ("+items.length+")";
+if(res.item){items.unshift(res.item);saveLocalHistory(items);}
+tHistory.textContent="Local History ("+items.length+")";
 renderHistory();ta.value="";charCount.textContent="0 / 2000";statusMsg.textContent="";
 submitView.style.display="none";successView.style.display="flex";activeTab="success";setTabStyles();
 if(turnstileSiteKey){
