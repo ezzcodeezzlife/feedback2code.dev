@@ -1,3 +1,4 @@
+import { feedbackSandboxTemplate } from "@/lib/feedback-agent/e2b-sandbox-template";
 import { buildFeedbackAgentEgressAllowOut } from "@/lib/feedback-agent/e2b-sandbox-network";
 import {
   buildFeedbackPrBody,
@@ -16,16 +17,7 @@ import { join } from "node:path";
 const REPO_PATH = "/home/user/feedback-repo";
 const E2B_ASSET_DIR = join(process.cwd(), "lib/feedback-agent/e2b");
 
-/**
- * Default template built from `e2b/feedback-agent/e2b.Dockerfile` via `npm run e2b:build-feedback-template`.
- * Override with `E2B_FEEDBACK_SANDBOX_TEMPLATE` if you publish under a different alias.
- */
-export const FEEDBACK_AGENT_E2B_TEMPLATE_ALIAS = "feedback2code-agent";
-
-export function feedbackSandboxTemplate(): string {
-  const t = process.env.E2B_FEEDBACK_SANDBOX_TEMPLATE?.trim();
-  return t || FEEDBACK_AGENT_E2B_TEMPLATE_ALIAS;
-}
+export { FEEDBACK_AGENT_E2B_TEMPLATE_ALIAS, feedbackSandboxTemplate } from "@/lib/feedback-agent/e2b-sandbox-template";
 
 export const PR_URL_FILE = "/home/user/f2c-pr-url.txt";
 export const AGENT_LLM_USAGE_FILE = "/home/user/f2c-agent-llm-usage.json";

@@ -3,7 +3,7 @@
  * Run: npx dotenv-cli -e .env.development -- npx tsx scripts/test-e2b-feedback-sandbox.ts
  */
 import { ALL_TRAFFIC, CommandExitError, Sandbox } from "e2b";
-import { feedbackSandboxTemplate } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
+import { feedbackSandboxTemplate } from "@/lib/feedback-agent/e2b-sandbox-template";
 import { buildFeedbackAgentEgressAllowOut } from "@/lib/feedback-agent/e2b-sandbox-network";
 
 const apiKey = process.env.E2B_API_KEY;

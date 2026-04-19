@@ -4,9 +4,9 @@ import {
   createSandboxOpts,
   feedbackPipelineEnvs,
   feedbackPipelineWrapperCmd,
-  feedbackSandboxTemplate,
   writeFeedbackSandboxFiles,
 } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
+import { feedbackSandboxTemplate } from "@/lib/feedback-agent/e2b-sandbox-template";
 import {
   buildFeedbackPrBody,
   buildFeedbackPrTitle,
@@ -24,11 +24,10 @@ const SANDBOX_TIMEOUT_MS = 3_600_000; // 1h (E2B hobby max)
 
 export {
   AGENT_LLM_USAGE_FILE,
-  FEEDBACK_AGENT_E2B_TEMPLATE_ALIAS,
   PR_URL_FILE,
   branchNameForFeedback,
-  feedbackSandboxTemplate,
 } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
+export { FEEDBACK_AGENT_E2B_TEMPLATE_ALIAS, feedbackSandboxTemplate } from "@/lib/feedback-agent/e2b-sandbox-template";
 export { runE2bFeedbackAgentBlockingIntegrationTest } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
 
 function revalidateRepo(dashboardPath: string) {
