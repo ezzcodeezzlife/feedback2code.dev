@@ -36,9 +36,12 @@ GitHub auth stays **inside the sandbox**: the same **GitHub App** credentials (`
 Set these **server-only** variables (see `.env.development` / `.env.production`):
 
 - `E2B_API_KEY`
+- `E2B_FEEDBACK_SANDBOX_TEMPLATE` (optional; defaults to `feedback2code-agent`)
 - `MINIMAX_API_KEY`
 - GitHub App credentials (`GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, and the rest you already use for the dashboard install flow)
 - Users must complete the **GitHub App install** so `githubInstallationId` is stored (used to pick the installation when minting tokens in the sandbox).
+
+**E2B sandbox template (required once per team):** Sandboxes use a custom template `feedback2code-agent` (2 vCPU, 2048 MiB RAM) with Node 20 and OpenCode preinstalled — see [`e2b/feedback-agent/e2b.Dockerfile`](./e2b/feedback-agent/e2b.Dockerfile). Publishing uses the [E2B CLI](https://e2b.dev/docs/cli), which requires an **access token** (not just the API key): copy [`.env.e2b.cli.example`](./.env.e2b.cli.example) to `.env.e2b.cli`, add `E2B_ACCESS_TOKEN` from the [API key / access token docs](https://e2b.dev/docs/api-key), then run `npm run e2b:build-feedback-template`. Alternatively run `npx @e2b/cli auth login` in an interactive terminal, then the same npm script. Vercel and other hosts only need `E2B_API_KEY` + `E2B_FEEDBACK_SANDBOX_TEMPLATE` at runtime (not the CLI access token).
 
 **GitHub App URLs (production example):** use the same origin as `NEXT_PUBLIC_APP_URL`. **Setup URL** should be `{origin}/api/github/setup` (GitHub appends `installation_id`). **Callback URL** can be `{origin}/api/github/callback` (forwards to setup) or the setup URL directly. Optional webhook: `{origin}/api/github/webhook` — copy the webhook secret into `GITHUB_APP_WEBHOOK_SECRET` in env so signatures are verified.
 

@@ -36,6 +36,8 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+# E2B CLI access token for `npm run e2b:build-feedback-template` only (not used by Next).
+.env.e2b.cli
 stripe_backup_code.txt
 
 # Built from .env.* on prebuild/predev (required on Vercel — serverless bundle has no .env files).

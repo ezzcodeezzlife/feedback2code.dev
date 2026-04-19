@@ -23,9 +23,11 @@ import { Sandbox } from "e2b";
 const SANDBOX_TIMEOUT_MS = 3_600_000; // 1h (E2B hobby max)
 
 export {
-  PR_URL_FILE,
   AGENT_LLM_USAGE_FILE,
+  FEEDBACK_AGENT_E2B_TEMPLATE_ALIAS,
+  PR_URL_FILE,
   branchNameForFeedback,
+  feedbackSandboxTemplate,
 } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
 export { runE2bFeedbackAgentBlockingIntegrationTest } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
 
@@ -155,10 +157,7 @@ export async function startE2bFeedbackAgentWebhook(input: {
   let sandbox: Awaited<ReturnType<typeof Sandbox.create>> | null = null;
 
   try {
-    const template = feedbackSandboxTemplate();
-    sandbox = template
-      ? await Sandbox.create(template, sandboxOpts)
-      : await Sandbox.create(sandboxOpts);
+    sandbox = await Sandbox.create(feedbackSandboxTemplate(), sandboxOpts);
 
     await prisma.widgetFeedback.update({
       where: { id: input.feedbackId },

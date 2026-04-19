@@ -24,5 +24,7 @@ git -C "$REPO_PATH" config user.email "feedback2code-bot@users.noreply.github.co
 git -C "$REPO_PATH" config user.name "feedback2code bot"
 git -C "$REPO_PATH" checkout -b "${F2C_BRANCH}"
 
-sudo npm install -g opencode-ai
+if ! command -v opencode >/dev/null 2>&1; then
+  sudo npm install -g opencode-ai
+fi
 mkdir -p /home/user/.config/opencode

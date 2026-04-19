@@ -16,6 +16,7 @@
     "tunnel:tailscale:funnel": "node scripts/tailscale-dev-tunnel.mjs --funnel",
     "test:e2b-feedback-sandbox": "dotenv -e .env.development -- npx tsx scripts/test-e2b-feedback-sandbox.ts",
     "test:e2b-production-like": "dotenv -e .env.development -- npx tsx scripts/test-e2b-production-like.ts",
+    "e2b:build-feedback-template": "node scripts/e2b-build-feedback-template.mjs",
     "purge:prod-widget-feedback": "dotenv -e .env.production -- npx tsx scripts/purge-user-widget-feedback.ts",
     "dev:downgrade-free": "dotenv -e .env.development -- npx tsx scripts/dev-downgrade-user-to-free.ts",
     "dev:reset-dashboard": "dotenv -e .env.development -- node scripts/dev-reset-dashboard-local.mjs"
@@ -46,6 +47,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@e2b/cli": "^2.8.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

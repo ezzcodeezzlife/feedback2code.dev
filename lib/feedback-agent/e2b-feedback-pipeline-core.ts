@@ -17,12 +17,14 @@ const REPO_PATH = "/home/user/feedback-repo";
 const E2B_ASSET_DIR = join(process.cwd(), "lib/feedback-agent/e2b");
 
 /**
- * Optional: E2B template alias/ID built with lower `--memory-mb` / `--cpu-count`.
- * The public `base` template is already 512 MiB; smaller sandboxes require your own template (often Pro).
+ * Default template built from `e2b/feedback-agent/e2b.Dockerfile` via `npm run e2b:build-feedback-template`.
+ * Override with `E2B_FEEDBACK_SANDBOX_TEMPLATE` if you publish under a different alias.
  */
-export function feedbackSandboxTemplate(): string | undefined {
+export const FEEDBACK_AGENT_E2B_TEMPLATE_ALIAS = "feedback2code-agent";
+
+export function feedbackSandboxTemplate(): string {
   const t = process.env.E2B_FEEDBACK_SANDBOX_TEMPLATE?.trim();
-  return t || undefined;
+  return t || FEEDBACK_AGENT_E2B_TEMPLATE_ALIAS;
 }
 
 export const PR_URL_FILE = "/home/user/f2c-pr-url.txt";
@@ -237,11 +239,8 @@ export async function runE2bFeedbackAgentBlockingIntegrationTest(input: {
     pagePath: input.pagePath,
   });
 
-  const template = feedbackSandboxTemplate();
   const sandboxOpts = createSandboxOpts(e2bKey, timeoutMs);
-  const sandbox = template
-    ? await Sandbox.create(template, sandboxOpts)
-    : await Sandbox.create(sandboxOpts);
+  const sandbox = await Sandbox.create(feedbackSandboxTemplate(), sandboxOpts);
 
   try {
     const { plainToken } = await mintMinimaxProxyTokenForFeedback({

@@ -3,6 +3,7 @@
  * Run: npx dotenv-cli -e .env.development -- npx tsx scripts/test-e2b-feedback-sandbox.ts
  */
 import { ALL_TRAFFIC, CommandExitError, Sandbox } from "e2b";
+import { feedbackSandboxTemplate } from "@/lib/feedback-agent/e2b-feedback-pipeline-core";
 import { buildFeedbackAgentEgressAllowOut } from "@/lib/feedback-agent/e2b-sandbox-network";
 
 const apiKey = process.env.E2B_API_KEY;
@@ -17,8 +18,6 @@ const publicBase =
   "";
 const webhookUrl = publicBase ? `${publicBase}/api/e2b/webhook` : "";
 const allowOut = buildFeedbackAgentEgressAllowOut(webhookUrl);
-const template = process.env.E2B_FEEDBACK_SANDBOX_TEMPLATE?.trim();
-
 async function main() {
   console.log("allowOut count:", allowOut.length);
   const createOpts = {
@@ -28,9 +27,7 @@ async function main() {
     network: { denyOut: [ALL_TRAFFIC], allowOut },
   };
 
-  const sandbox = template
-    ? await Sandbox.create(template, createOpts)
-    : await Sandbox.create(createOpts);
+  const sandbox = await Sandbox.create(feedbackSandboxTemplate(), createOpts);
 
   try {
     const okGithub = await sandbox.commands.run(
