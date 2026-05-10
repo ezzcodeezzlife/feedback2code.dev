@@ -2,7 +2,7 @@
 
 Turn website feedback into production-ready pull requests. Embed a lightweight chat widget to collect user input and automatically generate code changes via an AI coding agent.
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app). 
 
 ## Environment (two files)
 
