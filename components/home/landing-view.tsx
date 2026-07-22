@@ -169,23 +169,24 @@ export default function LandingView() {
           <StaggerChild delay={0}>
             <div className="inline-flex items-center gap-2 border border-border-bright px-3 py-1.5 text-xs uppercase tracking-widest text-muted-foreground mb-8">
               <Sparkles className="h-3 w-3 text-accent" />
-              AI-powered feedback automation
+              For freelancers &amp; agencies
             </div>
           </StaggerChild>
 
           <StaggerChild delay={100}>
             <h1 className="text-center text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
-              Turn feedback
+              Your client describes it.
               <br />
-              <span className="text-accent">into code.</span>
+              <span className="text-accent">The PR writes itself.</span>
             </h1>
           </StaggerChild>
 
           <StaggerChild delay={200}>
             <p className="mt-6 max-w-xl text-center text-base sm:text-lg leading-relaxed text-muted-foreground">
-              Embed a widget on your site. Users leave feedback. An AI agent
-              reads your codebase, implements changes, and opens a Pull Request
-              — automatically.
+              Built for agencies and freelancers: drop one script tag on a
+              client&apos;s site, and their feedback becomes reviewable code in{" "}
+              <span className="text-foreground">your</span>{" "}repo —
+              automatically, while you get on with real work.
             </p>
           </StaggerChild>
 
@@ -793,34 +794,34 @@ export default function LandingView() {
       {/* ─── USE CASES ────────────────────────────────────────── */}
       <section id="use-cases" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>Use cases</SectionLabel>
-          <SectionHeading>Built for teams who ship fast</SectionHeading>
+          <SectionLabel>Who it&apos;s for</SectionLabel>
+          <SectionHeading>Built for agencies &amp; freelance devs</SectionHeading>
 
           <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
             {[
               {
-                title: "SaaS Products",
+                title: "Digital Agencies & Studios",
                 description:
-                  "Let your users report bugs and request features directly from your web app. Each submission turns into a reviewable PR.",
-                icon: Globe,
+                  "Keep every client site polished without a queue of tiny change requests. Feedback across all your projects lands as PRs your team reviews and merges — no ticket triage, no context-switching.",
+                icon: Sparkles,
               },
               {
-                title: "Documentation Sites",
+                title: "Freelance Developers",
                 description:
-                  "Users spot outdated docs or unclear instructions. Feedback becomes a PR that updates the content.",
-                icon: Code,
-              },
-              {
-                title: "Internal Tools",
-                description:
-                  "Team members report issues without filing tickets. The AI agent handles the fix, you review and merge.",
+                  "Juggling five clients solo? Their change requests arrive as Pull Requests instead of DMs, emails, and \"quick calls.\" Batch them, review them, bill them — on your schedule.",
                 icon: Terminal,
               },
               {
-                title: "Freelancers & Agencies",
+                title: "Retainers & Maintenance",
                 description:
-                  "Give clients a feedback button. They describe what to change, and you get a ready-made PR to review.",
-                icon: Sparkles,
+                  "Turn post-launch support into low-effort recurring work. Clients report what to change on their live site; you merge the PRs and keep the retainer humming.",
+                icon: Clock3,
+              },
+              {
+                title: "Client Handoffs",
+                description:
+                  "Hand a site to a non-technical client and still stay in control. They describe changes in plain English — nothing ships until you review and merge the PR.",
+                icon: MessageSquare,
               },
             ].map((uc) => (
               <Card key={uc.title} className="p-6 hover:border-border-bright transition-colors">
@@ -1143,6 +1144,10 @@ export default function LandingView() {
 
           <div className="mt-14 max-w-3xl mx-auto space-y-px">
             <FAQItem
+              question="Who is feedback2code for?"
+              answer="Freelancers and agencies who build and maintain sites for clients. Your client leaves feedback on their live site, and it becomes a Pull Request in your repo that you review and merge. If you deliver client work on GitHub, it's built for you — it also works great for SaaS products, docs sites, and internal tools."
+            />
+            <FAQItem
               question="Does the sandbox have internet access?"
               answer="No. It stays off the public internet, so there is no web browsing or arbitrary outbound access."
             />
@@ -1178,9 +1183,9 @@ export default function LandingView() {
             [ Ready? ]
           </p>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
-            Stop triaging feedback.
+            Stop chasing change requests.
             <br />
-            <span className="text-accent">Start shipping fixes.</span>
+            <span className="text-accent">Start reviewing PRs.</span>
           </h2>
           <p className="mt-6 text-base text-muted-foreground max-w-md mx-auto">
             Set up in under 3 minutes. Your first automated PR is one feedback
