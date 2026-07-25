@@ -28,7 +28,45 @@ import {
   MousePointerClick,
   Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+/** Fades content in when it scrolls into view (adds .is-visible once). */
+function Reveal({
+  children,
+  className,
+  stagger = false,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  stagger?: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add("is-visible");
+          io.disconnect();
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={cn(stagger ? "reveal-stagger" : "reveal", className)}
+    >
+      {children}
+    </div>
+  );
+}
 
 function StaggerChild({
   children,
@@ -85,13 +123,15 @@ function FAQItem({
           className={`h-4 w-4 shrink-0 text-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
-      {open && (
-        <div className="px-5 pb-5 -mt-1">
-          <p className="text-sm leading-relaxed text-muted-foreground">
+      <div
+        className={`grid transition-[grid-template-rows] duration-300 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+      >
+        <div className="overflow-hidden">
+          <p className="px-5 pb-5 -mt-1 text-sm leading-relaxed text-muted-foreground">
             {answer}
           </p>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -165,10 +205,11 @@ export default function LandingView() {
       <section className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,107,0,0.06)_0%,transparent_70%)]" />
         <div className="hero-grid-bg absolute inset-0 opacity-[0.04]" />
+        <div className="scanlines pointer-events-none absolute inset-0" />
         <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-6 pt-20 pb-24 sm:pt-28 sm:pb-32">
           <StaggerChild delay={0}>
-            <div className="inline-flex items-center gap-2 border border-border-bright px-3 py-1.5 text-xs uppercase tracking-widest text-muted-foreground mb-8">
-              <Sparkles className="h-3 w-3 text-accent" />
+            <div className="inline-flex items-center gap-2.5 border border-border-bright bg-surface/60 px-3 py-1.5 text-xs uppercase tracking-widest text-muted-foreground mb-8 backdrop-blur-sm">
+              <span className="animate-status h-1.5 w-1.5 rounded-full bg-accent" />
               For freelancers &amp; agencies
             </div>
           </StaggerChild>
@@ -195,17 +236,18 @@ export default function LandingView() {
               <Button
                 onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
                 size="lg"
-                className="cursor-pointer text-sm px-8"
+                className="group cursor-pointer text-sm px-8"
               >
                 <Github className="h-4 w-4" />
                 Start for free
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </Button>
               <a
                 href="#how-it-works"
-                className="inline-flex items-center gap-2 border border-border-bright bg-transparent px-6 py-2.5 text-sm font-medium uppercase tracking-wide text-foreground transition-all hover:border-accent hover:text-accent"
+                className="group inline-flex items-center gap-2 border border-border-bright bg-transparent px-6 py-2.5 text-sm font-medium uppercase tracking-wide text-foreground transition-all hover:border-accent hover:text-accent"
               >
                 See how it works
-                <ArrowRight className="h-3.5 w-3.5" />
+                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
               </a>
             </div>
           </StaggerChild>
@@ -246,12 +288,14 @@ export default function LandingView() {
       {/* ─── HOW IT WORKS ─────────────────────────────────────── */}
       <section id="how-it-works" className="border-b border-border py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>How it works</SectionLabel>
-          <SectionHeading>
-            From feedback to Pull Request in three steps
-          </SectionHeading>
+          <Reveal>
+            <SectionLabel>How it works</SectionLabel>
+            <SectionHeading>
+              From feedback to Pull Request in three steps
+            </SectionHeading>
+          </Reveal>
 
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-0">
+          <Reveal stagger className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-0">
             {[
               {
                 step: "01",
@@ -298,7 +342,7 @@ export default function LandingView() {
                 </p>
               </div>
             ))}
-          </div>
+          </Reveal>
 
           {/* Connector arrows for desktop */}
           <div className="hidden md:flex items-center justify-center gap-2 mt-8">
@@ -320,16 +364,18 @@ export default function LandingView() {
       {/* ─── WIDGET PREVIEW ───────────────────────────────────── */}
       <section id="widget" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>The widget</SectionLabel>
-          <SectionHeading>
-            Beautiful. Unobtrusive. Ready to go.
-          </SectionHeading>
-          <p className="mt-4 text-center text-sm text-muted-foreground max-w-lg mx-auto">
-            The widget uses a polished built-in terminal aesthetic, supports
-            dark and light mode, and shows submission history to your visitors.
-          </p>
+          <Reveal>
+            <SectionLabel>The widget</SectionLabel>
+            <SectionHeading>
+              Beautiful. Unobtrusive. Ready to go.
+            </SectionHeading>
+            <p className="mt-4 text-center text-sm text-muted-foreground max-w-lg mx-auto">
+              The widget uses a polished built-in terminal aesthetic, supports
+              dark and light mode, and shows submission history to your visitors.
+            </p>
+          </Reveal>
 
-          <div className="mt-14">
+          <Reveal className="mt-14">
             <div className="mx-auto w-full max-w-5xl overflow-hidden border border-border-bright bg-background shadow-2xl shadow-black/50">
               <div className="flex min-w-0 items-center gap-2 border-b border-border bg-surface px-3 py-3 sm:gap-3 sm:px-4">
                 <div className="flex shrink-0 items-center gap-2">
@@ -385,7 +431,7 @@ export default function LandingView() {
 
                 <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
 
-                <div className="absolute bottom-6 right-6 w-[min(440px,calc(100%-3rem))] border border-border-bright bg-background shadow-2xl shadow-black/60">
+                <div className="animate-float absolute bottom-6 right-6 w-[min(440px,calc(100%-3rem))] border border-border-bright bg-background shadow-2xl shadow-black/60">
                   <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <span className="text-sm font-bold uppercase tracking-widest text-accent">
                       Feedback
@@ -516,19 +562,24 @@ export default function LandingView() {
                 </div>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ─── FEATURES GRID ────────────────────────────────────── */}
       <section id="features" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>Features</SectionLabel>
-          <SectionHeading>
-            Everything you need. Nothing you don&apos;t.
-          </SectionHeading>
+          <Reveal>
+            <SectionLabel>Features</SectionLabel>
+            <SectionHeading>
+              Everything you need. Nothing you don&apos;t.
+            </SectionHeading>
+          </Reveal>
 
-          <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border">
+          <Reveal
+            stagger
+            className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border"
+          >
             {[
               {
                 icon: Bot,
@@ -569,9 +620,9 @@ export default function LandingView() {
             ].map((feature) => (
               <Card
                 key={feature.title}
-                className="border-0 bg-background p-8 hover:bg-surface-raised transition-colors"
+                className="group border-0 bg-background p-8 hover:bg-surface-raised transition-colors"
               >
-                <feature.icon className="h-5 w-5 text-accent mb-4" />
+                <feature.icon className="h-5 w-5 text-accent mb-4 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
                 <h3 className="text-sm font-bold uppercase tracking-wider">
                   {feature.title}
                 </h3>
@@ -580,23 +631,25 @@ export default function LandingView() {
                 </p>
               </Card>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ─── DASHBOARD PREVIEW ────────────────────────────────── */}
       <section id="dashboard-preview" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>Dashboard</SectionLabel>
-          <SectionHeading>
-            Every submission, tracked and visible
-          </SectionHeading>
-          <p className="mt-4 text-center text-sm text-muted-foreground max-w-lg mx-auto">
-            See real-time status for every feedback — from the moment it&apos;s
-            submitted to the moment the PR is merged.
-          </p>
+          <Reveal>
+            <SectionLabel>Dashboard</SectionLabel>
+            <SectionHeading>
+              Every submission, tracked and visible
+            </SectionHeading>
+            <p className="mt-4 text-center text-sm text-muted-foreground max-w-lg mx-auto">
+              See real-time status for every feedback — from the moment it&apos;s
+              submitted to the moment the PR is merged.
+            </p>
+          </Reveal>
 
-          <div className="mt-14 border border-border bg-background">
+          <Reveal className="mt-14 border border-border bg-background">
             {/* Mock dashboard header */}
             <div className="flex flex-col gap-3 border-b border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap items-center gap-2">
@@ -650,29 +703,34 @@ export default function LandingView() {
                 </div>
               ))}
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ─── EMBED CODE SECTION ───────────────────────────────── */}
       <section className="border-b border-border py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>Get started</SectionLabel>
-          <SectionHeading>One line. That&apos;s it.</SectionHeading>
-          <p className="mt-4 text-center text-sm text-muted-foreground max-w-lg mx-auto">
-            We generate a unique widget id for your site, then give you a script tag to paste into your HTML. The feedback widget appears automatically.
-          </p>
+          <Reveal>
+            <SectionLabel>Get started</SectionLabel>
+            <SectionHeading>One line. That&apos;s it.</SectionHeading>
+            <p className="mt-4 text-center text-sm text-muted-foreground max-w-lg mx-auto">
+              We generate a unique widget id for your site, then give you a script tag to paste into your HTML. The feedback widget appears automatically.
+            </p>
 
-          <div className="mt-10 w-full min-w-0 max-w-3xl mx-auto">
-            <EmbedSnippetCopy
-              code={EXAMPLE_EMBED}
-              copyable={false}
-              selectable={false}
-              centered
-            />
-          </div>
+            <div className="mt-10 w-full min-w-0 max-w-3xl mx-auto">
+              <EmbedSnippetCopy
+                code={EXAMPLE_EMBED}
+                copyable={false}
+                selectable={false}
+                centered
+              />
+            </div>
+          </Reveal>
 
-          <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+          <Reveal
+            stagger
+            className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto"
+          >
             {[
               { icon: Zap, text: "Loads async, zero performance hit" },
               {
@@ -692,7 +750,7 @@ export default function LandingView() {
                 {item.text}
               </div>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -794,10 +852,15 @@ export default function LandingView() {
       {/* ─── USE CASES ────────────────────────────────────────── */}
       <section id="use-cases" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>Who it&apos;s for</SectionLabel>
-          <SectionHeading>Built for agencies &amp; freelance devs</SectionHeading>
+          <Reveal>
+            <SectionLabel>Who it&apos;s for</SectionLabel>
+            <SectionHeading>Built for agencies &amp; freelance devs</SectionHeading>
+          </Reveal>
 
-          <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+          <Reveal
+            stagger
+            className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6"
+          >
             {[
               {
                 title: "Digital Agencies & Studios",
@@ -824,8 +887,11 @@ export default function LandingView() {
                 icon: MessageSquare,
               },
             ].map((uc) => (
-              <Card key={uc.title} className="p-6 hover:border-border-bright transition-colors">
-                <uc.icon className="h-5 w-5 text-accent mb-4" />
+              <Card
+                key={uc.title}
+                className="group p-6 transition-all duration-200 hover:border-border-bright hover:-translate-y-1"
+              >
+                <uc.icon className="h-5 w-5 text-accent mb-4 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
                 <h3 className="text-sm font-bold uppercase tracking-wider">
                   {uc.title}
                 </h3>
@@ -834,23 +900,25 @@ export default function LandingView() {
                 </p>
               </Card>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ─── PIPELINE VISUALIZATION ───────────────────────────── */}
       <section className="border-b border-border py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>Under the hood</SectionLabel>
-          <SectionHeading>
-            Every submission triggers a real dev pipeline
-          </SectionHeading>
-          <p className="mt-4 text-center text-sm text-muted-foreground max-w-xl mx-auto">
-            Each feedback submission triggers a complete development pipeline
-            running in an isolated cloud sandbox.
-          </p>
+          <Reveal>
+            <SectionLabel>Under the hood</SectionLabel>
+            <SectionHeading>
+              Every submission triggers a real dev pipeline
+            </SectionHeading>
+            <p className="mt-4 text-center text-sm text-muted-foreground max-w-xl mx-auto">
+              Each feedback submission triggers a complete development pipeline
+              running in an isolated cloud sandbox.
+            </p>
+          </Reveal>
 
-          <div className="mt-14 border border-border bg-surface">
+          <Reveal className="mt-14 border border-border bg-surface">
             {/* Terminal header */}
             <div className="flex items-center gap-2 border-b border-border px-4 py-3">
               <div className="flex gap-1.5">
@@ -863,8 +931,8 @@ export default function LandingView() {
               </span>
             </div>
 
-            {/* Pipeline steps */}
-            <div className="p-6 sm:p-8 space-y-0">
+            {/* Pipeline steps — lines "type in" one after another on scroll */}
+            <Reveal stagger className="p-6 sm:p-8 space-y-0">
               {[
                 {
                   prefix: "$",
@@ -948,18 +1016,23 @@ export default function LandingView() {
                 </span>
                 <span className="text-sm text-muted animate-blink">▌</span>
               </div>
-            </div>
-          </div>
+            </Reveal>
+          </Reveal>
         </div>
       </section>
 
       {/* ─── TECH STACK / TRUST ───────────────────────────────── */}
       <section className="border-b border-border py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>Powered by</SectionLabel>
-          <SectionHeading>Enterprise-grade infrastructure</SectionHeading>
+          <Reveal>
+            <SectionLabel>Powered by</SectionLabel>
+            <SectionHeading>Enterprise-grade infrastructure</SectionHeading>
+          </Reveal>
 
-          <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
+          <Reveal
+            stagger
+            className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border"
+          >
             {[
               {
                 name: "E2B Sandboxes",
@@ -984,9 +1057,9 @@ export default function LandingView() {
             ].map((tech) => (
               <div
                 key={tech.name}
-                className="bg-background p-8 flex flex-col items-center text-center"
+                className="group bg-background p-8 flex flex-col items-center text-center transition-colors hover:bg-surface-raised"
               >
-                <tech.icon className="h-6 w-6 text-accent mb-3" />
+                <tech.icon className="h-6 w-6 text-accent mb-3 transition-transform duration-200 group-hover:scale-110" />
                 <h3 className="text-sm font-bold uppercase tracking-wider">
                   {tech.name}
                 </h3>
@@ -995,22 +1068,27 @@ export default function LandingView() {
                 </p>
               </div>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ─── PRICING ──────────────────────────────────────────── */}
       <section id="pricing" className="border-b border-border bg-surface/50 py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>Pricing</SectionLabel>
-          <SectionHeading>Start free. Scale when ready.</SectionHeading>
-          <p className="mt-4 text-center text-sm text-muted-foreground max-w-md mx-auto">
-            No hidden fees. No usage surprises. Upgrade when you need more.
-          </p>
+          <Reveal>
+            <SectionLabel>Pricing</SectionLabel>
+            <SectionHeading>Start free. Scale when ready.</SectionHeading>
+            <p className="mt-4 text-center text-sm text-muted-foreground max-w-md mx-auto">
+              No hidden fees. No usage surprises. Upgrade when you need more.
+            </p>
+          </Reveal>
 
-          <div className="mt-14 grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <Reveal
+            stagger
+            className="mt-14 grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto"
+          >
             {/* Free tier */}
-            <div className="border border-border bg-background p-8 flex flex-col">
+            <div className="border border-border bg-background p-8 flex flex-col transition-all duration-200 hover:border-border-bright hover:-translate-y-1">
               <span className="text-xs uppercase tracking-widest text-muted mb-2">
                 Free
               </span>
@@ -1047,7 +1125,7 @@ export default function LandingView() {
             </div>
 
             {/* Pro tier */}
-            <div className="relative border border-accent bg-background p-8 flex flex-col">
+            <div className="relative border border-accent bg-background p-8 flex flex-col transition-all duration-200 hover:-translate-y-1">
               <div className="absolute -top-px left-0 right-0 h-[3px] bg-accent" />
               <span className="text-xs uppercase tracking-widest text-accent mb-2">
                 Pro
@@ -1084,7 +1162,7 @@ export default function LandingView() {
             </div>
 
             {/* Enterprise tier */}
-            <div className="border border-border bg-background p-8 flex flex-col">
+            <div className="border border-border bg-background p-8 flex flex-col transition-all duration-200 hover:border-border-bright hover:-translate-y-1">
               <span className="text-xs uppercase tracking-widest text-muted mb-2">
                 Enterprise
               </span>
@@ -1132,17 +1210,19 @@ export default function LandingView() {
                 Contact us
               </Link>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ─── FAQ ──────────────────────────────────────────────── */}
       <section id="faq" className="border-b border-border py-20 sm:py-28">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <SectionLabel>FAQ</SectionLabel>
-          <SectionHeading>Questions? Answers.</SectionHeading>
+          <Reveal>
+            <SectionLabel>FAQ</SectionLabel>
+            <SectionHeading>Questions? Answers.</SectionHeading>
+          </Reveal>
 
-          <div className="mt-14 max-w-3xl mx-auto space-y-px">
+          <Reveal stagger className="mt-14 max-w-3xl mx-auto space-y-px">
             <FAQItem
               question="Who is feedback2code for?"
               answer="Freelancers and agencies who build and maintain sites for clients. Your client leaves feedback on their live site, and it becomes a Pull Request in your repo that you review and merge. If you deliver client work on GitHub, it's built for you — it also works great for SaaS products, docs sites, and internal tools."
@@ -1171,7 +1251,7 @@ export default function LandingView() {
               question="Can I use this for private repositories?"
               answer="Yes! The GitHub App integration supports both public and private repositories. Just grant access during the installation flow."
             />
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -1179,31 +1259,34 @@ export default function LandingView() {
       <section className="relative overflow-hidden py-24 sm:py-32">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,107,0,0.08)_0%,transparent_60%)]" />
         <div className="relative mx-auto w-full max-w-6xl px-6 text-center">
-          <p className="text-xs uppercase tracking-[.2em] text-accent mb-6">
-            [ Ready? ]
-          </p>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
-            Stop chasing change requests.
-            <br />
-            <span className="text-accent">Start reviewing PRs.</span>
-          </h2>
-          <p className="mt-6 text-base text-muted-foreground max-w-md mx-auto">
-            Set up in under 3 minutes. Your first automated PR is one feedback
-            submission away.
-          </p>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Button
-              onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
-              size="lg"
-              className="cursor-pointer text-sm px-8"
-            >
-              <Github className="h-4 w-4" />
-              Get started for free
-            </Button>
-          </div>
-          <p className="mt-6 text-xs text-muted">
-            Free forever for small projects · No credit card required
-          </p>
+          <Reveal>
+            <p className="text-xs uppercase tracking-[.2em] text-accent mb-6">
+              [ Ready? ]
+            </p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
+              Stop chasing change requests.
+              <br />
+              <span className="text-accent">Start reviewing PRs.</span>
+            </h2>
+            <p className="mt-6 text-base text-muted-foreground max-w-md mx-auto">
+              Set up in under 3 minutes. Your first automated PR is one feedback
+              submission away.
+            </p>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+              <Button
+                onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+                size="lg"
+                className="group cursor-pointer text-sm px-8"
+              >
+                <Github className="h-4 w-4" />
+                Get started for free
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              </Button>
+            </div>
+            <p className="mt-6 text-xs text-muted">
+              Free forever for small projects · No credit card required
+            </p>
+          </Reveal>
         </div>
       </section>
 
