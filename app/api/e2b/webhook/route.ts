@@ -5,7 +5,7 @@ import { AGENT_LLM_USAGE_FILE, PR_URL_FILE } from "@/lib/feedback-agent/run-e2b-
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { Sandbox } from "e2b";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { sendPrCreatedEmail } from "@/lib/email/send-pr-created-email";
 import {
   revokeMinimaxProxyTokensForFeedback,
@@ -24,8 +24,18 @@ function dashboardPathForFeedback(repositoryConfigOwner: string, repositoryConfi
   return dashboardRepoPath(repositoryConfigOwner, repositoryConfigRepo);
 }
 
-function hmacSha256Hex(secret: string, rawBody: string): string {
-  return createHmac("sha256", secret).update(rawBody, "utf8").digest("hex");
+/** E2B lifecycle webhooks: SHA-256(secret + rawBody), base64, strip trailing `=`. */
+function verifyE2bWebhookSignature(
+  secret: string,
+  rawBody: string,
+  payloadSignature: string,
+): boolean {
+  const expectedSignatureRaw = createHash("sha256")
+    .update(secret + rawBody, "utf8")
+    .digest("base64");
+  const expectedSignature = expectedSignatureRaw.replace(/=+$/, "");
+  const provided = payloadSignature.replace(/=+$/, "");
+  return constantTimeEquals(expectedSignature, provided);
 }
 
 function constantTimeEquals(a: string, b: string): boolean {
@@ -38,9 +48,8 @@ function constantTimeEquals(a: string, b: string): boolean {
 
 function extractProvidedSignature(req: NextRequest): string | null {
   const headers = req.headers;
-  // E2B may use different header names depending on their webhook implementation.
-  // Try several common variations.
   return (
+    headers.get("e2b-signature") ??
     headers.get("x-e2b-signature") ??
     headers.get("x-e2b-signature-256") ??
     headers.get("x-e2b-webhook-signature") ??
@@ -413,15 +422,13 @@ export async function POST(request: NextRequest) {
       if (!providedSignature) {
         console.warn("[e2b webhook] missing signature header");
         if (strict) return NextResponse.json({ ok: false }, { status: 401 });
-      } else {
-        const normalizedProvided = providedSignature.replace(/^sha256=/i, "");
-        const computed = hmacSha256Hex(webhookSecret, rawBody);
-        if (!constantTimeEquals(normalizedProvided, computed)) {
-          console.warn("[e2b webhook] signature mismatch (continuing in dev):", {
-            strict,
-          });
-          if (strict) return NextResponse.json({ ok: false }, { status: 401 });
-        }
+      } else if (
+        !verifyE2bWebhookSignature(webhookSecret, rawBody, providedSignature)
+      ) {
+        console.warn("[e2b webhook] signature mismatch (continuing in dev):", {
+          strict,
+        });
+        if (strict) return NextResponse.json({ ok: false }, { status: 401 });
       }
     }
   }
