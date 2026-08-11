@@ -66,7 +66,7 @@ export function feedbackPipelineWrapperCmd(): string {
       unset GITHUB_APP_ID GITHUB_INSTALLATION_ID GITHUB_APP_PRIVATE_KEY GITHUB_APP_PRIVATE_KEY_FILE || true
 
       set +e
-      \"$OCMD\" run \"$(cat /home/user/feedback-prompt.txt)\" --model \"minimax/MiniMax-M2.5\"
+      \"$OCMD\" run \"$(cat /home/user/feedback-prompt.txt)\" --model \"minimax/MiniMax-M3\"
       OC_EXIT=$?
       set -e
       node /home/user/collect-opencode-usage.mjs || true
@@ -135,11 +135,11 @@ export async function writeFeedbackSandboxFiles(
           apiKey: params.minimaxProxy.apiKey,
         },
         models: {
-          "MiniMax-M2.5": { name: "MiniMax-M2.5" },
+          "MiniMax-M3": { name: "MiniMax-M3" },
         },
       },
     },
-    model: "minimax/MiniMax-M2.5",
+    model: "minimax/MiniMax-M3",
   };
 
   await sandbox.files.write(

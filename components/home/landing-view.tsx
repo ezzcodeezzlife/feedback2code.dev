@@ -1046,7 +1046,7 @@ export default function LandingView() {
               },
               {
                 name: "AI Agent",
-                detail: "Full codebase understanding",
+                detail: "OpenCode with MiniMax-M3",
                 icon: Bot,
               },
               {
@@ -1233,7 +1233,7 @@ export default function LandingView() {
             />
             <FAQItem
               question="Which LLM does the agent use?"
-              answer="The coding agent runs on OpenCode with MiniMax-M2.5, an open source model. Model selection will be configurable on higher tiers later."
+              answer="The coding agent runs on OpenCode with MiniMax-M3, an open source model. Model selection will be configurable on higher tiers later."
             />
             <FAQItem
               question="What happens if the agent makes a bad change?"

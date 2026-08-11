@@ -22,7 +22,7 @@ const LANDING_FAQ = [
   {
     question: "Which LLM does the agent use?",
     answer:
-      "The coding agent runs on OpenCode with MiniMax-M2.5, an open source model. Model selection will be configurable on higher tiers later.",
+      "The coding agent runs on OpenCode with MiniMax-M3, an open source model. Model selection will be configurable on higher tiers later.",
   },
   {
     question: "What happens if the agent makes a bad change?",

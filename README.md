@@ -29,7 +29,7 @@ Run the dev server on port 3000, then open either [http://localhost:3000](http:/
 
 ## Widget feedback automation (E2B + OpenCode)
 
-When someone submits feedback through the embed, the app schedules an [E2B](https://e2b.dev) sandbox that clones the GitHub repo, runs [OpenCode](https://opencode.ai) with **MiniMax**, pushes a branch, and opens a PR.
+When someone submits feedback through the embed, the app schedules an [E2B](https://e2b.dev) sandbox that clones the GitHub repo, runs [OpenCode](https://opencode.ai) with **MiniMax-M3**, pushes a branch, and opens a PR.
 
 GitHub auth stays **inside the sandbox**: the same **GitHub App** credentials (`GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`) are written into the VM only long enough to mint **installation tokens** (see `lib/feedback-agent/e2b/e2b-github.mjs`). The repo remote is scrubbed before OpenCode runs so the agent does not see tokens. PRs are created as your **GitHub App** bot.
 
