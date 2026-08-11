@@ -94,10 +94,11 @@ export default function HomeNextSeo() {
         applicationCategory="DeveloperApplication"
         operatingSystem="Any"
         featureList={[
+          "Feedback automation from website widget to GitHub pull request",
           "Embeddable feedback widget for websites",
           "GitHub App installation for repository access",
           "AI agent runs in an isolated sandbox",
-          "Opens Pull Requests for human review — no auto-merge to production",
+          "Opens Pull Requests for human review, no auto-merge to production",
           "Supports public and private GitHub repositories",
           "Free tier available without a credit card",
         ]}
@@ -118,7 +119,7 @@ export default function HomeNextSeo() {
       <HowToJsonLd
         scriptKey="howto-feedback-pr"
         name="From feedback to Pull Request"
-        description="Set up feedback2code, collect user feedback, and receive GitHub Pull Requests from the AI agent."
+        description="Set up feedback automation with feedback2code: collect website feedback and receive GitHub Pull Requests from the AI agent."
         totalTime="PT3M"
         step={[
           {

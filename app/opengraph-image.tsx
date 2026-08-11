@@ -2,8 +2,7 @@ import { ImageResponse } from "next/og";
 import { loadOgMonoFont } from "@/lib/og/og-mono-font";
 import { OgShareCard } from "@/lib/og/share-card";
 
-export const alt =
-  "feedback2code — Turn user feedback into code changes automatically";
+export const alt = "Website feedback automation that opens GitHub pull requests";
 
 export const size = { width: 1200, height: 630 };
 

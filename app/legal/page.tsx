@@ -7,7 +7,8 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Legal & Contact",
-  description: "Legal information and contact details for feedback2code.",
+  description:
+    "Terms, privacy details, and contact information for feedback2code.",
 };
 
 export default function LegalPage() {

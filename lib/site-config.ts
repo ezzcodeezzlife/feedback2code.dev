@@ -1,14 +1,18 @@
 export const SITE_NAME = "feedback2code";
 
+/** Default / OG / meta description (~155 chars). Lead with the target query. */
 export const SITE_DESCRIPTION =
-  "Turn user feedback into code changes — automatically";
+  "Feedback automation for websites: embed a widget, collect user feedback, and let an AI agent open GitHub pull requests you review before anything ships.";
 
-/** Full `<title>` / share title for the marketing home page (search + tabs + OG). */
-export const SITE_PAGE_TITLE = `${SITE_NAME} — Website feedback widget & AI agent that opens GitHub pull requests`;
+/**
+ * Marketing home title. Exact-match query first; brand via root title template.
+ * Full SERP title: "{SITE_PAGE_TITLE} | feedback2code"
+ */
+export const SITE_PAGE_TITLE = "Feedback Automation That Opens GitHub PRs";
 
-/** Hero-style blurb for JSON-LD / sharing. */
+/** Longer blurb for JSON-LD / SoftwareApplication structured data. */
 export const SITE_LONG_DESCRIPTION =
-  "Embed a feedback widget on your site. An AI coding agent reads your codebase, implements changes in a secure sandbox, and opens Pull Requests on GitHub — nothing ships without your review.";
+  "Feedback automation that turns user reports into code. Embed a widget on your site, collect bug reports and ideas, and let an AI coding agent open GitHub pull requests you review before anything ships.";
 
 export function getSiteOrigin(): string {
   return (

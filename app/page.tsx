@@ -4,7 +4,6 @@ import LandingView from "@/components/home/landing-view";
 import HomeNextSeo from "@/components/seo/home-next-seo";
 import {
   SITE_DESCRIPTION,
-  SITE_LONG_DESCRIPTION,
   SITE_NAME,
   SITE_PAGE_TITLE,
   absoluteUrl,
@@ -14,23 +13,21 @@ import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: SITE_PAGE_TITLE,
-  description: SITE_LONG_DESCRIPTION,
+  description: SITE_DESCRIPTION,
   keywords: [
-    "feedback",
-    "user feedback",
-    "AI coding agent",
-    "GitHub",
-    "Pull Request",
-    "automation",
-    "developer tools",
-    "feedback widget",
-    "code changes",
-    "MiniMax",
-    "sandbox",
+    "feedback automation",
+    "website feedback automation",
+    "automate user feedback",
+    "feedback to pull request",
+    "website feedback widget",
+    "AI feedback agent",
+    "GitHub pull requests from feedback",
+    "bug report automation",
+    "embeddable feedback widget",
   ],
   alternates: { canonical: "/" },
   openGraph: {
-    title: SITE_PAGE_TITLE,
+    title: `${SITE_PAGE_TITLE} | ${SITE_NAME}`,
     description: SITE_DESCRIPTION,
     url: "/",
     siteName: SITE_NAME,
@@ -47,7 +44,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: SITE_PAGE_TITLE,
+    title: `${SITE_PAGE_TITLE} | ${SITE_NAME}`,
     description: SITE_DESCRIPTION,
     images: [absoluteUrl("/twitter-image")],
   },

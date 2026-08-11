@@ -16,23 +16,25 @@ const geistMono = Geist_Mono({
 });
 
 const siteUrl = getSiteOrigin();
-const title = SITE_NAME;
 const description = SITE_DESCRIPTION;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title,
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
   description,
   openGraph: {
-    title,
+    title: SITE_NAME,
     description,
     url: "/",
-    siteName: title,
+    siteName: SITE_NAME,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title,
+    title: SITE_NAME,
     description,
   },
 };

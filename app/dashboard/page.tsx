@@ -6,14 +6,14 @@ import DashboardView from "@/components/home/dashboard-view";
 import type { InstalledRepo } from "@/lib/github-app";
 import { getInstallationRepositories } from "@/lib/github-app";
 import { prisma } from "@/lib/prisma";
-import { SITE_NAME, SITE_PAGE_TITLE } from "@/lib/site-config";
+import { SITE_NAME } from "@/lib/site-config";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: `Dashboard — ${SITE_PAGE_TITLE}`,
+  title: "Dashboard",
   robots: { index: false, follow: false },
-  openGraph: { title: `Dashboard — ${SITE_NAME}`, url: "/dashboard" },
+  openGraph: { title: `Dashboard | ${SITE_NAME}`, url: "/dashboard" },
 };
 
 export default async function DashboardPage() {

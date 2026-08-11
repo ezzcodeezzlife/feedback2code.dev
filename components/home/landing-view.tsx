@@ -224,10 +224,10 @@ export default function LandingView() {
 
           <StaggerChild delay={200}>
             <p className="mt-6 max-w-xl text-center text-base sm:text-lg leading-relaxed text-muted-foreground">
-              Built for agencies and freelancers: drop one script tag on a
-              client&apos;s site, and their feedback becomes reviewable code in{" "}
-              <span className="text-foreground">your</span>{" "}repo —
-              automatically, while you get on with real work.
+              Feedback automation for agencies and freelancers: drop one script
+              tag on a client&apos;s site, and their feedback becomes reviewable
+              code in <span className="text-foreground">your</span> repo while
+              you get on with real work.
             </p>
           </StaggerChild>
 

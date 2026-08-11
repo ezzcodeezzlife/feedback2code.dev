@@ -8,7 +8,7 @@ import {
   dashboardRepoConfigurePath,
 } from "@/lib/app-paths";
 import { prisma } from "@/lib/prisma";
-import { SITE_NAME, SITE_PAGE_TITLE } from "@/lib/site-config";
+import { SITE_NAME } from "@/lib/site-config";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -28,10 +28,10 @@ export async function generateMetadata({
   const { owner, repo } = await params;
   const label = owner && repo ? `${owner}/${repo}` : "Repository";
   return {
-    title: `${label} — Feedbacks — ${SITE_PAGE_TITLE}`,
+    title: `${label} feedbacks`,
     robots: { index: false, follow: false },
     openGraph: {
-      title: `${label} — Feedbacks — ${SITE_NAME}`,
+      title: `${label} feedbacks | ${SITE_NAME}`,
     },
   };
 }
