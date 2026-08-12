@@ -44,6 +44,7 @@ stripe_backup_code.txt
 
 # Personal / local-only (not part of the public product)
 /outreach/
+/todo.txt
 
 # Built from .env.* on prebuild/predev (required on Vercel — serverless bundle has no .env files).
 /lib/generated/server-env.ts
