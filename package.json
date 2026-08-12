@@ -7,7 +7,7 @@
     "predev": "prisma generate && node scripts/generate-server-env.mjs --development",
     "prebuild": "node scripts/generate-server-env.mjs --production",
     "dev": "next dev",
-    "build": "dotenv -e .env.production -- prisma migrate deploy && next build",
+    "build": "node scripts/prisma-migrate-deploy.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "billing:setup-stripe": "dotenv -e .env.development -- node scripts/setup-stripe-plans.mjs",

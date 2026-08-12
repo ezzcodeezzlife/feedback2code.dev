@@ -4,20 +4,22 @@ Turn website feedback into production-ready pull requests. Embed a lightweight c
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app). 
 
-## Environment (two files)
+## Environment
+
+Copy [`.env.example`](./.env.example) to **gitignored** local files:
 
 | File | When it loads |
 |------|----------------|
-| [`.env.development`](./.env.development) | `npm run dev` |
-| [`.env.production`](./.env.production) | `npm run build` and Vercel production builds |
+| `.env.development` | `npm run dev` |
+| `.env.production` | Local `npm run build` / scripts that use production config |
 
-Do not add `.env`, `.env.local`, or other dotenv files: Next would load them and override `.env.development` / `.env.production`.
+Do not commit real secrets. Do not add `.env`, `.env.local`, or other dotenv files: Next would load them and override `.env.development` / `.env.production`.
 
-**Vercel:** Dashboard [Environment Variables](https://vercel.com/docs/projects/environment-variables) override repo env files. To use only `.env.production`, clear duplicate keys from the Vercel project (or leave the dashboard empty).
+**Vercel:** Set the same keys in the project [Environment Variables](https://vercel.com/docs/projects/environment-variables) (Production / Preview as needed). The repo does not ship `.env.production`.
 
-**Prisma:** `npm run build` runs `prisma migrate deploy` with [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) so `DATABASE_URL` is read from `.env.production`. For local migrations use `npm run migrate:dev`.
+**Prisma:** `npm run build` runs `prisma migrate deploy` (loads `.env.production` when present locally; on Vercel uses `DATABASE_URL` from the host). For local migrations use `npm run migrate:dev`.
 
-**Vercel / serverless:** Deployed Lambdas often do not ship `.env*` files, so `prebuild` / `predev` runs [`scripts/generate-server-env.mjs`](./scripts/generate-server-env.mjs) and writes `lib/generated/server-env.ts` (gitignored). That module assigns `process.env` at import time so NextAuth and Prisma always see secrets inside the server bundle.
+**Local serverless-shaped env:** `prebuild` / `predev` runs [`scripts/generate-server-env.mjs`](./scripts/generate-server-env.mjs) and writes `lib/generated/server-env.ts` (gitignored). If a local `.env.*` exists, that module injects into `process.env`; if not (e.g. Vercel), it writes a stub and the host env is used as-is.
 
 ## Getting Started
 
@@ -25,7 +27,7 @@ Do not add `.env`, `.env.local`, or other dotenv files: Next would load them and
 npm run dev
 ```
 
-Run the dev server on port 3000, then open either [http://localhost:3000](http://localhost:3000) or your **TryCloudflare** URL. [`.env.development`](./.env.development) sets `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` to that tunnel so GitHub OAuth matches; if the tunnel hostname changes, update those two values and `allowedDevOrigins` in `next.config.ts`.
+Run the dev server on port 3000, then open either [http://localhost:3000](http://localhost:3000) or your **TryCloudflare** URL. Your local `.env.development` should set `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` to that tunnel so GitHub OAuth matches; if the tunnel hostname changes, update those two values and `allowedDevOrigins` in `next.config.ts`.
 
 ## Widget feedback automation (E2B + OpenCode)
 
@@ -33,7 +35,7 @@ When someone submits feedback through the embed, the app schedules an [E2B](http
 
 GitHub auth stays **inside the sandbox**: the same **GitHub App** credentials (`GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`) are written into the VM only long enough to mint **installation tokens** (see `lib/feedback-agent/e2b/e2b-github.mjs`). The repo remote is scrubbed before OpenCode runs so the agent does not see tokens. PRs are created as your **GitHub App** bot.
 
-Set these **server-only** variables (see `.env.development` / `.env.production`):
+Set these **server-only** variables (local `.env.*` and/or Vercel):
 
 - `E2B_API_KEY`
 - `E2B_FEEDBACK_SANDBOX_TEMPLATE` (optional; defaults to `feedback2code-agent`)
@@ -51,7 +53,7 @@ Set these **server-only** variables (see `.env.development` / `.env.production`)
 
 ## Deploy on Vercel
 
-See [Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying). Production env comes from [`.env.production`](./.env.production) during `next build`. Database migrations run in `npm run build` (`prisma migrate deploy`).
+See [Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying). Production env comes from Vercel Environment Variables. Database migrations run in `npm run build` (`prisma migrate deploy`).
 
 ## Stripe subscriptions (Free + Pro)
 
@@ -95,6 +97,6 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 
 3. **Signing secret** — Each endpoint has its **own** `whsec_...`. Put the secret for the endpoint you keep into `STRIPE_WEBHOOK_SECRET` (if you delete/recreate the endpoint, the secret changes).
 4. **Customer portal** — For “Manage billing” to work, enable the portal in test mode [here](https://dashboard.stripe.com/test/settings/billing/portal) and in live mode [here](https://dashboard.stripe.com/settings/billing/portal).
-5. **Production webhook URL** — `https://feedback2code.dev/api/stripe/webhook` (use the live endpoint’s signing secret in `.env.production`).
+5. **Production webhook URL** — `https://feedback2code.dev/api/stripe/webhook` (use the live endpoint’s signing secret in Vercel / local `.env.production`).
 
-Use **test** Stripe keys in `.env.development` and **live** keys in `.env.production` (`STRIPE_SECRET_KEY`, `STRIPE_PRO_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`). Until live keys are set in `.env.production`, checkout and webhooks will not work in production.
+Use **test** Stripe keys in local `.env.development` and **live** keys in Vercel Production (and local `.env.production` if you build against prod) — `STRIPE_SECRET_KEY`, `STRIPE_PRO_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`. Until live keys are set on Vercel, checkout and webhooks will not work in production.

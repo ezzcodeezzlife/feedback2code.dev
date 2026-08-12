@@ -30,15 +30,20 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Only `.env.development` and `.env.production` are used. Ignore ad-hoc copies so they are never committed.
+# Local secrets — never commit. Use `.env.example` as the template.
 .env
 .env.local
+.env.development
 .env.development.local
 .env.test.local
+.env.production
 .env.production.local
 # E2B CLI access token for `npm run e2b:build-feedback-template` only (not used by Next).
 .env.e2b.cli
 stripe_backup_code.txt
+
+# Personal / local-only (not part of the public product)
+/outreach/
 
 # Built from .env.* on prebuild/predev (required on Vercel — serverless bundle has no .env files).
 /lib/generated/server-env.ts
