@@ -47,6 +47,12 @@ stripe_backup_code.txt
 /outreach/
 /todo.txt
 
+# Local Prisma SQLite (dev only; production uses Postgres via DATABASE_URL)
+/prisma/*.db
+/prisma/*.db-journal
+/prisma/*.db-shm
+/prisma/*.db-wal
+
 # Built from .env.* on prebuild/predev (required on Vercel — serverless bundle has no .env files).
 /lib/generated/server-env.ts
 
