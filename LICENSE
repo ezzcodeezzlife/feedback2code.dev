@@ -1,0 +1,82 @@
+Copyright (c) 2026 Fabian Stehle. All rights reserved.
+
+PROPRIETARY SOFTWARE LICENSE
+
+This software and its source code (the "Software") are the proprietary and
+confidential property of Fabian Stehle (the "Owner"). The Software is made
+visible for the sole purposes of reference, evaluation, and transparency.
+
+It is NOT open source software.
+
+1. NO LICENSE GRANTED
+
+   No license, right, or permission is granted to any person or entity to use,
+   copy, reproduce, modify, adapt, translate, merge, publish, distribute,
+   redistribute, sublicense, sell, rent, lease, host, deploy, or create
+   derivative works from the Software, in whole or in part, in any form or by
+   any means, whether for commercial or non-commercial purposes.
+
+   Viewing the Software in this repository does not grant any of the rights
+   listed above. All rights are expressly reserved by the Owner.
+
+2. SPECIFICALLY PROHIBITED
+
+   Without the Owner's prior written permission, you may not:
+
+   a) copy, clone, fork, mirror, or otherwise reproduce the Software or any
+      portion of it, except for the transient copies your web browser or git
+      client creates incidentally while viewing this repository;
+   b) run or deploy the Software, or operate it as a product or service;
+   c) use the Software, or any part of its code, design, structure, or
+      architecture, in any other project, whether your own or a third party's;
+   d) build, publish, or operate a product or service that is derived from,
+      substantially similar to, or competitive with the Software;
+   e) use the Software to train, fine-tune, evaluate, or otherwise develop any
+      machine learning model, dataset, or artificial intelligence system;
+   f) remove, obscure, or alter any copyright, trademark, or other proprietary
+      notice contained in the Software.
+
+3. TRADEMARKS AND BRANDING
+
+   "feedback2code" and all associated names, logos, designs, and branding are
+   trademarks of the Owner. No right or license to use them is granted by this
+   license.
+
+4. THIRD-PARTY COMPONENTS
+
+   The Software depends on third-party packages that are distributed under
+   their own separate licenses. Those licenses govern those components only,
+   and nothing in this license alters them. This license applies exclusively to
+   the original code authored by the Owner and contained in this repository.
+
+5. CONTRIBUTIONS
+
+   Unsolicited contributions are not invited. If you nevertheless submit any
+   contribution, suggestion, or material to the Owner, you irrevocably assign
+   all right, title, and interest in it to the Owner, free of charge and
+   without any obligation on the Owner's part.
+
+6. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NONINFRINGEMENT.
+
+7. LIMITATION OF LIABILITY
+
+   IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
+   FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OF OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+8. ENFORCEMENT AND TERMINATION
+
+   Any use of the Software outside the terms of this license is unauthorized
+   and constitutes infringement of the Owner's copyright and other rights. The
+   Owner reserves all available legal and equitable remedies. Any permission
+   the Owner grants may be revoked at any time.
+
+9. LICENSING ENQUIRIES
+
+   To request permission for any use of the Software, contact the Owner at
+   https://www.feedback2code.dev.

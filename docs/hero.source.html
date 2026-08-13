@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    --background:#000000; --foreground:#ededed; --accent:#ff6b00;
+    --surface:#0a0a0a; --border:#222222; --border-bright:#333333;
+    --muted:#888888; --muted-foreground:#a0a0a0;
+  }
+  html,body{ width:1200px; height:500px; }
+  body{
+    background:var(--background); color:var(--foreground);
+    font-family:"Geist Mono","JetBrains Mono","Fira Code",Menlo,ui-monospace,monospace;
+    position:relative; overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  /* radial accent glow — matches hero */
+  .glow{ position:absolute; inset:0;
+    background:radial-gradient(ellipse at center, rgba(255,107,0,0.09) 0%, transparent 70%); }
+  /* 60px accent grid at 4% */
+  .grid{ position:absolute; inset:0; opacity:.04;
+    background-image:
+      linear-gradient(rgba(255,107,0,.15) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,107,0,.15) 1px, transparent 1px);
+    background-size:60px 60px; }
+  /* CRT scanlines */
+  .scan{ position:absolute; inset:0; pointer-events:none;
+    background-image:repeating-linear-gradient(0deg,
+      rgba(255,255,255,.028) 0px, rgba(255,255,255,.028) 1px,
+      transparent 1px, transparent 3px); }
+  /* vignette so edges sit calmly in the README */
+  .vig{ position:absolute; inset:0;
+    background:radial-gradient(ellipse 120% 90% at center, transparent 55%, rgba(0,0,0,.85) 100%); }
+
+  .wrap{ position:relative; flex:1;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:0 90px; }
+
+  .badge{ display:inline-flex; align-items:center; gap:10px;
+    border:1px solid var(--border-bright); background:rgba(10,10,10,.6);
+    padding:7px 14px; font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--muted-foreground); margin-bottom:30px; }
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent);
+    box-shadow:0 0 8px 1px rgba(255,107,0,.7); }
+
+  h1{ text-align:center; font-size:57px; font-weight:700;
+    letter-spacing:-.035em; line-height:1.12; }
+  h1 .accent{ color:var(--accent); }
+
+  .sub{ margin-top:26px; max-width:660px; text-align:center;
+    font-size:16px; line-height:1.65; color:var(--muted-foreground); }
+  .sub b{ color:var(--foreground); font-weight:500; }
+
+  /* pipeline: the product in one line */
+  .pipe{ margin-top:38px; display:flex; align-items:center; gap:16px;
+    font-size:12.5px; letter-spacing:.05em; color:var(--muted); }
+  .step{ display:inline-flex; align-items:center; gap:9px;
+    border:1px solid var(--border); background:var(--surface);
+    padding:9px 15px; }
+  .step .ic{ font-size:13px; line-height:1; }
+  .step.on{ border-color:rgba(255,107,0,.45); color:var(--accent); }
+  .arrow{ color:var(--border-bright); font-size:13px; }
+
+  /* bottom stat strip, mirrors the site's stats section */
+  .stats{ position:relative; display:flex; border-top:1px solid var(--border);
+    background:var(--surface); }
+  .stat{ flex:1; text-align:center; padding:17px 0; }
+  .stat + .stat{ border-left:1px solid var(--border); }
+  .stat .v{ font-size:15px; font-weight:700; color:var(--foreground); }
+  .stat .l{ margin-top:3px; font-size:10.5px; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--muted); }
+</style>
+</head>
+<body>
+  <div class="glow"></div><div class="grid"></div><div class="scan"></div><div class="vig"></div>
+
+  <div class="wrap">
+    <div class="badge"><span class="dot"></span>For freelancers &amp; agencies</div>
+
+    <h1>Your client describes it.<br><span class="accent">The PR writes itself.</span></h1>
+
+    <p class="sub">Drop one script tag on a client&rsquo;s site &mdash; their feedback becomes
+      reviewable code in <b>your</b> repo.</p>
+
+    <div class="pipe">
+      <span class="step"><span class="ic">&#9679;</span>Client feedback</span>
+      <span class="arrow">&#10230;</span>
+      <span class="step"><span class="ic">&#9636;</span>AI coding agent</span>
+      <span class="arrow">&#10230;</span>
+      <span class="step on"><span class="ic">&#10138;</span>Pull request</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v">1 line</div><div class="l">of code to embed</div></div>
+    <div class="stat"><div class="v">&lt; 3 min</div><div class="l">setup time</div></div>
+    <div class="stat"><div class="v">Auto PRs</div><div class="l">from feedback to code</div></div>
+  </div>
+</body>
+</html>
