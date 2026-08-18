@@ -3,205 +3,140 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/license-proprietary-ff6b00?style=flat-square" alt="License: Proprietary">
+  <a href="https://www.feedback2code.dev"><img src="https://img.shields.io/badge/cloud-feedback2code.dev-ff6b00?style=flat-square" alt="Cloud: feedback2code.dev"></a>
+  <img src="https://img.shields.io/badge/license-proprietary-111111?style=flat-square" alt="License: Proprietary">
   <img src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs" alt="Next.js 16">
   <img src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/agent-OpenCode%20%2B%20MiniMax--M3-ff6b00?style=flat-square" alt="OpenCode + MiniMax-M3">
 </p>
 
+<h1 align="center">feedback2code</h1>
+
+<p align="center">
+  <strong>Your client describes it. The PR writes itself.</strong>
+</p>
+
+<p align="center">
+  Feedback automation for agencies and freelancers.<br>
+  One script tag on a client site. Their request becomes a pull request in <em>your</em> repo.
+</p>
+
+<p align="center">
+  <a href="https://www.feedback2code.dev"><strong>Use the cloud version →</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://www.feedback2code.dev">feedback2code.dev</a>
+</p>
+
 ---
 
-**Turn website feedback into production-ready pull requests.**
+## Use it (cloud)
 
-Embed a lightweight chat widget on a client's site to collect their input. Each
-submission is handed to an AI coding agent that clones your repo, makes the
-change, and opens a pull request for you to review.
+The product lives at **[www.feedback2code.dev](https://www.feedback2code.dev)**.
 
-Built for agencies and freelance developers who maintain sites for clients and
-would rather review a diff than decode an email.
+That is the hosted version: GitHub login, dashboard, widget, billing, and the
+agent that turns feedback into PRs. Free tier, no credit card, under three
+minutes to first setup.
+
+| | |
+|---|---|
+| **Start** | [www.feedback2code.dev](https://www.feedback2code.dev) → **Start for free** (GitHub) |
+| **Plans** | Free: 10 submissions / 30 days · Pro: 100 / 30 days |
+| **You keep** | Review and merge. Nothing ships without you. |
+
+This repository is the **source** of that product — published so you can see
+how it works. It is **not** a self-host kit and **not** open source. If you
+want feedback2code, use the [cloud](https://www.feedback2code.dev).
+
+## What it does
+
+You ship sites for clients. They email screenshots, Slack you “can the button
+be blue?”, and you spend the afternoon translating that into a commit.
+
+feedback2code puts a small chat widget on the live site. The client describes
+the change in their own words. An isolated coding agent clones the repo,
+implements it, and opens a pull request. You review the diff like any other PR.
+
+Works on public and private GitHub repos. The widget is one script tag — no
+framework, no build step on the client site.
 
 ## How it works
 
-1. **One script tag.** Drop the embed snippet on any client site — no framework, no build step.
-2. **Isolated execution.** Feedback schedules an [E2B](https://e2b.dev) sandbox (2 vCPU, 2 GiB) that clones the target repo.
-3. **The agent works.** [OpenCode](https://opencode.ai) running **MiniMax-M3** implements the request inside the VM.
-4. **You review.** A branch is pushed and a PR opened by your GitHub App bot. Nothing merges itself.
+1. **Embed.** Drop the snippet on any client site.
+2. **Sandbox.** Feedback schedules an [E2B](https://e2b.dev) VM (2 vCPU, 2 GiB) that clones the target repo. The sandbox has no public internet.
+3. **Agent.** [OpenCode](https://opencode.ai) with **MiniMax-M3** implements the request inside the VM.
+4. **PR.** Your GitHub App bot pushes a branch and opens a pull request. You review, merge, or close.
+
+GitHub credentials never stay in the agent’s environment: the sandbox mints
+short-lived installation tokens, then scrubs the remote before OpenCode runs.
+See [`lib/feedback-agent/e2b/e2b-github.mjs`](./lib/feedback-agent/e2b/e2b-github.mjs).
+
+## Who it’s for
+
+Freelancers and agencies who maintain client sites on GitHub and would rather
+review a diff than decode an email. It also fits SaaS products, docs sites, and
+internal tools — anywhere “change this on the live site” should become a PR.
+
+The agent does not push to production. A bad change is a closed pull request.
 
 ## Stack
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 16 (App Router), React 19, TypeScript (strict) |
-| Styling | Tailwind CSS 4, Geist Mono, dark terminal aesthetic |
-| Auth | NextAuth (GitHub OAuth) + GitHub App installation |
-| Database | PostgreSQL via Prisma |
-| Agent runtime | E2B sandboxes + OpenCode + MiniMax-M3 |
+| App | Next.js 16 (App Router), React 19, TypeScript (strict) |
+| UI | Tailwind CSS 4, Geist Mono |
+| Auth | NextAuth (GitHub OAuth) + GitHub App |
+| Data | PostgreSQL, Prisma |
+| Agent | E2B sandboxes, OpenCode, MiniMax-M3 |
 | Billing | Stripe (Free / Pro) |
 | Email | Resend |
-| Hosting | Vercel |
+| Hosting | Vercel — the live app is [feedback2code.dev](https://www.feedback2code.dev) |
 
-## Getting started
+## This repository
 
-```bash
-npm install
-npm run dev
-```
+Source-available for **reference and transparency**. See [LICENSE](./LICENSE).
 
-Then open [http://localhost:3000](http://localhost:3000) or your **TryCloudflare** tunnel URL.
+You may read the code. You may not copy, modify, deploy, redistribute, or reuse
+it, and you may not use it to train AI models. Running your own instance is not
+permitted. Use the [cloud](https://www.feedback2code.dev), or
+[get in touch](https://www.feedback2code.dev/legal) about licensing.
 
-Your local `.env.development` should point `NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL`
-at that tunnel so GitHub OAuth matches. If the tunnel hostname changes, update
-those two values plus `allowedDevOrigins` in `next.config.ts`.
+<details>
+<summary><strong>Reading the source</strong> — env layout, GitHub App URLs, E2B template, Stripe</summary>
 
-## Environment
+Local files: copy [`.env.example`](./.env.example) to gitignored
+`.env.development` / `.env.production`. Do not commit secrets. Do not add
+`.env` or `.env.local` — Next would load them and override the others.
 
-Copy [`.env.example`](./.env.example) to **gitignored** local files:
-
-| File | When it loads |
-|------|----------------|
-| `.env.development` | `npm run dev` |
-| `.env.production` | Local `npm run build` / scripts using production config |
-
-> **Never commit real secrets.** Do not add `.env` or `.env.local` — Next would
-> load them and override `.env.development` / `.env.production`.
-
-**Vercel:** set the same keys under [Environment Variables](https://vercel.com/docs/projects/environment-variables)
-(Production / Preview as needed). This repo does not ship `.env.production`.
-
-**Prisma:** `npm run build` runs `prisma migrate deploy` (loads `.env.production`
-locally; uses the host's `DATABASE_URL` on Vercel). For local migrations run
-`npm run migrate:dev`.
-
-**Local serverless-shaped env:** `prebuild` / `predev` runs
-[`scripts/generate-server-env.mjs`](./scripts/generate-server-env.mjs), writing the
-gitignored `lib/generated/server-env.ts`. If a local `.env.*` exists it injects into
-`process.env`; otherwise it writes a stub and the host env is used as-is.
-
-## Widget feedback automation
-
-When feedback arrives, the app schedules an E2B sandbox that clones the repo, runs
-OpenCode with MiniMax-M3, pushes a branch, and opens a PR.
-
-GitHub auth stays **inside the sandbox**: the GitHub App credentials
-(`GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`) are written into the VM only long enough
-to mint **installation tokens** — see
-[`lib/feedback-agent/e2b/e2b-github.mjs`](./lib/feedback-agent/e2b/e2b-github.mjs).
-The remote is scrubbed before OpenCode runs, so the agent never sees tokens. PRs are
-authored by your GitHub App bot.
-
-Required **server-only** variables:
-
-- `E2B_API_KEY`
-- `E2B_FEEDBACK_SANDBOX_TEMPLATE` (optional; defaults to `feedback2code-agent`)
-- `MINIMAX_API_KEY`
-- GitHub App credentials (`GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, plus the rest used by the dashboard install flow)
-
-Users must complete the **GitHub App install** so `githubInstallationId` is stored —
-it selects which installation to mint tokens for.
-
-### E2B sandbox template (once per team)
-
-Sandboxes use a custom template `feedback2code-agent` (2 vCPU, 2048 MiB, Node 20,
-OpenCode preinstalled) — see
-[`e2b/feedback-agent/e2b.Dockerfile`](./e2b/feedback-agent/e2b.Dockerfile).
-
-Publishing needs an **access token**, not just the API key:
-
-```bash
-cp .env.e2b.cli.example .env.e2b.cli   # add E2B_ACCESS_TOKEN
-npm run e2b:build-feedback-template
-```
-
-Get the token from the [E2B API key docs](https://e2b.dev/docs/api-key), or run
-`npx @e2b/cli auth login` interactively first. At runtime, hosts only need
-`E2B_API_KEY` + `E2B_FEEDBACK_SANDBOX_TEMPLATE`.
-
-### GitHub App URLs
-
-Use the same origin as `NEXT_PUBLIC_APP_URL`:
+GitHub App URLs use the same origin as `NEXT_PUBLIC_APP_URL`:
 
 | Setting | Value |
 |---|---|
-| Setup URL | `{origin}/api/github/setup` (GitHub appends `installation_id`) |
-| Callback URL | `{origin}/api/github/callback`, or the setup URL directly |
-| Webhook (optional) | `{origin}/api/github/webhook` — put the secret in `GITHUB_APP_WEBHOOK_SECRET` |
+| Setup URL | `{origin}/api/github/setup` |
+| Callback | `{origin}/api/github/callback` |
+| Webhook (optional) | `{origin}/api/github/webhook` |
 
-<details>
-<summary><strong>Troubleshooting: push/PR fails with <code>403</code> or <code>Permission … denied to …[bot]</code></strong></summary>
+Sandbox image: [`e2b/feedback-agent/e2b.Dockerfile`](./e2b/feedback-agent/e2b.Dockerfile)
+(`feedback2code-agent`, Node 20, OpenCode preinstalled). Production hosts need
+`E2B_API_KEY` and optionally `E2B_FEEDBACK_SANDBOX_TEMPLATE`.
 
-The app is recognized but cannot write to that repo. In
-[GitHub App settings](https://github.com/settings/apps) → your app → **Permissions**,
-set **Repository permissions → Contents** and **Pull requests** to **Read and write**,
-save, then reinstall the app (GitHub prompts to accept new permissions).
+Stripe webhook: `POST /api/stripe/webhook` on the cloud origin
+`https://www.feedback2code.dev/api/stripe/webhook`. Events:
+`checkout.session.completed`, `customer.subscription.created`,
+`customer.subscription.updated`, `customer.subscription.deleted`.
 
-On the install screen choose **All repositories**, or ensure every repo you add in the
-dashboard is checked. For organization repos, an org admin may need to approve the app
-under **Organization settings → Third-party access**.
+If a GitHub App push returns `403` / `Permission denied to …[bot]`, set
+**Contents** and **Pull requests** to Read and write, then reinstall the app
+on the repos you use.
 
-</details>
-
-<details>
-<summary><strong>Vercel / serverless timeouts</strong></summary>
-
-`next/server`'s `after()` still runs under your function **max duration** (often
-10–60s on Hobby/Pro). A full agent run can take many minutes. For production, host
-where timeouts are long, or move `runE2bFeedbackAgent` behind a queue/worker
-(Inngest, Trigger.dev, a small Railway service).
+`next/server` `after()` still counts against the function max duration. A full
+agent run can take minutes; production uses a host (or queue) that can wait.
 
 </details>
-
-## Billing
-
-Two plans, enforced on a rolling 30-day window:
-
-| Plan | Feedback submissions |
-|---|---|
-| `FREE` | 10 / 30 days |
-| `PRO` | 100 / 30 days |
-
-Required server env: `STRIPE_SECRET_KEY`, `STRIPE_PRO_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`.
-
-Create products and prices, then copy the printed `price_...` into `STRIPE_PRO_PRICE_ID`:
-
-```bash
-npm run billing:setup-stripe
-```
-
-Webhook endpoint is `POST /api/stripe/webhook`. Locally:
-
-```bash
-stripe listen --forward-to localhost:3000/api/stripe/webhook
-```
-
-<details>
-<summary><strong>Stripe Dashboard checklist</strong></summary>
-
-1. **One webhook only.** Two destinations on the same URL make Stripe deliver every event **twice**. Keep a single endpoint for `/api/stripe/webhook`.
-2. **Events to send** (these four are enough):
-   - `checkout.session.completed`
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-3. **Signing secret.** Each endpoint has its own `whsec_...`. Use the one for the endpoint you keep — deleting and recreating an endpoint changes it.
-4. **Customer portal.** Required for "Manage billing": enable it in [test mode](https://dashboard.stripe.com/test/settings/billing/portal) and [live mode](https://dashboard.stripe.com/settings/billing/portal).
-5. **Production webhook URL.** `https://feedback2code.dev/api/stripe/webhook`, using the live endpoint's signing secret.
-
-Use **test** keys in `.env.development` and **live** keys in Vercel Production. Until
-live keys are set, production checkout and webhooks will not work.
-
-</details>
-
-## Deploy
-
-Hosted on Vercel — see the [Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying).
-Production env comes from Vercel Environment Variables, and migrations run during
-`npm run build` via `prisma migrate deploy`.
 
 ## License
 
-**Proprietary — all rights reserved.** See [LICENSE](./LICENSE).
+**Proprietary — all rights reserved.** Copyright (c) 2026 Fabian Stehle.
 
-This source is published for reference and transparency only. It is **not** open
-source: you may not copy, modify, deploy, redistribute, or reuse this code or any
-part of it, and you may not use it to train AI models. For licensing enquiries,
-get in touch via [feedback2code.dev](https://www.feedback2code.dev).
+Not open source. Full terms: [LICENSE](./LICENSE).
+
+Product and licensing: [www.feedback2code.dev](https://www.feedback2code.dev)
