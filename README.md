@@ -22,15 +22,6 @@ would rather review a diff than decode an email.
 
 ## How it works
 
-```
-┌──────────────┐     ┌────────────────┐     ┌──────────────┐     ┌─────────────┐
-│ 1. Client    │ ──▶ │ 2. E2B sandbox │ ──▶ │ 3. OpenCode  │ ──▶ │ 4. Pull     │
-│    submits   │     │    clones the  │     │    writes the│     │    request  │
-│    feedback  │     │    repo        │     │    change    │     │    in your  │
-│    in widget │     │                │     │  (MiniMax-M3)│     │    repo     │
-└──────────────┘     └────────────────┘     └──────────────┘     └─────────────┘
-```
-
 1. **One script tag.** Drop the embed snippet on any client site — no framework, no build step.
 2. **Isolated execution.** Feedback schedules an [E2B](https://e2b.dev) sandbox (2 vCPU, 2 GiB) that clones the target repo.
 3. **The agent works.** [OpenCode](https://opencode.ai) running **MiniMax-M3** implements the request inside the VM.
