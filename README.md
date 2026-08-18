@@ -4,7 +4,6 @@
 
 <p align="center">
   <a href="https://www.feedback2code.dev"><img src="https://img.shields.io/badge/cloud-feedback2code.dev-ff6b00?style=flat-square" alt="Cloud: feedback2code.dev"></a>
-  <img src="https://img.shields.io/badge/license-proprietary-111111?style=flat-square" alt="License: Proprietary">
   <img src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs" alt="Next.js 16">
   <img src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/agent-OpenCode%20%2B%20MiniMax--M3-ff6b00?style=flat-square" alt="OpenCode + MiniMax-M3">
