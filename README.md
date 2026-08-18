@@ -1,7 +1,3 @@
-<p align="right">
-  <a href="https://www.feedback2code.dev"><strong>www.feedback2code.dev</strong> &nbsp;&#8599;</a>
-</p>
-
 <p align="center">
   <img src="./docs/hero.png" alt="feedback2code — Your client describes it. The PR writes itself." width="100%">
 </p>
